@@ -30,7 +30,7 @@ public final class ShadowEngine {
         public final Player owner;
         public int row,column,power,bonus,scorched,scorchTurns;
         public final ArrayList<TimedBonus> timedBonuses=new ArrayList<>();
-        public boolean inspired,suppressed,bonusDoublerConsumed;
+        public boolean inspired,suppressed,bonusDoublerConsumed,damageDoublerConsumed;
         // Cursed Thrall is controlled by the opponent until its original player\u0027s next turn.
         public Player fuseOrigin;
         public int fuseRound;
@@ -637,8 +637,11 @@ public final class ShadowEngine {
     private void damage(Unit source,Unit target,int amount){
         if(target==null||amount<=0)return;
         int actual=Math.max(0,amount+extraDamage(source)-reduction(target));
-        for(Unit ally:all(source.owner))if(ally!=source&&!ally.suppressed&&ally.card.name.equals("Jolder")){
-            actual*=2;suppress(ally);break;
+        for(Unit ally:all(source.owner))if(!ally.suppressed &&
+                ally.card.name.equals("Jolder") && !ally.damageDoublerConsumed){
+            actual*=2;ally.damageDoublerConsumed=true;
+            log("Jolder doubles the next damage event without becoming Suppressed.");
+            break;
         }
         for(Unit ally:all(source.owner))if(ally!=source&&!ally.suppressed&&ally.card.name.equals("Umeko")&&ally.row==0){
             actual+=1+rng.nextInt(3);break;
@@ -667,7 +670,7 @@ public final class ShadowEngine {
             }
             if(newUnit.row==0&&watcher.card.name.equals("Resilient Grenade Dreg")&&watcher.row==0){
                 newUnit.scorched=2;newUnit.scorchTurns=2;
-                dealDirect(watcher,newUnit,2);
+                log("SCORCHED ▶ "+newUnit.card.name+" for 2 turns (Resilient Grenade Dreg).");
             }
         }
     }
@@ -765,7 +768,13 @@ public final class ShadowEngine {
                     if(victim!=null)damage(unit,victim,2);
                     break;
                 case "Elite Walker":
-                    for(int i=0;i<2;i++){Unit chosen=randomUnit(other(side));if(chosen!=null)damage(unit,chosen,2);}
+                    ArrayList<Unit> walkerTargets=new ArrayList<>(all(other(side)));
+                    Collections.shuffle(walkerTargets,rng);
+                    for(int i=0;i<Math.min(2,walkerTargets.size());i++){
+                        Unit chosen=walkerTargets.get(i);
+                        if(chosen.owner.board[chosen.row][chosen.column]==chosen)
+                            damage(unit,chosen,2);
+                    }
                     break;
                 case "Pandora-7":
                     buff(at(side,unit.row,unit.column+1),2);break;
