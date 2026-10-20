@@ -699,10 +699,22 @@ public final class ShadowEngine {
         for(Unit unit:new ArrayList<>(all(side))){
             if(side.board[unit.row][unit.column]!=unit||unit.suppressed)continue;
             switch(unit.card.name){
-                case "Scorpius":case "Shinka Scorpius":
-                    if(unit.card.name.equals("Shinka Scorpius")&&!line(unit,3))break;
-                    int harm=unit.card.name.equals("Scorpius")?1:2;
-                    Unit victim=randomUnit(other(side));if(victim!=null)damage(unit,victim,harm);
+                case "Scorpius":
+                    // Corrected community card text: Back Row, 1 damage to two
+                    // distinct random opposing units (fewer if only one exists).
+                    if(unit.row!=ShadowRules.BACK_ROW)break;
+                    ArrayList<Unit> scorpiusTargets=new ArrayList<>(all(other(side)));
+                    Collections.shuffle(scorpiusTargets,rng);
+                    for(int i=0;i<Math.min(2,scorpiusTargets.size());i++){
+                        Unit victim=scorpiusTargets.get(i);
+                        if(victim.owner.board[victim.row][victim.column]==victim)
+                            damage(unit,victim,1);
+                    }
+                    break;
+                case "Shinka Scorpius":
+                    if(!line(unit,3))break;
+                    Unit victim=randomUnit(other(side));
+                    if(victim!=null)damage(unit,victim,2);
                     break;
                 case "Elite Walker":
                     for(int i=0;i<2;i++){Unit chosen=randomUnit(other(side));if(chosen!=null)damage(unit,chosen,2);}
