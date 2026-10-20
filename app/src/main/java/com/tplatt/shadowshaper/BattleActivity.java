@@ -119,6 +119,12 @@ public class BattleActivity extends Activity {
               }).setNegativeButton("Back to home",(d,w)->finish()).show();
             return;
         }
+        String requested=getIntent().getStringExtra("selected_deck");
+        if(requested!=null && legal.contains(requested)){
+            getIntent().removeExtra("selected_deck");
+            startMatch(requested);
+            return;
+        }
         String[] choices=legal.toArray(new String[0]);
         new AlertDialog.Builder(this).setTitle("Select your deck").setItems(choices,(d,i)->startMatch(choices[i]))
             .setNegativeButton(matchStarted?"Keep current battle":"Cancel",(d,w)->{if(!matchStarted)finish();}).show();
