@@ -49,8 +49,15 @@ public final class BattleActivity extends Activity {
     private int selectedHand=-1,lastShownLog=0;
     private boolean starting=false,dialogShowing=false;
     private final Runnable cpuAction=()->{
-        if(game!=null&&!game.finished&&!game.humanTurn) {
-            game.cpuTurn();selectedHand=-1;refresh();finishIfOver();
+        if(game==null||game.finished||game.humanTurn||dialogShowing)return;
+        if(game.cpuPlayOne()){
+            selectedHand=-1;
+            refresh(); // Show the CPU card and its Power before the next play.
+            handler.postDelayed(cpuAction,560);
+        }else{
+            game.endTurn();
+            refresh();finishIfOver();
+            if(game!=null&&!game.finished&&!game.humanTurn)scheduleCpu();
         }
     };
     private int dp(float v){return Math.round(v*getResources().getDisplayMetrics().density);}
@@ -235,17 +242,19 @@ public final class BattleActivity extends Activity {
         showCoin();
     }
     private void showCoin(){
+        dialogShowing=true;
+        handler.removeCallbacks(cpuAction);
         new AlertDialog.Builder(this)
           .setTitle(game.humanFirst?"OFFENSIVE • YOU GO FIRST":"DEFENSIVE • CPU GOES FIRST")
           .setMessage("Six rounds • 15-card decks\n"+
               "Build the greatest total Power on your side.\n"+
               "Opening hand: "+game.human.hand.size()+" cards.")
-          .setPositiveButton("START DUEL",(d,w)->scheduleCpu())
+          .setPositiveButton("START DUEL",(d,w)->{dialogShowing=false;scheduleCpu();})
           .show();
     }
     private void scheduleCpu(){
         handler.removeCallbacks(cpuAction);
-        if(game!=null&&!game.finished&&!game.humanTurn)handler.postDelayed(cpuAction,560);
+        if(game!=null&&!game.finished&&!game.humanTurn&&!dialogShowing)handler.postDelayed(cpuAction,560);
     }
     private void endTurn(){
         if(game==null||game.finished||!game.humanTurn)return;
