@@ -35,7 +35,7 @@ Sources: [Carrier card face](https://www.media.todayindestiny.com/images/rising/
 - **Xur:** Rock placement blocked by missing original Rock card Power.
 - **Tomb Ship:** random Hive token selection needs authoritative summon-pool details.
 - **Drop Pod:** random Cabal Line summon pool needs authoritative details.
-- **Xuan Wei:** damage occurs; relocation destination is not yet selectable.
+- **Xuan Wei:** damage and relocation are now selectable directly on the target's battlefield, but the original game's precise destination-choice restriction is not yet verified.
 
 ### Newly improved effect families
 
