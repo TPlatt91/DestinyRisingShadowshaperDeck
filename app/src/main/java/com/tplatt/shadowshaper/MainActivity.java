@@ -29,32 +29,59 @@ public class MainActivity extends Activity {
 
     static class Card {
         String name, effect, slug, image;
+        String faction="", rarity="", cost="", power="", cardNumber="";
+        String classification="", trigger="", acquisition="", source="", notes="";
         Card(String n,String e) {
             name=n; effect=e;
             slug=n.toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]+","_").replaceAll("^_|_$","");
             image="https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/"+slug+".webp";
+            source="https://www.todayindestiny.com/rising/shadowshaper_duels/cards/"+slug;
         }
+        String shown(String value) { return value == null || value.trim().isEmpty() ? "Not documented" : value; }
+    }
+    // Preserve the original TodayInDestiny descriptions for the first 34 cards.
+    // Supplemental cards use the community list until primary card-face data can be sourced.
+    private void readSupplemental(String filename) {
+        try(BufferedReader in=new BufferedReader(new InputStreamReader(getAssets().open(filename),StandardCharsets.UTF_8))){
+            String line;
+            while((line=in.readLine())!=null) {
+                String[] p=line.split("\\|",6);
+                if(p.length!=6 || getCard(p[0])!=null) continue;
+                Card card=new Card(p[0],p[5]);
+                card.rarity=p[1]; card.faction=p[2];card.cost=p[3];card.power=p[4];
+                card.image="";
+                card.source="https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/shadowshaper_card_list/";
+                cards.add(card);
+            }
+        } catch(Exception e){Toast.makeText(this,"Could not load "+filename+": "+e.getMessage(),Toast.LENGTH_LONG).show();}
+    }
+    private void readDetails(){
+        try(BufferedReader in=new BufferedReader(new InputStreamReader(getAssets().open("card_details.tsv"),StandardCharsets.UTF_8))){
+            String line;
+            while((line=in.readLine())!=null) {
+                String[] p=line.split("\\|",-1);
+                if(p.length<10)continue;
+                Card card=getCard(p[0]);if(card==null)continue;
+                card.faction=p[1];card.rarity=p[2];card.cost=p[3];card.power=p[4];
+                card.classification=p[5];card.trigger=p[6];card.acquisition=p[7];card.notes=p[8];card.cardNumber=p[9];
+            }
+        }catch(Exception e){Toast.makeText(this,"Could not load card details: "+e.getMessage(),Toast.LENGTH_LONG).show();}
     }
     @Override public void onCreate(Bundle saved) {
         super.onCreate(saved);
         getWindow().setStatusBarColor(background);
         getWindow().setNavigationBarColor(background);
         try(BufferedReader in = new BufferedReader(new InputStreamReader(getAssets().open("cards.tsv"), StandardCharsets.UTF_8))) {
-            String line; while((line=in.readLine())!=null) { String[] p=line.split("\\|",2); if(p.length==2)cards.add(new Card(p[0],p[1])); }
-        } catch(Exception e) { Toast.makeText(this,"Catalog load error: "+e.getMessage(),Toast.LENGTH_LONG).show(); }
-        try(BufferedReader in = new BufferedReader(new InputStreamReader(getAssets().open("community_cards.tsv"), StandardCharsets.UTF_8))) {
-            String line;
-            while((line=in.readLine())!=null) {
-                String[] p=line.split("\\|",6);
-                if(p.length==6 && getCard(p[0])==null) {
-                    Card card=new Card(p[0],p[5]);
-                    card.image="";
-                    card.effect=p[5]+"  •  "+p[2]+" / "+p[1]+" / Cost "+p[3]+" / Power "+p[4];
-                    cards.add(card);
-                }
+            String line; while((line=in.readLine())!=null) {
+                String[] p=line.split("\\|",2);
+                if(p.length==2)cards.add(new Card(p[0],p[1]));
             }
-        } catch(Exception e) { Toast.makeText(this,"Supplemental catalog error: "+e.getMessage(),Toast.LENGTH_LONG).show(); }
-        loadNames(); loadDeck(currentDeck); frame(); showCollection();
+        }catch(Exception e){Toast.makeText(this,"Catalog load error: "+e.getMessage(),Toast.LENGTH_LONG).show();}
+        readSupplemental("community_cards.tsv");
+        readSupplemental("expanded_cards.tsv");
+        readDetails();
+        Collections.sort(cards,(a,b)->a.name.compareToIgnoreCase(b.name));
+        loadNames();loadDeck(currentDeck);frame();showCollection();
     }
     private int dp(float d){ return (int)(getResources().getDisplayMetrics().density*d+0.5f); }
     private TextView label(String text,int size,boolean bold) {
@@ -87,13 +114,13 @@ public class MainActivity extends Activity {
     private void showCollection(){
         showingDeck=false;clear();
         search=new EditText(this);search.setSingleLine();search.setTextColor(Color.WHITE);search.setHintTextColor(0xffb4bdd4);
-        search.setHint("Search cards and abilities…");search.setPadding(dp(16),dp(8),dp(16),dp(8));body.addView(search);
+        search.setHint("Search name, faction, rarity, or effect…");search.setPadding(dp(16),dp(8),dp(16),dp(8));body.addView(search);
         TextView heading=label(cards.size()+" catalog records  •  select a card to view/add",12,false);body.addView(heading);
         ScrollView s=scroll(body);LinearLayout list=column(s);
         Runnable refresh=()->{
             list.removeAllViews();String q=search.getText().toString().toLowerCase(Locale.ROOT).trim();
             int displayed=0;
-            for(Card c:cards)if(c.name.toLowerCase(Locale.ROOT).contains(q)||c.effect.toLowerCase(Locale.ROOT).contains(q)){
+            for(Card c:cards)if(c.name.toLowerCase(Locale.ROOT).contains(q)||c.effect.toLowerCase(Locale.ROOT).contains(q)||c.faction.toLowerCase(Locale.ROOT).contains(q)||c.rarity.toLowerCase(Locale.ROOT).contains(q)){
                 addCardTile(list,c);displayed++;
             }
             heading.setText(displayed+" / "+cards.size()+" catalog records  •  tap card to view/add");
@@ -105,23 +132,91 @@ public class MainActivity extends Activity {
         });refresh.run();
     }
     private void addCardTile(LinearLayout list,Card c){
-        LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);row.setPadding(dp(8),dp(7),dp(8),dp(7));row.setBackground(bg(panel,12));
-        LinearLayout.LayoutParams outer=new LinearLayout.LayoutParams(-1,dp(126));outer.bottomMargin=dp(7);list.addView(row,outer);
-        ImageView art=new ImageView(this);art.setScaleType(ImageView.ScaleType.FIT_CENTER);row.addView(art,new LinearLayout.LayoutParams(dp(76),dp(112)));loadImage(c,art);
-        LinearLayout info=new LinearLayout(this);info.setOrientation(LinearLayout.VERTICAL);row.addView(info,new LinearLayout.LayoutParams(0,-2,1));
-        info.addView(label(c.name,16,true));TextView effect=label(c.effect,12,false);effect.setTextColor(0xffccd6eb);effect.setMaxLines(3);info.addView(effect);
-        TextView owned=label("In deck: "+active.getOrDefault(c.name,0),12,false);owned.setTextColor(accent);info.addView(owned);
+        LinearLayout row=new LinearLayout(this);row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(8),dp(7),dp(8),dp(7));row.setBackground(bg(panel,12));
+        LinearLayout.LayoutParams outer=new LinearLayout.LayoutParams(-1,dp(140));
+        outer.bottomMargin=dp(7);list.addView(row,outer);
+        ImageView art=new ImageView(this);art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        row.addView(art,new LinearLayout.LayoutParams(dp(79),dp(118)));loadImage(c,art);
+        LinearLayout info=new LinearLayout(this);info.setOrientation(LinearLayout.VERTICAL);
+        row.addView(info,new LinearLayout.LayoutParams(0,-2,1));
+        info.addView(label(c.name,16,true));
+        TextView stats=label(c.shown(c.rarity)+" · "+c.shown(c.faction)+
+            " · POW "+c.shown(c.power)+" · COST "+c.shown(c.cost),11,false);
+        stats.setTextColor(accent);info.addView(stats);
+        TextView effect=label(c.effect,12,false);effect.setTextColor(0xffccd6eb);
+        effect.setMaxLines(2);info.addView(effect);
+        TextView owned=label("In deck: "+active.getOrDefault(c.name,0)+
+            (c.image.isEmpty() ? "   •   Image needed" : ""),11,false);
+        owned.setTextColor(0xffb7c7e0);info.addView(owned);
         row.setOnClickListener(v->inspect(c));
     }
+    private TextView section(LinearLayout parent,String heading,String value){
+        TextView title=label(heading.toUpperCase(Locale.ROOT),11,true);
+        title.setTextColor(accent);parent.addView(title);
+        TextView text=label(value,15,false);text.setTextColor(0xffe2e9f6);
+        parent.addView(text);return text;
+    }
+    private void metric(LinearLayout parent,String heading,String value){
+        LinearLayout box=new LinearLayout(this);box.setOrientation(LinearLayout.VERTICAL);
+        box.setBackground(bg(panel,10));box.setPadding(dp(4),dp(3),dp(4),dp(3));
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(76),1);
+        lp.setMargins(dp(3),0,dp(3),0);parent.addView(box,lp);
+        TextView label=label(heading,11,true);label.setTextColor(0xffb9cbec);
+        box.addView(label);
+        TextView item=label(value,19,true);item.setTextColor(Color.WHITE);
+        box.addView(item);
+    }
     private void inspect(Card c){
-        LinearLayout stack=new LinearLayout(this);stack.setPadding(dp(12),dp(8),dp(12),dp(8));stack.setOrientation(LinearLayout.VERTICAL);
-        ImageView art=new ImageView(this);art.setScaleType(ImageView.ScaleType.FIT_CENTER);stack.addView(art,new LinearLayout.LayoutParams(-1,dp(350)));loadImage(c,art);
-        stack.addView(label(c.effect,14,false));stack.addView(label("Current deck: "+currentDeck+" ("+active.getOrDefault(c.name,0)+" copies)",12,false));
-        AlertDialog dialog=new AlertDialog.Builder(this).setTitle(c.name).setView(stack)
-          .setPositiveButton("Add copy",(d,w)->{active.put(c.name,active.getOrDefault(c.name,0)+1);saveDeck(); if(showingDeck)showDeck();else showCollection();})
+        ScrollView scroller=new ScrollView(this);scroller.setFillViewport(false);
+        LinearLayout stack=new LinearLayout(this);stack.setPadding(dp(12),dp(10),dp(12),dp(14));
+        stack.setOrientation(LinearLayout.VERTICAL);stack.setBackgroundColor(background);
+        scroller.addView(stack);
+        if(!c.image.isEmpty()){
+            ImageView art=new ImageView(this);art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            stack.addView(art,new LinearLayout.LayoutParams(-1,dp(360)));loadImage(c,art);
+            TextView imageNote=label("Original card face · online image cached when available",11,false);
+            imageNote.setGravity(Gravity.CENTER);imageNote.setTextColor(0xffaab7ca);stack.addView(imageNote);
+        } else {
+            TextView absent=label("CARD ARTWORK NOT YET VERIFIED\nThis card is documented, but no matching original card-face image has been found.",14,true);
+            absent.setGravity(Gravity.CENTER);absent.setTextColor(0xffc2cde3);
+            absent.setBackground(bg(panel,12));
+            stack.addView(absent,new LinearLayout.LayoutParams(-1,dp(180)));
+        }
+        TextView title=label(c.name,22,true);title.setGravity(Gravity.CENTER);
+        stack.addView(title);
+        TextView banner=label(c.shown(c.rarity).toUpperCase(Locale.ROOT)+
+            "  •  "+c.shown(c.faction),14,true);
+        banner.setGravity(Gravity.CENTER);banner.setTextColor(accent);stack.addView(banner);
+        LinearLayout metrics=new LinearLayout(this);metrics.setOrientation(LinearLayout.HORIZONTAL);
+        stack.addView(metrics,new LinearLayout.LayoutParams(-1,dp(80)));
+        metric(metrics,"POWER",c.shown(c.power));metric(metrics,"COST",c.shown(c.cost));
+        metric(metrics,"COPIES",String.valueOf(active.getOrDefault(c.name,0)));
+        if(!c.cardNumber.isEmpty())section(stack,"Card number",c.cardNumber);
+        if(!c.classification.isEmpty())section(stack,"Card class",c.classification);
+        section(stack,"Card effect",c.effect.isEmpty() ? "No effect recorded" : c.effect);
+        if(!c.trigger.isEmpty())section(stack,"Effect type / positioning",c.trigger);
+        if(!c.acquisition.isEmpty())section(stack,"How to obtain",c.acquisition);
+        if(!c.notes.isEmpty())section(stack,"Additional information",c.notes);
+        TextView source=label("Reference: "+
+            (c.source.contains("todayindestiny.com")?"TodayInDestiny individual card entry":
+             "Community Shadowshaper card list; statistics may need game verification"),12,false);
+        source.setTextColor(0xffb7c7de);stack.addView(source);
+        if(!c.source.isEmpty())stack.addView(button("Open card reference",()->{
+            try{startActivity(new Intent(Intent.ACTION_VIEW,android.net.Uri.parse(c.source)));}
+            catch(Exception ex){toast("Could not open reference");}
+        }),new LinearLayout.LayoutParams(-1,dp(46)));
+        if(c.cardNumber.isEmpty()){
+            TextView number=label("Printed card number: none confirmed by current references.",11,false);
+            number.setTextColor(0xffaab5ca);stack.addView(number);
+        }
+        AlertDialog dialog=new AlertDialog.Builder(this)
+          .setTitle("Card details").setView(scroller)
+          .setPositiveButton("Add copy",(d,w)->{active.put(c.name,active.getOrDefault(c.name,0)+1);saveDeck();if(showingDeck)showDeck();else showCollection();})
           .setNeutralButton("Remove copy",(d,w)->{int n=active.getOrDefault(c.name,0);if(n<=1)active.remove(c.name);else active.put(c.name,n-1);saveDeck();if(showingDeck)showDeck();else showCollection();})
           .setNegativeButton("Close",null).create();
         dialog.show();
+        if(dialog.getWindow()!=null)dialog.getWindow().setLayout(-1,-2);
     }
     private void showDeck(){
         showingDeck=true;clear();
@@ -228,7 +323,7 @@ public class MainActivity extends Activity {
     }
     private void toast(String msg){Toast.makeText(this,msg,Toast.LENGTH_LONG).show();}
     private void loadImage(Card card,ImageView view){
-        view.setImageDrawable(bg(0xff28334f,8));view.setContentDescription(card.name);\n        if(card.image.isEmpty()) return;
+        view.setImageDrawable(bg(0xff28334f,8));view.setContentDescription(card.name);\n        view.setTag(card.slug);\n        if(card.image.isEmpty()) return;
         Bitmap cached; synchronized(memory){cached=memory.get(card.slug);}
         if(cached!=null){view.setImageBitmap(cached);return;}
         view.setTag(card.slug);
