@@ -20,7 +20,7 @@ public final class ShadowData {
     private ShadowData(){}
     public static final int DECK_SIZE=15, COPIES_LIMIT=2, EXOTIC_LIMIT=3, MYTHIC_LIMIT=5;
     public static class Card {
-        public String name="", rarity="", faction="", cost="", power="", effect="", classification="";
+        public String name="", rarity="", faction="", cost="", power="", effect="", classification="", trigger="";
         public int numericCost(){try{return Integer.parseInt(cost);}catch(Exception ignored){return -1;}}
         public int numericPower(){try{return Integer.parseInt(power);}catch(Exception ignored){return -1;}}
         public boolean isPlayable(){return numericCost()>0 && numericPower()>=0 &&
@@ -41,7 +41,7 @@ public final class ShadowData {
                 if(card==null)continue;
                 card.faction=fields[1];card.rarity=fields[2];
                 card.cost=fields[3];card.power=fields[4];
-                card.classification=fields[5];
+                card.classification=fields[5];card.trigger=fields[6];
             }
         }catch(Exception ignored){}
         return result;
