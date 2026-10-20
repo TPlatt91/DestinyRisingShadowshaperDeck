@@ -4,7 +4,7 @@ Native Android Studio (Java) single-player Shadowshaper Duels companion.
 
 ## Main menu (four sections)
 
-1. **Sim Battle** — six-round playable practice match against CPU. Choose a legal saved deck, draw a starting hand, place cards in front/back-row positions, spend 1–6 round play points, inspect cards, end turns, and see total Power scores and final victory/draw/defeat. Includes original card art when a matching online or bundled image exists. Now uses a dedicated `ShadowEngine` with shared targeting, damage, buffs, turn resolution, line/column synergies and AI opponents. Incomplete effects are explicitly logged rather than treated as resolved. See `docs/GAMEPLAY_IMPLEMENTATION.md` for detailed coverage and caveats.
+1. **Sim Battle** — six-round playable practice match against CPU. Choose a legal saved deck, draw a starting hand, place cards in front/back-row positions, spend 1–6 round play points, inspect cards, end turns, and see total Power scores and final victory/draw/defeat. Includes original card art when a matching online or bundled image exists. Now uses a dedicated `ShadowEngine` with shared targeting, damage, buffs, turn resolution, line/column synergies and AI opponents. Incomplete effects are explicitly logged rather than treated as resolved. See `docs/GAMEPLAY_IMPLEMENTATION.md` and [`docs/RULES_AUDIT.md`](docs/RULES_AUDIT.md) for rules, verified assumptions, and unimplemented interactions.
 2. **Deck Construction** — local multiple saved decks, rename/delete, copy/share/import deck text, enforce the maximum 2 copies per name, 3 Exotic, 5 Mythic and 15-card total. Incomplete decks can be saved but **cannot enter Sim Battle**. Tokens and entries without verified Power or cost cannot be added. Launch a valid deck straight into battle.
 3. **Card Collection** — browse the 110 known card records, original card-face images where available, stats, rarity, faction, effects, and source details; search by name/faction/rarity/effect.
 4. **Rules** — in-app Shadowshaper deck limits, six-round scoring, positioning, Inspired/Sustained/Suppressed definitions, and gameplay source link.
@@ -53,3 +53,9 @@ Open the repository root folder in Android Studio, using JDK 17 and the Gradle 8
 - https://game8.co/games/Destiny-Rising/archives/546603
 
 Use original assets responsibly and check content-owner permissions before redistributing artwork.
+
+## Local rule verification
+
+The shared `ShadowRules.java` constants and `ShadowEngine.validatePlay` enforce match legality before any Light or card movement. The CPU uses projected same-faction lines, column partners, and row effects to choose positions. The battle event viewer can copy/share a reproducible report containing the match seed, board and event history.
+
+For local testing without GitHub Actions credits, run `gradlew.bat :app:testDebugUnitTest` and `gradlew.bat :app:assembleDebug` on your computer. These commands have not been executed here.
