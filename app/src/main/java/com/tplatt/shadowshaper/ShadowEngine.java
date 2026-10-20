@@ -203,7 +203,7 @@ public final class ShadowEngine {
             case "Vandal":case "Wretch":case "Incendior":case "Resilient Marauder":
             case "Augmented Shank":case "High Servitor":case "Thinktank":case "Amu-Atu":
             case "Shinka Incendior":case "Shinka Vigile":case "Thagrius":
-            case "Wolf":case "Wu Ming":case "Gwynn":case "Xuan Wei":
+            case "Wolf":case "Wu Ming":case "Gwynn":case "Xuan Wei":case "Ikora":case "Goliath Tank":
                 return true;
             default:return false;
         }
@@ -216,6 +216,7 @@ public final class ShadowEngine {
             case "Augmented Shank":case "High Servitor":case "Thinktank":
             case "Amu-Atu":case "Shinka Incendior":case "Shinka Vigile":
             case "Thagrius":case "Wolf":case "Wu Ming":case "Gwynn":case "Xuan Wei":
+            case "Ikora":case "Goliath Tank":
             case "Shinka Psion":return true;
             default:return false;
         }
@@ -320,6 +321,9 @@ public final class ShadowEngine {
                 for(Unit u:faction(me,"Fallen"))buff(u,2);break;
             case "Kabr":
                 for(Unit u:all(me))if(u.card.name.equals("Guerrilla"))buff(u,3);break;
+            case "Bazinet":
+                if(actor.row==0)for(Unit u:new ArrayList<>(all(foe)))if(powerBonus(u)>0)damage(actor,u,3);
+                break;
             case "Radegast":
                 if(hasFaction(foe,"Fallen"))
                     for(Unit u:all(me))if(u.row==actor.row&&u.card.name.equals("Guerrilla"))buff(u,4);
@@ -369,6 +373,14 @@ public final class ShadowEngine {
             case "Shinka Incendior":if(line(actor,3))damage(actor,picked,3);break;
             case "Shinka Vigile":if(line(actor,3))damage(actor,picked,4);break;
             case "Thagrius":if(line(actor,6))damage(actor,picked,2*lineLength(actor));break;
+            case "Ikora":
+                if(picked!=null)for(Unit u:new ArrayList<>(all(foe)))
+                    if(u.row==picked.row)damage(actor,u,2);
+                break;
+            case "Goliath Tank":
+                if(picked!=null&&line(actor,5))for(Unit u:new ArrayList<>(all(foe)))
+                    if(u.row==picked.row)damage(actor,u,3);
+                break;
             case "Wolf":if(picked!=null&&power(picked)>8)damage(actor,picked,power(picked));break;
             case "Wu Ming":if(actor.row==0&&picked!=null)suppress(picked);break;
             case "Gwynn":
@@ -396,8 +408,11 @@ public final class ShadowEngine {
             case "Carrier":case "Ketch":
                 spawnAt(me,actor.row,actor.column-1,"Dreg");
                 spawnAt(me,actor.row,actor.column+1,"Dreg");break;
-            case "Mu Ying":case "Paradoxical Neophyte":case "Denzin":case "Unrelenting Captain":
-                incomplete(actor.card,"Summon token has no verified base Power in catalog.");break;
+            case "Paradoxical Neophyte":
+                spawnAt(me,actor.row,actor.column-1,"Paradoxical Neophyte's Shade");
+                break;
+            case "Mu Ying":
+                incomplete(actor.card,"Guerrilla token Power not verified.");break;
             case "Tomb Ship":case "Drop Pod":
                 incomplete(actor.card,"Random faction summoning pool not confirmed.");break;
             case "Ning Fei":
@@ -421,6 +436,8 @@ public final class ShadowEngine {
             case "Ogre":case "Tenacious Ogre":case "Shrieker":
             case "Saladin":case "Tan-2":case "Elite Sniper Vandal":
             case "Ayuela":case "Resilient Grenade Dreg":case "Zhiyao":
+            case "Denzin":case "Unrelenting Captain":case "The Speaker":
+            case "Guerrilla Captain":case "Umeko":case "Jolder":
                 return true;
             default:return false;
         }
@@ -499,6 +516,8 @@ public final class ShadowEngine {
                 ArrayList<Unit> hive=faction(own,"Hive");hive.remove(target);
                 if(!hive.isEmpty())buff(hive.get(rng.nextInt(hive.size())),2);
             }
+            if(unit==target&&name.equals("The Speaker")&&unit.row==0)
+                buff(at(own,unit.row,unit.column+1),2);
             if(unit==target&&name.equals("Guerrilla Captain")){
                 Unit victim=randomUnit(foe);if(victim!=null)damage(unit,victim,2);
             }
