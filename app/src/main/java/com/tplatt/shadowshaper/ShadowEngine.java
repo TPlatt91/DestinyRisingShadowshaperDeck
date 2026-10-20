@@ -31,6 +31,9 @@ public final class ShadowEngine {
         public int row,column,power,bonus,scorched,scorchTurns;
         public final ArrayList<TimedBonus> timedBonuses=new ArrayList<>();
         public boolean inspired,suppressed,bonusDoublerConsumed;
+        // Cursed Thrall is controlled by the opponent until its original player\u0027s next turn.
+        public Player fuseOrigin;
+        public int fuseRound;
         public Unit(Player owner,ShadowData.Card card,int row,int col) {
             this.owner=owner;this.card=card;this.row=row;this.column=col;
             this.power=Math.max(0,card.numericPower());
@@ -359,7 +362,8 @@ public final class ShadowEngine {
         lastPlacedSide=me.human?0:1;lastPlacedRow=row;lastPlacedColumn=column;placementRevision++;
         log((me.human?"YOU":"CPU")+" ▶ "+card.name+" • "+(row==0?"BACK":"FRONT")+" "+(column+1));
         onPlayed(placed,target);
-        fireEnemyPlacement(placed);
+        if(placed.owner.board[placed.row][placed.column]==placed)
+            fireEnemyPlacement(placed); // transfer abilities dispatch their own placement event
         sweep();
         return true;
     }
@@ -504,7 +508,7 @@ public final class ShadowEngine {
             case "Ning Fei":
                 incomplete(actor.card,"Enemy Clone token Power not verified.");break;
             case "Cursed Thrall":
-                incomplete(actor.card,"Opponent-side delayed-death transfer remains under verification.");break;
+                transferCursedThrall(actor);break;
             case "Shinka Scorpius":case "Scorpius":case "Elite Walker":
             case "Pandora-7":break;
             default:
@@ -685,6 +689,47 @@ public final class ShadowEngine {
             }
         }
     }
+    /**
+     * Cursed Thrall occupies a random empty opponent Front Row slot and
+     * detonates at the beginning of the original player's next turn.
+     * This uses a new controlled unit so owner and board are consistent.
+     */
+    private void transferCursedThrall(Unit from){
+        Player origin=from.owner,destination=other(origin);
+        ArrayList<Integer> candidates=new ArrayList<>();
+        for(int col=0;col<COLUMNS;col++)if(empty(destination,1,col))candidates.add(col);
+        if(candidates.isEmpty()){
+            incomplete(from.card,"Opponent Front Row full; transfer failure behavior unverified.");
+            return;
+        }
+        int column=candidates.get(rng.nextInt(candidates.size()));
+        origin.board[from.row][from.column]=null;
+        Unit bomb=new Unit(destination,from.card,1,column);
+        bomb.power=from.power;bomb.bonus=from.bonus;
+        bomb.fuseOrigin=origin;
+        bomb.fuseRound=round+1;
+        destination.board[1][column]=bomb;
+        lastPlacedSide=destination.human?0:1;lastPlacedRow=1;lastPlacedColumn=column;
+        log("CURSED THRALL ▶ opponent Front Row "+(column+1)+"; detonates on next original turn.");
+        fireEnemyPlacement(bomb);
+    }
+    private void startSide(Player side){
+        // Side's own summoned or transferred units may need delayed activation.
+        // A cursed unit is stored on the opponent's battlefield until its caster
+        // begins the next turn, and cannot fire twice after removal.
+        for(Player controller:new Player[]{human,cpu})
+            for(Unit unit:new ArrayList<>(all(controller))){
+                if(unit.fuseOrigin!=side||unit.fuseRound>round)continue;
+                if(controller.board[unit.row][unit.column]!=unit)continue;
+                controller.board[unit.row][unit.column]=null;
+                log("CURSED THRALL DETONATES ▶ "+(unit.column+1));
+                for(int offset:new int[]{-1,1}){
+                    Unit adjacentUnit=at(controller,unit.row,unit.column+offset);
+                    if(adjacentUnit!=null)dealDirect(unit,adjacentUnit,2);
+                }
+            }
+        sweep();
+    }
     private void endSide(Player side){
         for(Unit unit:new ArrayList<>(all(side))){
             if(unit.owner.board[unit.row][unit.column]!=unit)continue;
@@ -745,8 +790,10 @@ public final class ShadowEngine {
             draw(human,ShadowRules.NEW_ROUND_DRAW);draw(cpu,ShadowRules.NEW_ROUND_DRAW);
             humanTurn=humanFirst;
             log("ROUND "+round+" • "+round+" play points");
+            startSide(humanTurn?human:cpu);
         }else{
             humanTurn=!humanTurn;
+            startSide(humanTurn?human:cpu);
         }
     }
     /**
