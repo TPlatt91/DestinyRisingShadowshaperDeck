@@ -23,7 +23,7 @@ Native Android Studio (Java) deck creator. Current catalog: **110 distinct names
 - The CPU places cards sequentially, with UI updates between each play. Dialogs pause AI progression; a placement animates once, and each new round highlights once.
 - Deck construction shows base deck Power, copies and rarity counts, and a six-cost distribution, reflecting the real game's deck summary layout.
 - **Scorpius** has a community-documented corrected Back Row, two-target end-turn ability; two regression tests protect the correction.
-- The core source contains **19 local JUnit tests** across two test files. These are committed but **not executed**; no GitHub Actions workflows were invoked.
+- The core source contains **31 local JUnit tests** across two test files. These are committed but **not executed**; no GitHub Actions workflows were invoked.
 
 For reference sources, what is implemented, and remaining exact-match limitations, read [UI fidelity audit](docs/UI_FIDELITY_AUDIT.md) and [rules audit](docs/RULES_AUDIT.md). Do not treat source-level structural checks as an Android build or visual test.
 
