@@ -119,4 +119,38 @@ public class ShadowRulesTest {
         assertEquals(3,game.round);
         assertEquals(3,game.human.points);
     }
+
+    @Test public void projectedFactionLinesRequireAdjacentSameFactionUnits(){
+        ShadowEngine game=humanFirst();
+        ShadowData.Card cabal=new ShadowData.Card();
+        cabal.name="Shinka Psion";cabal.cost="2";cabal.power="3";
+        cabal.faction="Cabal";cabal.rarity="Legendary";
+        cabal.effect="When Played (2-Unit Line): Deals 3 damage to a unit.";
+        game.catalog.put(cabal.name,cabal);
+        ShadowData.Card ally=new ShadowData.Card();
+        ally.name="Cabal Ally";ally.faction="Cabal";ally.cost="1";ally.power="2";
+        ally.rarity="Rare";ally.effect="No special effects.";
+        game.catalog.put(ally.name,ally);
+        game.human.board[0][0]=new ShadowEngine.Unit(game.human,ally,0,0);
+        assertEquals(2,game.projectedFactionLine(game.human,cabal,0,1));
+        assertEquals(1,game.projectedFactionLine(game.human,cabal,0,3));
+        // Another faction interrupts what would otherwise look like a line.
+        game.human.board[0][2]=new ShadowEngine.Unit(game.human,game.catalog.get("Test Unit 0"),0,2);
+        assertEquals(1,game.projectedFactionLine(game.human,cabal,0,3));
+        assertEquals(0,game.projectedFactionLine(game.human,cabal,0,2));
+    }
+    @Test public void noIllegalTargetPromptWithoutRequiredFactionLine(){
+        ShadowEngine game=humanFirst();
+        ShadowData.Card cabal=new ShadowData.Card();
+        cabal.name="Shinka Psion";cabal.cost="2";cabal.power="3";
+        cabal.faction="Cabal";cabal.rarity="Legendary";
+        cabal.effect="When Played (2-Unit Line): Deals 3 damage to a unit.";
+        game.catalog.put(cabal.name,cabal);
+        game.cpu.board[0][0]=new ShadowEngine.Unit(game.cpu,game.catalog.get("Test Unit 0"),0,0);
+        assertTrue(game.targetOptions(game.human,cabal,1,3).isEmpty());
+        ShadowData.Card partner=new ShadowData.Card();
+        partner.name="Cabal";partner.cost="1";partner.power="1";partner.faction="Cabal";
+        game.human.board[1][2]=new ShadowEngine.Unit(game.human,partner,1,2);
+        assertEquals(1,game.targetOptions(game.human,cabal,1,3).size());
+    }
 }
