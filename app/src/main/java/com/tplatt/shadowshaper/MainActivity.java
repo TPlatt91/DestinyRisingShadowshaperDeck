@@ -207,6 +207,8 @@ public class MainActivity extends Activity {
         if(!c.cardNumber.isEmpty())section(stack,"Card number",c.cardNumber);
         if(!c.classification.isEmpty())section(stack,"Card class",c.classification);
         section(stack,"Card effect",c.effect.isEmpty() ? "No effect recorded" : c.effect);
+        section(stack,"Sim Battle implementation",
+            ShadowEffectCoverage.status(c.name,c.effect,c.cost,c.power));
         if(!c.trigger.isEmpty())section(stack,"Effect type / positioning",c.trigger);
         if(!c.acquisition.isEmpty())section(stack,"How to obtain",c.acquisition);
         if(!c.notes.isEmpty())section(stack,"Additional information",c.notes);
