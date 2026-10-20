@@ -20,7 +20,7 @@ BLOCKED_BY_RULES={
     "Xur":"Rock token Power unknown",
     "Tomb Ship":"Random Hive summon pool not verified",
     "Drop Pod":"Random Cabal Line summon pool not verified",
-    "Xuan Wei":"Destination-selection movement not implemented",
+    "Xuan Wei":"Damage and relocation scripted; exact destination rules need verification",
 }
 cards={}
 errors=[]
