@@ -52,7 +52,7 @@ These are **inventory classifications**, not verified full implementation counts
 Run locally (no GitHub Actions credits):
 
 ```bat
-python tools\audit_card_effects.py
+python tools\audit_catalog.py
 python tools\audit_effect_coverage.py --csv
 gradlew.bat :app:testDebugUnitTest
 gradlew.bat :app:assembleDebug
