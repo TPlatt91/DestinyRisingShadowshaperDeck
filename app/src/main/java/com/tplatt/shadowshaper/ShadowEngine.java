@@ -133,16 +133,16 @@ public final class ShadowEngine {
         return units;
     }
     private boolean adjacent(Unit a,Unit b){
-        return a.owner==b.owner&&a.row==b.row&&Math.abs(a.column-b.column)==1;
+        return a.owner==b.owner &&
+            ShadowPositionRules.isAdjacent(a.row,a.column,b.row,b.column);
     }
     private boolean sameColumn(Unit a,Unit b){
-        return a.owner==b.owner&&a.column==b.column&&a.row!=b.row;
+        return a.owner==b.owner &&
+            ShadowPositionRules.isSameColumn(a.row,a.column,b.row,b.column);
     }
     private boolean line(Unit unit,int threshold){
-        int left=unit.column,right=unit.column;
-        while(left>0&&validLine(unit,unit.owner.board[unit.row][left-1]))left--;
-        while(right<COLUMNS-1&&validLine(unit,unit.owner.board[unit.row][right+1]))right++;
-        return right-left+1>=threshold;
+        return ShadowPositionRules.contiguousFactionLine(unit.owner,unit.card.faction,
+            unit.row,unit.column,false)>=threshold;
     }
     private boolean validLine(Unit origin,Unit next){
         return next!=null&&next.card.faction.equalsIgnoreCase(origin.card.faction);
@@ -248,20 +248,8 @@ public final class ShadowEngine {
      * the same row; visually adjacent units from other factions break it.
      */
     public int projectedFactionLine(Player player,ShadowData.Card card,int row,int column){
-        if(player==null||card==null||!ShadowRules.isOnBoard(row,column))return 0;
-        if(player.board[row][column]!=null)return 0;
-        int length=1;
-        for(int c=column-1;c>=0;c--){
-            Unit neighbor=player.board[row][c];
-            if(neighbor==null||!neighbor.card.faction.equalsIgnoreCase(card.faction))break;
-            length++;
-        }
-        for(int c=column+1;c<COLUMNS;c++){
-            Unit neighbor=player.board[row][c];
-            if(neighbor==null||!neighbor.card.faction.equalsIgnoreCase(card.faction))break;
-            length++;
-        }
-        return length;
+        if(player==null||card==null)return 0;
+        return ShadowPositionRules.contiguousFactionLine(player,card.faction,row,column,true);
     }
     private int requiredFactionLine(String name){
         switch(name){
@@ -529,7 +517,7 @@ public final class ShadowEngine {
             case "Pandora-7":break;
             default:
                 if(!noEffect(actor.card)&&!isKnownSustained(actor.card.name))
-                    incomplete(actor.card,"No verified scripted resolver.");
+                    incomplete(actor.card,"No verified "+ShadowEffectRegistry.family(actor.card)+" resolver.");
         }
     }
     private boolean isKnownSustained(String name){
@@ -549,10 +537,8 @@ public final class ShadowEngine {
         }
     }
     private int lineLength(Unit unit){
-        int total=1;
-        for(int c=unit.column-1;c>=0&&validLine(unit,at(unit.owner,unit.row,c));c--)total++;
-        for(int c=unit.column+1;c<COLUMNS&&validLine(unit,at(unit.owner,unit.row,c));c++)total++;
-        return total;
+        return ShadowPositionRules.contiguousFactionLine(unit.owner,unit.card.faction,
+            unit.row,unit.column,false);
     }
     private boolean rowEmpty(Player player,int row){return countRow(player,row)==0;}
     private int countRow(Player player,int row){
