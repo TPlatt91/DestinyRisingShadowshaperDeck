@@ -184,6 +184,12 @@ public final class BattleActivity extends Activity {
                 titles.add(name);lists.add(deck);
             }
         }
+        String requested=getIntent().getStringExtra("selected_deck");
+        if(requested!=null){
+            int index=titles.indexOf(requested);
+            getIntent().removeExtra("selected_deck");
+            if(index>=0){begin(titles.get(index),lists.get(index));return;}
+        }
         if(titles.isEmpty()){
             new AlertDialog.Builder(this).setTitle("Deck Construction")
                 .setMessage("No legal practice or saved deck is available yet.")
@@ -207,7 +213,7 @@ public final class BattleActivity extends Activity {
               .setMessage(error.getMessage()).setPositiveButton("Choose Deck",(d,w)->selectDeck(true)).show();return;
         }
         selectedHand=-1;hintText.setText("Tap to select • drag to place • hold to inspect");
-        refresh();scheduleCpu();
+        refresh();
         showCoin();
     }
     private void showCoin(){
