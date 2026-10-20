@@ -15,11 +15,6 @@ public final class ShadowEffectCoverage {
         if(effect==null||effect.trim().isEmpty()||effect.toLowerCase(java.util.Locale.ROOT).contains("no special effects"))
             return "BASIC RULES: No special effect; Power and placement are supported.";
         switch(name){
-            case "Mu Ying":
-            case "Denzin":
-                return "INCOMPLETE: Guerrilla summon needs verified token Power.";
-            case "Ning Fei":
-                return "INCOMPLETE: Clone summon needs verified token Power.";
             case "Xur":
                 return "INCOMPLETE: Rock summon needs verified token Power.";
             case "Tomb Ship":
