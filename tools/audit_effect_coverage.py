@@ -17,9 +17,6 @@ MAIN=ASSETS/"cards.tsv"
 TABLES=[MAIN,ASSETS/"community_cards.tsv",ASSETS/"expanded_cards.tsv"]
 DETAILS=ASSETS/"card_details.tsv"
 BLOCKED_BY_RULES={
-    "Mu Ying":"Guerrilla token Power unknown",
-    "Denzin":"Guerrilla token Power unknown",
-    "Ning Fei":"Clone token Power unknown",
     "Xur":"Rock token Power unknown",
     "Tomb Ship":"Random Hive summon pool not verified",
     "Drop Pod":"Random Cabal Line summon pool not verified",
