@@ -201,4 +201,31 @@ public class ShadowEffectFamiliesTest {
         assertEquals("Dreg",g.human.board[1][3].card.name);
     }
 
+    @Test public void xuanWeiRequiresAndResolvesSurvivingTargetRelocation(){
+        ShadowEngine g=game();
+        ShadowData.Card xuan=make("Xuan Wei","Humans",3,6,
+            "When Played (Back Row): Deals 5 damage to an enemy and moves it.");
+        ShadowData.Card victim=cards.get("Filler 0");
+        ShadowEngine.Unit unit=new ShadowEngine.Unit(g.cpu,victim,1,0);
+        unit.power=10;g.cpu.board[1][0]=unit;
+        g.human.hand.clear();g.human.hand.add(xuan);g.human.points=3;
+        assertTrue(g.play(g.human,0,0,2,new ShadowEngine.Target(g.cpu,1,0)));
+        assertEquals(5,unit.power);
+        assertSame(unit,g.pendingMovedUnit);
+        assertSame(g.human,g.pendingMoveCaster);
+        int round=g.round;
+        g.endTurn();
+        assertEquals(round,g.round);
+        assertTrue(g.humanTurn); // can't end before a destination is chosen
+        assertFalse(g.resolveMove(g.human,1,0)); // destination is occupied
+        assertTrue(g.resolveMove(g.human,0,3));
+        assertNull(g.cpu.board[1][0]);
+        assertSame(unit,g.cpu.board[0][3]);
+        assertEquals(0,unit.row);
+        assertEquals(3,unit.column);
+        assertNull(g.pendingMovedUnit);
+        g.endTurn();
+        assertFalse(g.humanTurn);
+    }
+
 }
