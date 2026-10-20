@@ -18,7 +18,10 @@ import java.util.Map;
  */
 public final class ShadowData {
     private ShadowData(){}
-    public static final int DECK_SIZE=15, COPIES_LIMIT=2, EXOTIC_LIMIT=3, MYTHIC_LIMIT=5;
+    public static final int DECK_SIZE=ShadowRules.DECK_SIZE;
+    public static final int COPIES_LIMIT=ShadowRules.COPY_LIMIT;
+    public static final int EXOTIC_LIMIT=ShadowRules.EXOTIC_LIMIT;
+    public static final int MYTHIC_LIMIT=ShadowRules.MYTHIC_LIMIT;
     public static class Card {
         public String name="", rarity="", faction="", cost="", power="", effect="", classification="", trigger="";
         public boolean onlineArt=false;
