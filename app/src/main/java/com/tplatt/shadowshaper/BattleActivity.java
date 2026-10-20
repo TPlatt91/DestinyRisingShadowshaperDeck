@@ -41,7 +41,8 @@ public final class BattleActivity extends Activity {
     private ShadowEngine game;
     private LinkedHashMap<String,ShadowData.Card> cards;
     private LinearLayout root,board,hand,sidePanel;
-    private TextView roundText,scoreText,turnText,pointsText,deckText,hintText,events;
+    private TextView roundText,scoreText,turnText,pointsText,deckText,hintText,events,opponentText;
+    private String enemyFaction="Mixed";
     private Button endButton;
     private int selectedHand=-1,lastShownLog=0;
     private boolean starting=false,dialogShowing=false;
@@ -144,7 +145,7 @@ public final class BattleActivity extends Activity {
         parent.addView(hud,new LinearLayout.LayoutParams(dp(111),-1));
         TextView e=text("OPPONENT",11,true,ENEMY);
         hud.addView(e,new LinearLayout.LayoutParams(-1,dp(28)));
-        TextView foe=text("CPU",16,true,CREAM);hud.addView(foe,new LinearLayout.LayoutParams(-1,0,1));
+        opponentText=text("CPU",16,true,CREAM);hud.addView(opponentText,new LinearLayout.LayoutParams(-1,0,1));
         roundText=text("ROUND\n1 / 6",18,true,GOLD);
         roundText.setBackground(panel(0xff263440,0xff87734e,11));
         LinearLayout.LayoutParams roundParams=new LinearLayout.LayoutParams(-1,dp(88));
@@ -206,13 +207,23 @@ public final class BattleActivity extends Activity {
         chooser.setCanceledOnTouchOutside(!first);chooser.show();
     }
     private void begin(String title,LinkedHashMap<String,Integer> deck){
-        LinkedHashMap<String,Integer> enemy=ShadowData.opponentDeck(cards);
+        String[] opponents={"Mixed Practice","Fallen","Hive","Cabal","Humans"};
+        new AlertDialog.Builder(this).setTitle("CHOOSE CPU OPPONENT")
+          .setItems(opponents,(dialog,index)->{
+              String selected=index==0?"Mixed":opponents[index];
+              launchMatch(title,deck,selected);
+          }).setNegativeButton("Back",(d,w)->selectDeck(false)).show();
+    }
+    private void launchMatch(String title,LinkedHashMap<String,Integer> deck,String faction){
+        enemyFaction=faction;
+        LinkedHashMap<String,Integer> enemy=ShadowData.opponentDeck(cards,faction);
         game=new ShadowEngine(cards,System.nanoTime());
         try{game.start(deck,enemy);}catch(Exception error){
             new AlertDialog.Builder(this).setTitle("Unable to start duel")
               .setMessage(error.getMessage()).setPositiveButton("Choose Deck",(d,w)->selectDeck(true)).show();return;
         }
         selectedHand=-1;hintText.setText("Tap to select • drag to place • hold to inspect");
+        opponentText.setText("CPU\n"+enemyFaction.toUpperCase(Locale.ROOT));
         refresh();
         showCoin();
     }
