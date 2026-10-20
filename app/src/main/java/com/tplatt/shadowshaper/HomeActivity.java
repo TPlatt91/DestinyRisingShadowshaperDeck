@@ -13,7 +13,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class HomeActivity extends Activity {
-    private final int ink=0xff0c1324, panel=0xff1b2943, pale=0xffc2d0e8, accent=0xffa8c6ff;
+    private final int ink=0xff171210, panel=0xff382820, pale=0xffe0cdb0, accent=0xfff0c678;
     private int dp(float value){return Math.round(value*getResources().getDisplayMetrics().density);}
     private GradientDrawable background(int color,int radius){
         GradientDrawable result=new GradientDrawable();
@@ -33,7 +33,7 @@ public class HomeActivity extends Activity {
         LinearLayout.LayoutParams margin=new LinearLayout.LayoutParams(-1,dp(112));margin.bottomMargin=dp(13);
         root.addView(item,margin);
         TextView number=text(glyph,24,true,accent);number.setGravity(Gravity.CENTER);
-        number.setBackground(background(0xff314462,12));
+        number.setBackground(background(0xff614631,12));
         item.addView(number,new LinearLayout.LayoutParams(dp(52),dp(54)));
         LinearLayout details=new LinearLayout(this);details.setPadding(dp(15),0,0,0);details.setOrientation(LinearLayout.VERTICAL);
         item.addView(details,new LinearLayout.LayoutParams(0,-2,1));
@@ -68,7 +68,7 @@ public class HomeActivity extends Activity {
         destination(content,"◈","Card Collection","Explore the Shadowshaper card archive",MainActivity.class,"collection");
         destination(content,"≡","Rules","Deck limits, scoring and game mechanics",RulesActivity.class,null);
 
-        TextView footer=text("Fan-made companion • Offline deck data • No multiplayer",11,false,0xff8496b5);
+        TextView footer=text("Fan-made companion • Offline deck data • Solo vs AI",11,false,0xffbaa389);
         footer.setGravity(Gravity.CENTER);footer.setPadding(0,dp(14),0,dp(10));content.addView(footer);
     }
 }
