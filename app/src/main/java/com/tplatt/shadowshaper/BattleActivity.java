@@ -11,6 +11,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.HorizontalScrollView;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
@@ -328,19 +329,30 @@ public class BattleActivity extends Activity {
     }
     private void renderRow(LinearLayout stack,String title,Side side,int row,boolean yours){
         TextView titleView=label(title,12,true,yours?accent:0xffffd3a2);stack.addView(titleView);
-        HorizontalScrollView scroller=new HorizontalScrollView(this);scroller.setHorizontalScrollBarEnabled(false);
-        stack.addView(scroller,new LinearLayout.LayoutParams(-1,dp(85)));
+        HorizontalScrollView scroller=new HorizontalScrollView(this);
+        scroller.setHorizontalScrollBarEnabled(false);
+        stack.addView(scroller,new LinearLayout.LayoutParams(-1,dp(120)));
         LinearLayout tiles=new LinearLayout(this);scroller.addView(tiles);
         for(int i=0;i<SLOTS;i++){
             Unit unit=side.board[row][i];
-            String name=unit==null?"EMPTY":unit.card.name;
-            TextView tile=label((unit==null?"＋":String.valueOf(unit.power))+"\n"+name,10,unit!=null,
-                unit==null?0xff7f92b5:Color.WHITE);
-            tile.setGravity(Gravity.CENTER);tile.setMaxLines(3);
+            LinearLayout tile=new LinearLayout(this);
+            tile.setOrientation(LinearLayout.VERTICAL);
+            tile.setGravity(Gravity.CENTER);
             tile.setBackground(background(unit==null?0xff192640:0xff324767,9));
-            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(57),dp(78));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(57),dp(112));
             lp.setMargins(dp(2),dp(2),dp(2),dp(2));tiles.addView(tile,lp);
-            if(unit!=null)tile.setOnClickListener(v->inspectUnit(unit));
+            if(unit!=null){
+                ImageView image=new ImageView(this);image.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                tile.addView(image,new LinearLayout.LayoutParams(-1,dp(75)));
+                CardArt.bind(this,unit.card,image);
+                TextView stats=label(unit.power+" • "+unit.card.name,9,true,Color.WHITE);
+                stats.setGravity(Gravity.CENTER);stats.setMaxLines(2);
+                tile.addView(stats);
+                tile.setOnClickListener(v->inspectUnit(unit));
+            }else{
+                TextView empty=label("＋\nEMPTY",10,false,0xff7f92b5);
+                empty.setGravity(Gravity.CENTER);tile.addView(empty);
+            }
         }
     }
     private void render(){
@@ -366,11 +378,16 @@ public class BattleActivity extends Activity {
         log.setBackground(background(0xff17253d,8));field.addView(log);
         for(int i=0;i<player.hand.size();i++){
             final int handIndex=i;ShadowData.Card card=player.hand.get(i);
-            TextView tile=label(card.name+"\n"+card.cost+" pts • "+card.power+" Pow",12,true,Color.WHITE);
-            tile.setGravity(Gravity.CENTER);tile.setBackground(background(
+            LinearLayout tile=new LinearLayout(this);tile.setOrientation(LinearLayout.VERTICAL);
+            tile.setGravity(Gravity.CENTER);
+            tile.setBackground(background(
                 playerTurn && card.numericCost()<=player.points ? 0xff364f78 : panel,10));
             LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(102),dp(110));
             lp.setMargins(dp(3),dp(4),dp(3),dp(4));hand.addView(tile,lp);
+            ImageView art=new ImageView(this);art.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            tile.addView(art,new LinearLayout.LayoutParams(-1,dp(69)));CardArt.bind(this,card,art);
+            TextView title=label(card.name+"  •  "+card.cost+"/"+card.power,10,true,Color.WHITE);
+            title.setGravity(Gravity.CENTER);title.setMaxLines(2);tile.addView(title);
             tile.setOnClickListener(v->choosePlacement(handIndex));
         }
         if(player.hand.isEmpty())hand.addView(label("No cards in hand",13,false,0xffc4d0e3));
