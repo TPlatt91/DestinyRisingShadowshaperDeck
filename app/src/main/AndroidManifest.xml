@@ -2,12 +2,14 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <application android:theme="@android:style/Theme.Material.NoActionBar"
         android:label="Shadowshaper Duels" android:usesCleartextTraffic="false" android:allowBackup="true">
-        <activity android:name=".HomeActivity" android:exported="true">
+        <activity android:name=".ShadowComposeActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- Original Java screens retained during Kotlin migration for rollback/debugging. -->
+        <activity android:name=".HomeActivity" android:exported="false"/>
         <activity android:name=".MainActivity" android:exported="false"/>
         <activity android:name=".BattleActivity" android:exported="false" android:screenOrientation="landscape"/>
         <activity android:name=".RulesActivity" android:exported="false"/>
