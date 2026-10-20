@@ -420,26 +420,53 @@ public final class BattleActivity extends Activity {
             });
             frame.setOnLongClickListener(v->{inspectCard(card);return true;});
             frame.setOnTouchListener(new View.OnTouchListener(){
-                float downX,downY;boolean dragged;
+                float downX,downY;
+                boolean dragged,longPressed,moved;
+                Runnable pendingLongPress;
+                final int slop=ViewConfiguration.get(BattleActivity.this).getScaledTouchSlop();
+                private void cancelPress(){
+                    if(pendingLongPress!=null){
+                        handler.removeCallbacks(pendingLongPress);pendingLongPress=null;
+                    }
+                }
+                private void resetView(View v){
+                    v.animate().translationY(0f).scaleX(1f).scaleY(1f).setDuration(110).start();
+                }
                 @Override public boolean onTouch(View view,MotionEvent event){
                     switch(event.getActionMasked()){
                         case MotionEvent.ACTION_DOWN:
-                            downX=event.getRawX();downY=event.getRawY();dragged=false;
-                            return false; // Let View dispatch click and native long-press detection.
+                            downX=event.getRawX();downY=event.getRawY();
+                            dragged=false;longPressed=false;moved=false;
+                            view.animate().translationY(-dp(7)).scaleX(1.04f).scaleY(1.04f)
+                                .setDuration(120).start();
+                            pendingLongPress=()->{
+                                if(!dragged&&!moved){
+                                    longPressed=true;resetView(view);view.performLongClick();
+                                }
+                            };
+                            handler.postDelayed(pendingLongPress,ViewConfiguration.getLongPressTimeout());
+                            return true; // The view must own DOWN to receive MOVE for dragging.
                         case MotionEvent.ACTION_MOVE:
-                            if(!dragged && game!=null&&game.humanTurn&&!game.finished &&
-                                game.affordable(game.human,cardIndex) &&
-                                Math.hypot(event.getRawX()-downX,event.getRawY()-downY)>dp(10)){
-                                dragged=true;selectedHand=cardIndex;
-                                ClipData dragData=ClipData.newPlainText("shadow_hand",String.valueOf(cardIndex));
-                                view.startDragAndDrop(dragData,new View.DragShadowBuilder(view),null,0);
-                                return true;
+                            float dx=event.getRawX()-downX,dy=event.getRawY()-downY;
+                            if(!dragged&&!longPressed && Math.hypot(dx,dy)>slop){
+                                moved=true;cancelPress();
+                                if(game!=null&&game.humanTurn&&!game.finished&&
+                                    game.affordable(game.human,cardIndex)){
+                                    dragged=true;selectedHand=cardIndex;resetView(view);
+                                    ClipData payload=ClipData.newPlainText(
+                                        "shadow_hand",String.valueOf(cardIndex));
+                                    view.startDragAndDrop(payload,new View.DragShadowBuilder(view),null,0);
+                                }else resetView(view);
                             }
-                            return dragged; // Non-drag moves still permit long-press inspection.
+                            return true;
                         case MotionEvent.ACTION_UP:
-                            return dragged; // Native click fires for non-drag taps.
-                        case MotionEvent.ACTION_CANCEL:return dragged;
-                    }return false;
+                            cancelPress();resetView(view);
+                            if(!dragged&&!longPressed&&!moved)view.performClick();
+                            return true;
+                        case MotionEvent.ACTION_CANCEL:
+                            cancelPress();resetView(view);return true;
+                    }
+                    return true;
                 }
             });
         }
