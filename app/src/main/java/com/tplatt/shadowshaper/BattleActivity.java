@@ -242,6 +242,22 @@ public final class BattleActivity extends Activity {
     }
     private void endTurn(){
         if(game==null||game.finished||!game.humanTurn)return;
+        boolean playable=false;
+        for(int i=0;i<game.human.hand.size();i++)
+            if(game.affordable(game.human,i)){playable=true;break;}
+        if(game.human.points>0 && playable){
+            new AlertDialog.Builder(this)
+                .setTitle("End turn with Light remaining?")
+                .setMessage("You still have "+game.human.points+
+                    " Light and a playable card in hand. Unspent Light does not carry over.")
+                .setPositiveButton("END TURN",(d,w)->finishTurn())
+                .setNegativeButton("KEEP PLAYING",null).show();
+            return;
+        }
+        finishTurn();
+    }
+    private void finishTurn(){
+        if(game==null||game.finished||!game.humanTurn)return;
         selectedHand=-1;game.endTurn();refresh();finishIfOver();scheduleCpu();
     }
     private void finishIfOver(){
@@ -288,8 +304,8 @@ public final class BattleActivity extends Activity {
             final int row=index,column=col;
             final ShadowEngine.Unit unit=owner.board[row][col];
             FrameLayout slot=new FrameLayout(this);
-            boolean highlighted=mine && unit==null && game.humanTurn && selectedHand>=0 &&
-                selectedHand<game.human.hand.size()&&game.affordable(game.human,selectedHand);
+            boolean highlighted=mine && selectedHand>=0 &&
+                game.isPlayablePlacement(game.human,selectedHand,row,column);
             slot.setBackground(panel(unit==null?(highlighted?0xff426c75:0xff182533):0xff2e3e4c,
                 highlighted?0xffb1d8cf:0xff715843,5));
             LinearLayout.LayoutParams width=new LinearLayout.LayoutParams(0,-1,1);
@@ -330,6 +346,7 @@ public final class BattleActivity extends Activity {
             if(mine&&unit==null){
                 slot.setOnClickListener(v->{
                     if(selectedHand>=0)attemptPlay(selectedHand,row,column);
+                    else hintText.setText("Select a card in your hand before choosing a position.");
                 });
                 slot.setOnDragListener((v,drag)->{
                     if(game==null||game.finished||!game.humanTurn)return false;
@@ -416,8 +433,10 @@ public final class BattleActivity extends Activity {
     private void attemptPlay(int handIndex,int row,int col){
         if(game==null||game.finished||!game.humanTurn||handIndex<0||handIndex>=game.human.hand.size())return;
         ShadowData.Card card=game.human.hand.get(handIndex);
-        if(!game.affordable(game.human,handIndex)){
-            hintText.setText("Not enough Light to play "+card.name);return;
+        if(!game.isPlayablePlacement(game.human,handIndex,row,col)){
+            String why=game.validatePlay(game.human,handIndex,row,col,null);
+            hintText.setText(why.isEmpty()?"Cannot place card here.":why);
+            return;
         }
         List<ShadowEngine.Target> options=game.targetOptions(game.human,card,row,col);
         if(game.isTargeted(card)&&!options.isEmpty()){
@@ -439,7 +458,11 @@ public final class BattleActivity extends Activity {
     private void commitPlay(int handIndex,int row,int col,ShadowEngine.Target target){
         if(game.play(game.human,handIndex,row,col,target)){
             selectedHand=-1;
+            hintText.setText("Card played • choose next card or end turn");
             refresh();finishIfOver();
+        }else{
+            hintText.setText(game.lastActionError.isEmpty()?
+                "Unable to play card.":game.lastActionError);
         }
     }
     private void inspectUnit(ShadowEngine.Unit unit){
