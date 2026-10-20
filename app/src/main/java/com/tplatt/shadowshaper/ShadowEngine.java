@@ -502,11 +502,14 @@ public final class ShadowEngine {
                 spawnAt(me,actor.row,actor.column-1,"Paradoxical Neophyte's Shade");
                 break;
             case "Mu Ying":
-                incomplete(actor.card,"Guerrilla token Power not verified.");break;
+                spawnAt(me,actor.row,actor.column-1,"Guerrilla");
+                spawnAt(me,actor.row,actor.column+1,"Guerrilla");
+                break;
             case "Tomb Ship":case "Drop Pod":
                 incomplete(actor.card,"Random faction summoning pool not confirmed.");break;
             case "Ning Fei":
-                incomplete(actor.card,"Enemy Clone token Power not verified.");break;
+                spawnRandom(foe,1,"Clone",actor.card);
+                break;
             case "Cursed Thrall":
                 transferCursedThrall(actor);break;
             case "Shinka Scorpius":case "Scorpius":case "Elite Walker":
@@ -544,6 +547,16 @@ public final class ShadowEngine {
     }
     private Unit at(Player p,int row,int col){
         return row>=0&&row<2&&col>=0&&col<COLUMNS?p.board[row][col]:null;
+    }
+    /** A named, playable token is placed into a uniformly random free slot. */
+    private void spawnRandom(Player owner,int row,String token,ShadowData.Card source){
+        ArrayList<Integer> open=new ArrayList<>();
+        for(int col=0;col<COLUMNS;col++)if(empty(owner,row,col))open.add(col);
+        if(open.isEmpty()){
+            incomplete(source,"No empty slot for "+token+"; full-row behavior not verified.");
+            return;
+        }
+        spawnAt(owner,row,open.get(rng.nextInt(open.size())),token);
     }
     private void spawnAt(Player me,int row,int col,String name){
         if(!empty(me,row,col))return;
@@ -611,7 +624,7 @@ public final class ShadowEngine {
                 Unit victim=randomUnit(foe);if(victim!=null)damage(unit,victim,2);
             }
             if(unit==target && name.equals("Denzin"))
-                incomplete(unit.card,"Guerrilla token Power unknown; cannot safely summon.");
+                spawnAt(own,unit.row,unit.column-1,"Guerrilla");
             if(unit==target && name.equals("Unrelenting Captain"))
                 spawnAt(own,unit.row,unit.column-1,"Dreg");
             if(unit==target&&name.equals("Xur"))
