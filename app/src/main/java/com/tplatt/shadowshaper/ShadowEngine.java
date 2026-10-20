@@ -746,34 +746,42 @@ public final class ShadowEngine {
             humanTurn=!humanTurn;
         }
     }
-    /** Position-aware CPU heuristic. Only sends legal plays through the same engine API. */
+    /**
+     * Executes ONE CPU card play. Called by the Android screen with a
+     * short delay between plays so users can watch each placement/effect.
+     * Returns false when no more legal actions are available.
+     */
+    public boolean cpuPlayOne(){
+        if(finished||humanTurn)return false;
+        int bestIndex=-1,bestRow=-1,bestColumn=-1;
+        double bestValue=Double.NEGATIVE_INFINITY;
+        for(int index=0;index<cpu.hand.size();index++){
+            ShadowData.Card card=cpu.hand.get(index);
+            if(card.numericCost()<1||card.numericCost()>cpu.points)continue;
+            for(int row=0;row<ShadowRules.ROWS;row++)
+                for(int column=0;column<COLUMNS;column++){
+                    if(!isPlayablePlacement(cpu,index,row,column))continue;
+                    double value=evaluateCpuPlacement(card,row,column);
+                    if(value>bestValue){
+                        bestValue=value;bestIndex=index;bestRow=row;bestColumn=column;
+                    }
+                }
+        }
+        if(bestIndex<0)return false;
+        ShadowData.Card chosen=cpu.hand.get(bestIndex);
+        Target target=chooseAI(cpu,chosen,bestRow,bestColumn);
+        if(!play(cpu,bestIndex,bestRow,bestColumn,target)){
+            log("CPU rejected move: "+lastActionError);
+            return false;
+        }
+        return true;
+    }
+    /** Headless version used by tests and future difficulty simulators. */
     public void cpuTurn(){
         if(finished||humanTurn)return;
         int safety=40;
-        while(safety-->0){
-            int bestIndex=-1,bestRow=-1,bestColumn=-1;
-            double bestValue=Double.NEGATIVE_INFINITY;
-            for(int index=0;index<cpu.hand.size();index++){
-                ShadowData.Card card=cpu.hand.get(index);
-                if(card.numericCost()<1||card.numericCost()>cpu.points)continue;
-                for(int row=0;row<ShadowRules.ROWS;row++)
-                    for(int column=0;column<COLUMNS;column++){
-                        if(!isPlayablePlacement(cpu,index,row,column))continue;
-                        double value=evaluateCpuPlacement(card,row,column);
-                        if(value>bestValue){
-                            bestValue=value;bestIndex=index;bestRow=row;bestColumn=column;
-                        }
-                    }
-            }
-            if(bestIndex<0)break;
-            ShadowData.Card chosen=cpu.hand.get(bestIndex);
-            Target target=chooseAI(cpu,chosen,bestRow,bestColumn);
-            if(!play(cpu,bestIndex,bestRow,bestColumn,target)){
-                log("CPU could not make selected legal move: "+lastActionError);
-                break;
-            }
-        }
-        endTurn();
+        while(safety-->0 && cpuPlayOne()){}
+        if(!finished&&!humanTurn)endTurn();
     }
     private double evaluateCpuPlacement(ShadowData.Card card,int row,int column){
         double value=(Math.max(0,card.numericPower())+0.5)/(double)card.numericCost();
