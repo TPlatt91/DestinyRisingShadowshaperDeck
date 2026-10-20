@@ -132,7 +132,7 @@ public class MainActivity extends Activity {
     }
     private String key(String name){return "deck_"+name;}
     private void loadNames(){
-        String stored=getPreferences(0).getString("deck_names","[\\\"My Deck\\\"]");
+        String stored=getPreferences(0).getString("deck_names","[\"My Deck\"]");
         try{JSONArray a=new JSONArray(stored);for(int i=0;i<a.length();i++)deckNames.add(a.getString(i));}catch(Exception ignored){}
         if(deckNames.isEmpty())deckNames.add("My Deck");
         currentDeck=getPreferences(0).getString("selected_deck",deckNames.get(0));
