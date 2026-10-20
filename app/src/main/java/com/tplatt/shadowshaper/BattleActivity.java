@@ -216,7 +216,7 @@ public final class BattleActivity extends Activity {
         AlertDialog chooser=new AlertDialog.Builder(this)
           .setTitle(first?"Choose a Shadowshaper deck":"Start a new duel")
           .setItems(titles.toArray(new String[0]),(dialog,which)->begin(titles.get(which),lists.get(which)))
-          .setNegativeButton(first?"Home":"Keep Playing",(d,w)->{if(first)finish();})
+          .setNegativeButton(first?"Home":"Keep Playing",(d,w)->{if(first)finish();else {dialogShowing=false;scheduleCpu();}})
           .create();
         chooser.setCanceledOnTouchOutside(!first);chooser.show();
     }
@@ -592,6 +592,7 @@ public final class BattleActivity extends Activity {
                     case 2:
                         resumeOnDismiss[0]=false;
                         startActivity(new Intent(this,RulesActivity.class));
+                        dialogShowing=false; // onPause cancels AI; onResume will resume after Rules
                         break;
                     case 3:
                         resumeOnDismiss[0]=false;
