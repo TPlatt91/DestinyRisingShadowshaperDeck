@@ -96,4 +96,52 @@ public class ShadowEffectFamiliesTest {
         assertEquals(2,g.cpu.board[1][0].power); // 2 baseline damage plus Servitor +1
         assertEquals(2,g.power(support));
     }
+    @Test public void jolderDoublesOnlyFirstDamageWithoutSelfSuppression(){
+        ShadowEngine g=game();
+        ShadowData.Card jolder=make("Jolder","Humans",3,3,"Next damage is doubled.");
+        ShadowData.Card vandal=make("Vandal","Fallen",2,2,"Deal 2 damage to enemy front.");
+        ShadowData.Card enemy=cards.get("Filler 0");
+        ShadowEngine.Unit doubler=new ShadowEngine.Unit(g.human,jolder,0,0);
+        g.human.board[0][0]=doubler;
+        g.cpu.board[1][0]=new ShadowEngine.Unit(g.cpu,enemy,1,0);
+        g.cpu.board[1][0].power=10;
+        g.human.hand.clear();g.human.hand.add(vandal);g.human.hand.add(vandal);
+        g.human.points=4;
+        assertTrue(g.play(g.human,0,1,2,new ShadowEngine.Target(g.cpu,1,0)));
+        assertEquals(6,g.cpu.board[1][0].power); // 2 damage doubled to 4
+        assertTrue(doubler.damageDoublerConsumed);
+        assertFalse(doubler.suppressed);
+        assertTrue(g.play(g.human,0,1,3,new ShadowEngine.Target(g.cpu,1,0)));
+        assertEquals(4,g.cpu.board[1][0].power); // only 2 this time
+    }
+    @Test public void eliteWalkerDamagesTwoDifferentTargets(){
+        ShadowEngine g=game();
+        ShadowData.Card walker=make("Elite Walker","Fallen",4,3,
+            "When your turn ends, deals 2 damage to 2 random opposing units.");
+        ShadowData.Card basic=cards.get("Filler 0");
+        g.human.board[0][0]=new ShadowEngine.Unit(g.human,walker,0,0);
+        g.cpu.board[1][0]=new ShadowEngine.Unit(g.cpu,basic,1,0);
+        g.cpu.board[1][0].power=6;
+        g.cpu.board[1][1]=new ShadowEngine.Unit(g.cpu,basic,1,1);
+        g.cpu.board[1][1].power=6;
+        g.endTurn();
+        assertEquals(4,g.cpu.board[1][0].power);
+        assertEquals(4,g.cpu.board[1][1].power);
+    }
+    @Test public void resilientGrenadeDregScorchesTwiceWithoutTripleDamage(){
+        ShadowEngine g=game();
+        ShadowData.Card watcher=make("Resilient Grenade Dreg","Fallen",3,7,
+            "Sustained (Back Row): When opponent places a unit in back row deals 2 damage for 2 turns.");
+        g.cpu.board[0][0]=new ShadowEngine.Unit(g.cpu,watcher,0,0);
+        ShadowData.Card newcomer=cards.get("Filler 0");
+        g.human.hand.clear();g.human.hand.add(newcomer);g.human.points=1;
+        assertTrue(g.play(g.human,0,0,1,null));
+        ShadowEngine.Unit affected=g.human.board[0][1];
+        assertNotNull(affected);
+        assertEquals(3,g.power(affected)); // no extra immediate damage
+        g.endTurn(); // human's end; first scorch tick
+        assertEquals(1,g.power(affected));
+        assertEquals(1,affected.scorchTurns);
+    }
+
 }
