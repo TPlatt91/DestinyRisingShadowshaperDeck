@@ -6,26 +6,33 @@ This report covers **110 distinct named records** currently included in the app'
 
 | Classification | Entries | What it means |
 |---|---:|---|
-| Simple base-Power cards | 13 | Play cost, placement and Power are supported; no printed special ability |
-| Has an effect handler or relevant shared rule, pending QA | 86 | Engine contains an ability reference/handler, but accuracy, activation conditions and interactions require gameplay verification |
-| Explicitly incomplete / partial | 7 | Script has a known unresolved outcome, token pool, or movement choice |
-| Data-blocked | 4 | Lacks verified base Power and/or play cost |
+| Simple base-Power cards | 14 | Play cost, placement and Power are supported; no printed special ability |
+| Has an effect handler or relevant shared rule, pending QA | 91 | Engine contains an ability reference/handler, but accuracy, activation conditions and interactions require gameplay verification |
+| Explicitly incomplete / partial | 4 | Script has a known unresolved outcome, token pool, or movement choice |
+| Data-blocked | 1 | Lacks verified base Power and/or play cost |
 | **Total** | **110** | Distinct card names, not alternate image variants |
 
 These are **inventory classifications**, not verified full implementation counts. The 86 still need effect-by-effect testing. Source-level code checks do not validate Android behavior.
 
 ### Data-blocked records
 
-- **Carrier:** its printed Light cost and Power are not confirmed. Do not assume the community's `Ketch` is necessarily the same card with identical stats.
-- **Clone:** summoned token's Power not verified.
-- **Guerrilla:** summoned token's Power not verified.
-- **Rock:** summoned token's Power not verified.
+- **Rock:** original summoned token's Power and Light cost remain unverified.
+
+
+### New card-face verifications and unlocked summons
+
+TodayInDestiny's original card images show **Carrier = 3 Power / 2 Light**, **Guerrilla = 2 Power / 1 Light**, and **Clone = 1 Power / 1 Light**. Clone and Guerrilla remain non-deckable generated units. After populating those verified values:
+
+- **Carrier** now passes deck legality and summons left/right Dregs.
+- **Mu Ying** summons a 2-Power Guerrilla on each empty adjacent slot.
+- **Denzin** summons a 2-Power Guerrilla on the left when Denzin gains Power.
+- **Ning Fei** places a 1-Power Clone in a random free opponent Front Row slot; Clone uses the existing 3-damage adjacent death splash.
+
+Sources: [Carrier card face](https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/carrier.webp), [Guerrilla card face](https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/guerrilla.webp), [Clone card face](https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/clone.webp). These card-specific implementations still need actual device match testing.
 
 ### Known incomplete or partial effect resolvers
 
-- **Mu Ying / Denzin:** Guerrilla token creation blocked by missing Power.
-- **Ning Fei:** enemy-side Clone placement blocked by missing token Power.
-- **Xur:** Rock placement blocked by missing token Power.
+- **Xur:** Rock placement blocked by missing original Rock card Power.
 - **Tomb Ship:** random Hive token selection needs authoritative summon-pool details.
 - **Drop Pod:** random Cabal Line summon pool needs authoritative details.
 - **Xuan Wei:** damage occurs; relocation destination is not yet selectable.
@@ -58,7 +65,7 @@ gradlew.bat :app:testDebugUnitTest
 gradlew.bat :app:assembleDebug
 ```
 
-The coverage CSV can help triage every record. **The 26 authored JUnit tests have not been executed** in this environment. No device build has been verified.
+The coverage CSV can help triage every record. **The 30 authored JUnit tests have not been executed** in this environment. No device build has been verified.
 
 ## Source references
 
