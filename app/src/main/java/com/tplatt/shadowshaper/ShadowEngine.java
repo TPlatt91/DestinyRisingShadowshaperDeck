@@ -24,6 +24,8 @@ public final class ShadowEngine {
     public boolean humanFirst, humanTurn, finished;
     public int round=1, completedTurns=0, unresolvedEffects=0;
     public int lastPlacedSide=-1,lastPlacedRow=-1,lastPlacedColumn=-1,placementRevision=0;
+    public Unit pendingMovedUnit;
+    public Player pendingMoveCaster;
 
     public static final class Unit {
         public final ShadowData.Card card;
@@ -78,6 +80,7 @@ public final class ShadowEngine {
         error=ShadowData.validate(cpuDeck,catalog);
         if(!error.isEmpty())throw new IllegalArgumentException("CPU: "+error);
         clear(human);clear(cpu);journal.clear();unresolvedEffects=0;lastActionError="";
+        pendingMovedUnit=null;pendingMoveCaster=null;
         human.drawPile.addAll(ShadowData.expanded(playerDeck,catalog));
         cpu.drawPile.addAll(ShadowData.expanded(cpuDeck,catalog));
         Collections.shuffle(human.drawPile,rng);Collections.shuffle(cpu.drawPile,rng);
@@ -316,6 +319,7 @@ public final class ShadowEngine {
     public String validatePlay(Player side,int index,int row,int column,Target selected){
         if(side!=human&&side!=cpu)return "Unknown player.";
         if(finished)return "The match has finished.";
+        if(pendingMovedUnit!=null)return "Choose a destination for "+pendingMovedUnit.card.name+" before playing another card.";
         if(side!=(humanTurn?human:cpu))return "It is not this player's turn.";
         if(index<0||index>=side.hand.size())return "Selected card is not in hand.";
         ShadowData.Card card=side.hand.get(index);
@@ -344,7 +348,7 @@ public final class ShadowEngine {
     }
     public boolean isPlayablePlacement(Player side,int index,int row,int column){
         // Useful for UI drop highlighting; target choice is resolved after drop.
-        if((side!=human&&side!=cpu)||finished||side!=(humanTurn?human:cpu))return false;
+        if((side!=human&&side!=cpu)||finished||pendingMovedUnit!=null||side!=(humanTurn?human:cpu))return false;
         if(index<0||index>=side.hand.size())return false;
         return affordable(side,index) && side.hand.get(index).numericPower()>=0
             && empty(side,row,column);
@@ -365,6 +369,7 @@ public final class ShadowEngine {
         if(placed.owner.board[placed.row][placed.column]==placed)
             fireEnemyPlacement(placed); // transfer abilities dispatch their own placement event
         sweep();
+        if(me==cpu)resolveCpuMove();
         return true;
     }
     private void onPlayed(Unit actor,Target target){
@@ -481,7 +486,15 @@ public final class ShadowEngine {
             case "Xuan Wei":
                 if(actor.row==0&&picked!=null){
                     damage(actor,picked,5);
-                    if(targetUnit(target)!=null)incomplete(actor.card,"Choose destination for displaced unit.");
+                    if(power(picked)>0 && picked.owner.board[picked.row][picked.column]==picked){
+                        if(hasEmptySlot(picked.owner)){
+                            pendingMovedUnit=picked;
+                            pendingMoveCaster=me;
+                            log("XUAN WEI: Choose a new position for "+picked.card.name+".");
+                        }else{
+                            incomplete(actor.card,"No open destination; full-board relocation behavior unverified.");
+                        }
+                    }
                 }break;
             case "Augmented Shank":
                 if(actor.row==1&&picked!=null)
@@ -557,6 +570,50 @@ public final class ShadowEngine {
             return;
         }
         spawnAt(owner,row,open.get(rng.nextInt(open.size())),token);
+    }
+    private boolean hasEmptySlot(Player side){
+        for(int r=0;r<ShadowRules.ROWS;r++)
+            for(int c=0;c<COLUMNS;c++)if(empty(side,r,c))return true;
+        return false;
+    }
+    /**
+     * Xuan Wei: after damage, the surviving target must move to an empty
+     * position of its current owner's board. The exact choice pattern in
+     * the game client remains to be independently verified.
+     */
+    public boolean resolveMove(Player actor,int row,int col){
+        if(pendingMovedUnit==null || pendingMoveCaster!=actor){
+            lastActionError="No movement is pending for this player.";return false;
+        }
+        Unit moving=pendingMovedUnit;
+        if(moving.owner.board[moving.row][moving.column]!=moving){
+            pendingMovedUnit=null;pendingMoveCaster=null;
+            lastActionError="Target was removed before relocation.";return false;
+        }
+        if(!empty(moving.owner,row,col)){
+            lastActionError="Select an empty destination on the target's battlefield.";
+            return false;
+        }
+        moving.owner.board[moving.row][moving.column]=null;
+        moving.row=row;moving.column=col;
+        moving.owner.board[row][col]=moving;
+        lastPlacedSide=moving.owner.human?0:1;
+        lastPlacedRow=row;lastPlacedColumn=col;placementRevision++;
+        pendingMovedUnit=null;pendingMoveCaster=null;
+        lastActionError="";
+        log("RELOCATED ▶ "+moving.card.name+" to "+(row==0?"BACK":"FRONT")+" "+(col+1));
+        sweep();
+        return true;
+    }
+    public void resolveCpuMove(){
+        if(pendingMovedUnit==null || pendingMoveCaster!=cpu)return;
+        ArrayList<Target> options=new ArrayList<>();
+        for(int r=0;r<2;r++)for(int c=0;c<COLUMNS;c++)
+            if(empty(pendingMovedUnit.owner,r,c))options.add(new Target(pendingMovedUnit.owner,r,c));
+        if(!options.isEmpty()){
+            Target chosen=options.get(rng.nextInt(options.size()));
+            resolveMove(cpu,chosen.row,chosen.column);
+        }
     }
     private void spawnAt(Player me,int row,int col,String name){
         if(!empty(me,row,col))return;
@@ -798,6 +855,10 @@ public final class ShadowEngine {
     }
     public void endTurn(){
         if(finished)return;
+        if(pendingMovedUnit!=null){
+            lastActionError="Relocate "+pendingMovedUnit.card.name+" before ending your turn.";
+            return;
+        }
         lastActionError="";
         Player current=humanTurn?human:cpu;
         endSide(current);
@@ -825,6 +886,7 @@ public final class ShadowEngine {
      */
     public boolean cpuPlayOne(){
         if(finished||humanTurn)return false;
+        if(pendingMovedUnit!=null){resolveCpuMove();return false;}
         int bestIndex=-1,bestRow=-1,bestColumn=-1;
         double bestValue=Double.NEGATIVE_INFINITY;
         for(int index=0;index<cpu.hand.size();index++){
