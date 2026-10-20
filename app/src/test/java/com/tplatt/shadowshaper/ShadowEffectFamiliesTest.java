@@ -144,4 +144,61 @@ public class ShadowEffectFamiliesTest {
         assertEquals(1,affected.scorchTurns);
     }
 
+    @Test public void muYingCreatesTwoVerifiedTwoPowerGuerrillas(){
+        ShadowEngine g=game();
+        ShadowData.Card guer=make("Guerrilla","Humans",1,2,"No special effects.");
+        guer.classification="Summoned unit";
+        ShadowData.Card mu=make("Mu Ying","Humans",2,3,
+            "When Played: Summons 1 Guerrilla on the left and 1 on the right.");
+        g.human.hand.clear();g.human.hand.add(mu);g.human.points=2;
+        assertTrue(g.play(g.human,0,1,2,null));
+        assertEquals("Guerrilla",g.human.board[1][1].card.name);
+        assertEquals("Guerrilla",g.human.board[1][3].card.name);
+        assertEquals(2,g.power(g.human.board[1][1]));
+        assertEquals(2,g.power(g.human.board[1][3]));
+        assertEquals(7,g.score(g.human)); // Mu Ying 3 + two 2-Power Guerrillas
+    }
+    @Test public void denzinGainingBonusCreatesGuerrillaAtLeft(){
+        ShadowEngine g=game();
+        ShadowData.Card guer=make("Guerrilla","Humans",1,2,"No special effects.");
+        guer.classification="Summoned unit";
+        ShadowData.Card denzin=make("Denzin","Humans",2,3,
+            "Sustained: When acquiring a Power bonus, summons a Guerrilla on the left.");
+        ShadowData.Card mor=make("Morgran","Humans",3,6,"Grants +1 Power to a unit.");
+        g.human.board[0][2]=new ShadowEngine.Unit(g.human,denzin,0,2);
+        g.human.hand.clear();g.human.hand.add(mor);g.human.points=3;
+        assertTrue(g.play(g.human,0,1,0,new ShadowEngine.Target(g.human,0,2)));
+        assertNotNull(g.human.board[0][1]);
+        assertEquals("Guerrilla",g.human.board[0][1].card.name);
+        assertEquals(2,g.power(g.human.board[0][1]));
+    }
+    @Test public void ningFeiSummonsCloneToRandomEmptyEnemyFrontSlot(){
+        ShadowEngine g=game();
+        ShadowData.Card clone=make("Clone","Humans",1,1,
+            "When Power reaches 0, deals 3 damage to the units on the left and right.");
+        clone.classification="Summoned unit";
+        ShadowData.Card ning=make("Ning Fei","Humans",2,4,
+            "Randomly places a Clone in the opponent's front row.");
+        ShadowData.Card filler=cards.get("Filler 0");
+        for(int col=0;col<ShadowRules.COLUMNS;col++){
+            if(col!=3)g.cpu.board[1][col]=new ShadowEngine.Unit(g.cpu,filler,1,col);
+        }
+        g.human.hand.clear();g.human.hand.add(ning);g.human.points=2;
+        assertTrue(g.play(g.human,0,0,2,null));
+        assertNotNull(g.cpu.board[1][3]);
+        assertEquals("Clone",g.cpu.board[1][3].card.name);
+        assertEquals(1,g.power(g.cpu.board[1][3]));
+    }
+    @Test public void carrierNowHasPlayablePowerCostAndSpawnsDregs(){
+        ShadowEngine g=game();
+        ShadowData.Card carrier=make("Carrier","Fallen",2,3,
+            "When Played: Summons two Fallen Dregs to its left and right.");
+        ShadowData.Card dreg=make("Dreg","Fallen",1,1,"No special effects.");
+        g.human.hand.clear();g.human.hand.add(carrier);g.human.points=2;
+        assertTrue(g.play(g.human,0,1,2,null));
+        assertEquals(5,g.score(g.human)); // 3 + two 1-Power Dregs
+        assertEquals("Dreg",g.human.board[1][1].card.name);
+        assertEquals("Dreg",g.human.board[1][3].card.name);
+    }
+
 }
