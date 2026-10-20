@@ -47,6 +47,8 @@ public final class BattleActivity extends Activity {
     private String enemyFaction="Mixed";
     private Button endButton;
     private int selectedHand=-1,lastShownLog=0;
+    private int lastVisualRevision=-1,lastRoundShown=-1;
+    private boolean animateNewestPlacement=false;
     private int pendingHand=-1,pendingRow=-1,pendingColumn=-1;
     private final ArrayList<ShadowEngine.Target> pendingTargets=new ArrayList<>();
     private boolean starting=false,dialogShowing=false;
@@ -239,6 +241,7 @@ public final class BattleActivity extends Activity {
               .setMessage(error.getMessage()).setPositiveButton("Choose Deck",(d,w)->selectDeck(true)).show();return;
         }
         clearTargetSelection();
+        lastVisualRevision=-1;lastRoundShown=-1;
         selectedHand=-1;hintText.setText("Tap to select • drag to place • hold to inspect");
         opponentText.setText("CPU\n"+enemyFaction.toUpperCase(Locale.ROOT));
         refresh();
@@ -299,6 +302,12 @@ public final class BattleActivity extends Activity {
     }
     private void refresh(){
         if(game==null)return;
+        animateNewestPlacement=game.placementRevision!=lastVisualRevision;
+        if(lastRoundShown!=game.round){
+            lastRoundShown=game.round;
+            roundText.setScaleX(1.08f);roundText.setScaleY(1.08f);
+            roundText.animate().scaleX(1f).scaleY(1f).setDuration(310).start();
+        }
         roundText.setText("ROUND\n"+game.round+" / "+ShadowEngine.ROUNDS);
         roundMarkers.removeAllViews();
         for(int n=1;n<=ShadowRules.ROUNDS;n++){
@@ -324,6 +333,8 @@ public final class BattleActivity extends Activity {
         addBoardRow("YOUR BACK",game.human,0);
         renderHand();
         renderEvents();
+        lastVisualRevision=game.placementRevision;
+        animateNewestPlacement=false;
     }
     private void addBoardRow(String title,ShadowEngine.Player owner,int index){
         boolean mine=owner==game.human;
@@ -381,7 +392,7 @@ public final class BattleActivity extends Activity {
                     }else inspectUnit(unit);
                 });
                 slot.setOnLongClickListener(v->{inspectUnit(unit);return true;});
-                if(game.lastPlacedSide==(mine?0:1)&&game.lastPlacedRow==row&&game.lastPlacedColumn==column){
+                if(animateNewestPlacement&&game.lastPlacedSide==(mine?0:1)&&game.lastPlacedRow==row&&game.lastPlacedColumn==column){
                     slot.setScaleX(.88f);slot.setScaleY(.88f);
                     slot.animate().scaleX(1f).scaleY(1f).setDuration(170).start();
                 }
