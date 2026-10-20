@@ -204,9 +204,9 @@ public class BattleActivity extends Activity {
             case "Sparrow":
                 if(row==1){unit.power+=3;event("Sparrow gains +3 Power (Front Row).");}return;
             case "Resilient Captain":
-                unit.power+=3;event("Resilient Captain gains +3 Power.");return;
+                if(row==1){unit.power+=3;event("Resilient Captain gains +3 Power (Front Row).");}return;
             case "Elite Vandal":
-                if(hasFront(other)){unit.power+=3;event("Elite Vandal gains +3 Power.");}return;
+                if(row==0&&hasFront(other)){unit.power+=3;event("Elite Vandal gains +3 Power (Back Row).");}return;
             case "Hexguard":
                 unit.inspired=true;event("Hexguard becomes Inspired.");return;
             case "Tenacious Shielded Knight":
@@ -269,8 +269,11 @@ public class BattleActivity extends Activity {
         render();
     }
     private int[] cpuSlot(ShadowData.Card card){
-        boolean back=card.effect.toLowerCase(Locale.ROOT).contains("back row");
-        boolean front=card.effect.toLowerCase(Locale.ROOT).contains("front row")&&!back;
+        String condition=card.trigger.toLowerCase(Locale.ROOT);
+        if(condition.isEmpty()&&card.effect.toLowerCase(Locale.ROOT).startsWith("when played ("))
+            condition=card.effect.substring(0,Math.min(40,card.effect.length())).toLowerCase(Locale.ROOT);
+        boolean back=condition.contains("back row");
+        boolean front=condition.contains("front row")&&!back;
         int[] preference=back?new int[]{0,1}:front?new int[]{1,0}:new int[]{1,0};
         for(int row:preference)for(int col=0;col<SLOTS;col++)if(free(enemy,row,col))return new int[]{row,col};
         return null;
