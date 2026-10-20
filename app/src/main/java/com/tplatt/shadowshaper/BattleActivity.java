@@ -389,6 +389,13 @@ public class BattleActivity extends Activity {
             TextView title=label(card.name+"  •  "+card.cost+"/"+card.power,10,true,Color.WHITE);
             title.setGravity(Gravity.CENTER);title.setMaxLines(2);tile.addView(title);
             tile.setOnClickListener(v->choosePlacement(handIndex));
+            tile.setOnLongClickListener(v->{
+                new AlertDialog.Builder(this).setTitle(card.name)
+                  .setMessage("Faction: "+card.faction+"\nRarity: "+card.rarity+
+                    "\nCost: "+card.cost+"\nPower: "+card.power+"\n\n"+card.effect)
+                  .setPositiveButton("Close",null).show();
+                return true;
+            });
         }
         if(player.hand.isEmpty())hand.addView(label("No cards in hand",13,false,0xffc4d0e3));
         endTurnButton.setEnabled(!finished&&playerTurn);
