@@ -264,6 +264,10 @@ public final class BattleActivity extends Activity {
         if(game!=null&&!game.finished&&!game.humanTurn&&!dialogShowing)handler.postDelayed(cpuAction,560);
     }
     private void endTurn(){
+        if(game!=null && game.pendingMovedUnit!=null){
+            hintText.setText("Move "+game.pendingMovedUnit.card.name+" to an empty gold-highlighted slot.");
+            return;
+        }
         if(!pendingTargets.isEmpty()){
             clearTargetSelection();
             hintText.setText("Target selection canceled.");
@@ -323,8 +327,12 @@ public final class BattleActivity extends Activity {
            "CPU TURN  •  "+(game.humanFirst?"DEFENSIVE":"OFFENSIVE"));
         pointsText.setText(game.human.points+" / "+game.round+"\nLIGHT");
         deckText.setText("DECK "+game.human.drawPile.size()+"  •  HAND "+game.human.hand.size());
-        endButton.setText(pendingTargets.isEmpty()?"END TURN  ›":"CANCEL TARGET");
-        endButton.setEnabled(!game.finished&&game.humanTurn);
+        endButton.setText(game.pendingMovedUnit!=null?"CHOOSE DESTINATION":
+            pendingTargets.isEmpty()?"END TURN  ›":"CANCEL TARGET");
+        endButton.setEnabled(!game.finished&&game.humanTurn&&game.pendingMovedUnit==null);
+        if(game.pendingMovedUnit!=null){
+            hintText.setText("Xuan Wei: move "+game.pendingMovedUnit.card.name+" to an empty slot.");
+        }
         endButton.setAlpha(game.humanTurn&&!game.finished?1f:0.48f);
         board.removeAllViews();
         addBoardRow("ENEMY BACK",game.cpu,0);
@@ -350,12 +358,15 @@ public final class BattleActivity extends Activity {
             final int row=index,column=col;
             final ShadowEngine.Unit unit=owner.board[row][col];
             FrameLayout slot=new FrameLayout(this);
+            final boolean relocationSlot=game.pendingMovedUnit!=null &&
+                game.pendingMoveCaster==game.human &&
+                owner==game.pendingMovedUnit.owner && unit==null;
             final boolean targetHighlighted=isPendingTarget(owner,row,column);
             boolean highlighted=pendingTargets.isEmpty()&&mine && selectedHand>=0 &&
                 game.isPlayablePlacement(game.human,selectedHand,row,column);
-            slot.setBackground(panel(targetHighlighted?0xff557058:
+            slot.setBackground(panel((targetHighlighted||relocationSlot)?0xff557058:
                 unit==null?(highlighted?0xff435a53:0xff211b1b):0xff4a3531,
-                targetHighlighted?0xffffe2a2:highlighted?0xffe4bf73:0xff9b774e,5));
+                (targetHighlighted||relocationSlot)?0xffffe2a2:highlighted?0xffe4bf73:0xff9b774e,5));
             LinearLayout.LayoutParams width=new LinearLayout.LayoutParams(0,-1,1);
             width.setMargins(dp(2),dp(1),dp(2),dp(1));strip.addView(slot,width);
             if(unit==null){
@@ -397,7 +408,14 @@ public final class BattleActivity extends Activity {
                     slot.animate().scaleX(1f).scaleY(1f).setDuration(170).start();
                 }
             }
-            if(mine&&unit==null){
+            if(relocationSlot){
+                slot.setOnClickListener(v->{
+                    if(game.resolveMove(game.human,row,column)){
+                        hintText.setText("Unit moved. Continue your turn.");
+                        refresh();
+                    }else hintText.setText(game.lastActionError);
+                });
+            }else if(mine&&unit==null){
                 slot.setOnClickListener(v->{
                     if(!pendingTargets.isEmpty())return;
                     if(selectedHand>=0)attemptPlay(selectedHand,row,column);
@@ -525,6 +543,10 @@ public final class BattleActivity extends Activity {
     }
     private void attemptPlay(int handIndex,int row,int col){
         if(game==null||game.finished||!game.humanTurn||handIndex<0||handIndex>=game.human.hand.size())return;
+        if(game.pendingMovedUnit!=null){
+            hintText.setText("Finish relocating "+game.pendingMovedUnit.card.name+" first.");
+            return;
+        }
         ShadowData.Card card=game.human.hand.get(handIndex);
         if(!game.isPlayablePlacement(game.human,handIndex,row,col)){
             String why=game.validatePlay(game.human,handIndex,row,col,null);
