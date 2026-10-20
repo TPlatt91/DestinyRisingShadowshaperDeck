@@ -14,11 +14,13 @@ import java.util.Random;
  * explicitly logged as unimplemented; they must not be counted as resolved.
  */
 public final class ShadowEngine {
-    public static final int COLUMNS=6, ROUNDS=6;
+    public static final int COLUMNS=ShadowRules.COLUMNS, ROUNDS=ShadowRules.ROUNDS;
     public final Map<String,ShadowData.Card> catalog;
     public final Player human=new Player(true), cpu=new Player(false);
     public final ArrayList<String> journal=new ArrayList<>();
     public final Random rng;
+    public final long seed;
+    public String lastActionError="";
     public boolean humanFirst, humanTurn, finished;
     public int round=1, completedTurns=0, unresolvedEffects=0;
     public int lastPlacedSide=-1,lastPlacedRow=-1,lastPlacedColumn=-1;
@@ -52,7 +54,7 @@ public final class ShadowEngine {
         public Unit unit(){return owner.board[row][column];}
     }
     public ShadowEngine(Map<String,ShadowData.Card> catalog,long seed){
-        this.catalog=catalog;this.rng=new Random(seed);
+        this.catalog=catalog;this.seed=seed;this.rng=new Random(seed);
     }
     private void log(String message){
         journal.add(message);
@@ -72,15 +74,15 @@ public final class ShadowEngine {
         if(!error.isEmpty())throw new IllegalArgumentException(error);
         error=ShadowData.validate(cpuDeck,catalog);
         if(!error.isEmpty())throw new IllegalArgumentException("CPU: "+error);
-        clear(human);clear(cpu);journal.clear();unresolvedEffects=0;
+        clear(human);clear(cpu);journal.clear();unresolvedEffects=0;lastActionError="";
         human.drawPile.addAll(ShadowData.expanded(playerDeck,catalog));
         cpu.drawPile.addAll(ShadowData.expanded(cpuDeck,catalog));
         Collections.shuffle(human.drawPile,rng);Collections.shuffle(cpu.drawPile,rng);
         humanFirst=rng.nextBoolean();humanTurn=humanFirst;finished=false;
-        round=1;completedTurns=0;
-        draw(human,humanFirst?5:4);
-        draw(cpu,humanFirst?4:5);
-        human.points=1;cpu.points=1;
+        round=1;completedTurns=0;lastPlacedSide=-1;lastPlacedRow=-1;lastPlacedColumn=-1;resolutionDepth=0;
+        draw(human,ShadowRules.openingHand(humanFirst));
+        draw(cpu,ShadowRules.openingHand(!humanFirst));
+        human.points=ShadowRules.lightForRound(1);cpu.points=ShadowRules.lightForRound(1);
         log(humanFirst?"Offensive: you act first.":"Defensive: CPU acts first.");
         log("Round 1 — 1 play point.");
     }
@@ -98,7 +100,7 @@ public final class ShadowEngine {
         return score;
     }
     public boolean empty(Player player,int row,int column){
-        return row>=0&&row<2&&column>=0&&column<COLUMNS&&player.board[row][column]==null;
+        return ShadowRules.isOnBoard(row,column)&&player.board[row][column]==null;
     }
     public boolean affordable(Player side,int index){
         return index>=0&&index<side.hand.size()&&side.hand.get(index).numericCost()>0
@@ -238,8 +240,7 @@ public final class ShadowEngine {
         for(int r=0;r<2;r++)for(int c=0;c<COLUMNS;c++){
             Unit unit=side.board[r][c];
             if(unit==null)continue;
-            if("Vandal".equals(card.name)||"Wretch".equals(card.name)||"Incendior".equals(card.name)
-              ||"Shinka Psion".equals(card.name)&&false){
+            if("Vandal".equals(card.name)||"Wretch".equals(card.name)||"Incendior".equals(card.name)){
                 if(r!=1)continue;
             }
             if("Shinka Incendior".equals(card.name)||"Shinka Vigile".equals(card.name)){
@@ -264,10 +265,56 @@ public final class ShadowEngine {
         choices.sort((a,b)->Integer.compare(power(b.unit()),power(a.unit())));
         return choices.get(0);
     }
+    /**
+     * Validate an entire player action BEFORE payment or any board mutation.
+     * Enforces turn ownership, hand index, affordable cost, empty in-bounds
+     * placement, and selection of a currently legal target.
+     * No target is required when a targeted ability has no legal candidates.
+     */
+    public String validatePlay(Player side,int index,int row,int column,Target selected){
+        if(side!=human&&side!=cpu)return "Unknown player.";
+        if(finished)return "The match has finished.";
+        if(side!=(humanTurn?human:cpu))return "It is not this player's turn.";
+        if(index<0||index>=side.hand.size())return "Selected card is not in hand.";
+        ShadowData.Card card=side.hand.get(index);
+        if(card.numericCost()<1)return "Card is not playable (missing or invalid cost).";
+        if(card.numericPower()<0)return "Card Power is not verified.";
+        if(card.numericCost()>side.points)return "Insufficient Light.";
+        if(!ShadowRules.isOnBoard(row,column))return "Invalid battlefield position.";
+        if(!empty(side,row,column))return "Position is already occupied.";
+        if(selected!=null) {
+            if(selected.owner!=human && selected.owner!=cpu)
+                return "Target does not belong to this match.";
+            if(!ShadowRules.isOnBoard(selected.row,selected.column))
+                return "Target is outside the battlefield.";
+            if(selected.unit()==null)return "Target is no longer on the battlefield.";
+        }
+        List<Target> possible=targetOptions(side,card,row,column);
+        if(selected!=null){
+            boolean found=false;
+            for(Target legal:possible)if(legal.owner==selected.owner&&legal.row==selected.row
+                &&legal.column==selected.column){found=true;break;}
+            if(!found)return "That unit is not a legal target for "+card.name+".";
+        }else if(!possible.isEmpty()) {
+            return "Choose a target for "+card.name+".";
+        }
+        return "";
+    }
+    public boolean isPlayablePlacement(Player side,int index,int row,int column){
+        // Useful for UI drop highlighting; target choice is resolved after drop.
+        if(side!=human&&side!=cpu||finished||side!=(humanTurn?human:cpu))return false;
+        if(index<0||index>=side.hand.size())return false;
+        return affordable(side,index) && side.hand.get(index).numericPower()>=0
+            && empty(side,row,column);
+    }
+    public String turnLabel(){
+        if(finished)return "FINAL";
+        return (humanTurn?"PLAYER":"CPU")+" • ROUND "+round;
+    }
     public boolean play(Player me,int handIndex,int row,int column,Target target){
-        if(finished||!me.equals(humanTurn?human:cpu)||!affordable(me,handIndex)||!empty(me,row,column))return false;
+        lastActionError=validatePlay(me,handIndex,row,column,target);
+        if(!lastActionError.isEmpty())return false;
         ShadowData.Card card=me.hand.get(handIndex);
-        if(target!=null&&targetUnit(target)==null)return false;
         me.points-=card.numericCost();me.hand.remove(handIndex);
         Unit placed=new Unit(me,card,row,column);me.board[row][column]=placed;
         lastPlacedSide=me.human?0:1;lastPlacedRow=row;lastPlacedColumn=column;
@@ -640,8 +687,9 @@ public final class ShadowEngine {
                 finished=true;log("FINAL • YOU "+score(human)+" — "+score(cpu)+" CPU");
                 return;
             }
-            round++;completedTurns=0;human.points=round;cpu.points=round;
-            draw(human,1);draw(cpu,1);
+            round++;completedTurns=0;
+            human.points=ShadowRules.lightForRound(round);cpu.points=ShadowRules.lightForRound(round);
+            draw(human,ShadowRules.NEW_ROUND_DRAW);draw(cpu,ShadowRules.NEW_ROUND_DRAW);
             humanTurn=humanFirst;
             log("ROUND "+round+" • "+round+" play points");
         }else{
@@ -681,6 +729,6 @@ public final class ShadowEngine {
     public String result(){
         if(!finished)return "";
         int left=score(human),right=score(cpu);
-        return left>right?"VICTORY":left<right?"DEFEAT":"DRAW";
+        return ShadowRules.result(left,right);
     }
 }
