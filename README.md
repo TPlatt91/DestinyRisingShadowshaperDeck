@@ -4,7 +4,7 @@ Native Android Studio (Java) single-player Shadowshaper Duels companion.
 
 ## Main menu (four sections)
 
-1. **Sim Battle** — six-round playable practice match against CPU. Choose a legal saved deck, draw a starting hand, place cards in front/back-row positions, spend 1–6 round play points, inspect cards, end turns, and see total Power scores and final victory/draw/defeat. Includes original card art when a matching online or bundled image exists. Currently an **early gameplay prototype**; some targeted, summon, ongoing and faction-line effects remain **explicitly marked PENDING** in the match log and do not silently pretend to resolve. The six-position row representation and one-card-per-round draw timing need in-game validation.
+1. **Sim Battle** — six-round playable practice match against CPU. Choose a legal saved deck, draw a starting hand, place cards in front/back-row positions, spend 1–6 round play points, inspect cards, end turns, and see total Power scores and final victory/draw/defeat. Includes original card art when a matching online or bundled image exists. Now uses a dedicated `ShadowEngine` with shared targeting, damage, buffs, turn resolution, line/column synergies and AI opponents. Incomplete effects are explicitly logged rather than treated as resolved. See `docs/GAMEPLAY_IMPLEMENTATION.md` for detailed coverage and caveats.
 2. **Deck Construction** — local multiple saved decks, rename/delete, copy/share/import deck text, enforce the maximum 2 copies per name, 3 Exotic, 5 Mythic and 15-card total. Incomplete decks can be saved but **cannot enter Sim Battle**. Tokens and entries without verified Power or cost cannot be added. Launch a valid deck straight into battle.
 3. **Card Collection** — browse the 110 known card records, original card-face images where available, stats, rarity, faction, effects, and source details; search by name/faction/rarity/effect.
 4. **Rules** — in-app Shadowshaper deck limits, six-round scoring, positioning, Inspired/Sustained/Suppressed definitions, and gameplay source link.
@@ -44,7 +44,7 @@ This local metadata audit does not use GitHub Actions or GitHub usage credits.
 
 Open the repository root folder in Android Studio, using JDK 17 and the Gradle 8.11.1 distribution compatible with Android Gradle Plugin 8.9.2. The project includes the Gradle wrapper JAR and launcher scripts. Open the repository root in Android Studio and sync; the wrapper will download Gradle 8.11.1 on first run. On Windows, run `gradlew.bat :app:assembleDebug` from the project root if you want a local command-line build. This needs internet for the first Gradle download but does not use GitHub Actions or GitHub usage credits.
 
-**Status:** Android project and viewer source committed, but full Gradle compilation and on-device verification have not yet been completed.
+**Status:** The four-section app and landscape simulator are committed. Local Gradle compilation and on-device verification have not yet been completed.
 
 ## References
 
