@@ -21,6 +21,7 @@ public final class ShadowData {
     public static final int DECK_SIZE=15, COPIES_LIMIT=2, EXOTIC_LIMIT=3, MYTHIC_LIMIT=5;
     public static class Card {
         public String name="", rarity="", faction="", cost="", power="", effect="", classification="", trigger="";
+        public boolean onlineArt=false;
         public int numericCost(){try{return Integer.parseInt(cost);}catch(Exception ignored){return -1;}}
         public int numericPower(){try{return Integer.parseInt(power);}catch(Exception ignored){return -1;}}
         public boolean isPlayable(){return numericCost()>0 && numericPower()>=0 &&
@@ -53,7 +54,7 @@ public final class ShadowData {
                 String[] fields=line.split("\\|",expanded?6:2);
                 if(fields.length!=(expanded?6:2))continue;
                 if(map.containsKey(fields[0]))continue;
-                Card card=new Card();card.name=fields[0];
+                Card card=new Card();card.name=fields[0];card.onlineArt=!expanded;
                 if(expanded){card.rarity=fields[1];card.faction=fields[2];card.cost=fields[3];card.power=fields[4];card.effect=fields[5];}
                 else card.effect=fields[1];
                 map.put(card.name,card);
