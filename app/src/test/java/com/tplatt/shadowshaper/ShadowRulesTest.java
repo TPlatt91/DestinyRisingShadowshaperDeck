@@ -186,4 +186,34 @@ public class ShadowRulesTest {
         assertFalse(ShadowData.validate(chosen,cards).isEmpty());
     }
 
+    @Test public void scorpiusDealsOneToTwoDifferentOpponentsFromBackRow(){
+        ShadowEngine game=humanFirst();
+        ShadowData.Card scorpius=new ShadowData.Card();
+        scorpius.name="Scorpius";scorpius.faction="Cabal";scorpius.rarity="Legendary";
+        scorpius.cost="3";scorpius.power="4";
+        scorpius.effect="Sustained (Back Row): At the end of your turn, deals 1 damage each to 2 random opposing units.";
+        ShadowData.Card target=game.catalog.get("Test Unit 0");
+        game.human.board[0][0]=new ShadowEngine.Unit(game.human,scorpius,0,0);
+        game.cpu.board[0][0]=new ShadowEngine.Unit(game.cpu,target,0,0);
+        game.cpu.board[1][0]=new ShadowEngine.Unit(game.cpu,target,1,0);
+        assertEquals(4,game.score(game.cpu));
+        game.endTurn();
+        assertEquals(2,game.score(game.cpu));
+        assertEquals(1,game.cpu.board[0][0].power);
+        assertEquals(1,game.cpu.board[1][0].power);
+    }
+    @Test public void scorpiusDoesNotTriggerFromFrontRow(){
+        ShadowEngine game=humanFirst();
+        ShadowData.Card scorpius=new ShadowData.Card();
+        scorpius.name="Scorpius";scorpius.faction="Cabal";scorpius.rarity="Legendary";
+        scorpius.cost="3";scorpius.power="4";
+        scorpius.effect="Sustained (Back Row): At end of turn, damages two opposing units.";
+        ShadowData.Card target=game.catalog.get("Test Unit 0");
+        game.human.board[1][0]=new ShadowEngine.Unit(game.human,scorpius,1,0);
+        game.cpu.board[0][0]=new ShadowEngine.Unit(game.cpu,target,0,0);
+        game.cpu.board[1][0]=new ShadowEngine.Unit(game.cpu,target,1,0);
+        game.endTurn();
+        assertEquals(4,game.score(game.cpu));
+    }
+
 }
