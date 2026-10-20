@@ -323,30 +323,44 @@ public class MainActivity extends Activity {
     }
     private void toast(String msg){Toast.makeText(this,msg,Toast.LENGTH_LONG).show();}
     private void loadImage(Card card,ImageView view){
-        view.setImageDrawable(bg(0xff28334f,8));view.setContentDescription(card.name);\n        view.setTag(card.slug);\n        if(card.image.isEmpty()) return;
-        Bitmap cached; synchronized(memory){cached=memory.get(card.slug);}
-        if(cached!=null){view.setImageBitmap(cached);return;}
+        view.setImageDrawable(bg(0xff28334f,8));
+        view.setContentDescription(card.name);
         view.setTag(card.slug);
+        if(card.image.isEmpty())return;
+        Bitmap cached;
+        synchronized(memory){cached=memory.get(card.slug);}
+        if(cached!=null){view.setImageBitmap(cached);return;}
         images.execute(()->{
-            Bitmap b=null;File directory=new File(getCacheDir(),"shadowshaper_cards");directory.mkdirs();
+            Bitmap bitmap=null;
+            File directory=new File(getCacheDir(),"shadowshaper_cards");
+            if(!directory.exists())directory.mkdirs();
             File file=new File(directory,card.slug+".webp");
-            try{
-                if(file.exists())b=BitmapFactory.decodeFile(file.getAbsolutePath());
-                if(b==null){
+            try {
+                if(file.isFile())bitmap=BitmapFactory.decodeFile(file.getAbsolutePath());
+                if(bitmap==null) {
                     HttpURLConnection conn=(HttpURLConnection)new URL(card.image).openConnection();
-                    conn.setConnectTimeout(7000);conn.setReadTimeout(10000);
-                    conn.setRequestProperty("User-Agent","ShadowshaperDeck/0.1");
-                    if(conn.getResponseCode()==200){
-                        try(InputStream in=conn.getInputStream();FileOutputStream out=new FileOutputStream(file)){
-                            byte[] bytes=new byte[8192];int n;while((n=in.read(bytes))!=-1)out.write(bytes,0,n);
+                    conn.setConnectTimeout(6000);conn.setReadTimeout(10000);
+                    conn.setRequestProperty("User-Agent","ShadowshaperDeck/0.2");
+                    try {
+                        if(conn.getResponseCode()==HttpURLConnection.HTTP_OK &&
+                           conn.getContentType()!=null && conn.getContentType().startsWith("image/")) {
+                            try(InputStream input=conn.getInputStream();
+                                FileOutputStream output=new FileOutputStream(file)){
+                                byte[] bytes=new byte[8192];int length;
+                                while((length=input.read(bytes))!=-1)output.write(bytes,0,length);
+                            }
+                            bitmap=BitmapFactory.decodeFile(file.getAbsolutePath());
                         }
-                        b=BitmapFactory.decodeFile(file.getAbsolutePath());
-                        if(b==null)file.delete();
-                    }conn.disconnect();
+                    }finally {conn.disconnect();}
+                    if(bitmap==null)file.delete();
                 }
-            }catch(Exception ignored){}
-            if(b!=null){synchronized(memory){memory.put(card.slug,b);}Bitmap done=b;
-                runOnUiThread(()->{if(card.slug.equals(view.getTag()))view.setImageBitmap(done);});
+            }catch(Exception ignored){ /* Image errors never hide the card metadata. */ }
+            if(bitmap!=null){
+                synchronized(memory){memory.put(card.slug,bitmap);}
+                final Bitmap completed=bitmap;
+                runOnUiThread(()->{
+                    if(card.slug.equals(view.getTag()))view.setImageBitmap(completed);
+                });
             }
         });
     }
