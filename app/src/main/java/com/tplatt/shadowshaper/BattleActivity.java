@@ -14,6 +14,7 @@ import android.os.Looper;
 import android.view.DragEvent;
 import android.view.Gravity;
 import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.HorizontalScrollView;
@@ -34,14 +35,15 @@ import java.util.Locale;
  * All state mutations and card abilities live in ShadowEngine.
  */
 public final class BattleActivity extends Activity {
-    private static final int BG=0xff0d151e, TABLE=0xff1d232a, WOOD=0xff32291f;
-    private static final int GOLD=0xffdfb970, BLUE=0xff86baf0, MUTED=0xffadbaa9;
-    private static final int CREAM=0xfff5ead4, ENEMY=0xffbd847d;
+    private static final int BG=0xff13100f, TABLE=0xff241b17, WOOD=0xff3a2920;
+    private static final int GOLD=0xffe5bb70, BLUE=0xff8bc5ee, MUTED=0xffc3ae92;
+    private static final int CREAM=0xfff7e9cb, ENEMY=0xffd09b8a;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private ShadowEngine game;
     private LinkedHashMap<String,ShadowData.Card> cards;
     private LinearLayout root,board,hand,sidePanel;
-    private TextView roundText,scoreText,turnText,pointsText,deckText,hintText,events,opponentText;
+    private TextView roundText,scoreText,turnText,pointsText,deckText,hintText,events,opponentText,opponentHandText;
+    private LinearLayout roundMarkers;
     private String enemyFaction="Mixed";
     private Button endButton;
     private int selectedHand=-1,lastShownLog=0;
@@ -91,14 +93,16 @@ public final class BattleActivity extends Activity {
 
         LinearLayout top=new LinearLayout(this);
         top.setGravity(Gravity.CENTER_VERTICAL);top.setPadding(dp(5),dp(3),dp(6),dp(3));
-        top.setBackground(tint(0xff323237,0xff171f29,0));
+        top.setBackground(tint(0xff4a3020,0xff241713,0));
         root.addView(top,new LinearLayout.LayoutParams(-1,dp(46)));
         top.addView(button("‹",()->pauseMenu()),new LinearLayout.LayoutParams(dp(46),-1));
         TextView title=text("SHADOWSHAPER  •  DUELS",17,true,CREAM);
         title.setGravity(Gravity.CENTER_VERTICAL);
         title.setPadding(dp(14),0,0,0);
         top.addView(title,new LinearLayout.LayoutParams(0,-1,1));
-        turnText=text("SOLO PRACTICE",11,true,MUTED);
+        opponentHandText=text("CPU  ▤ 0",11,true,MUTED);
+        top.addView(opponentHandText,new LinearLayout.LayoutParams(dp(93),-1));
+        turnText=text("SOLO PRACTICE",11,true,GOLD);
         top.addView(turnText,new LinearLayout.LayoutParams(dp(170),-1));
         top.addView(button("☰",()->pauseMenu()),new LinearLayout.LayoutParams(dp(48),-1));
 
@@ -107,7 +111,7 @@ public final class BattleActivity extends Activity {
         root.addView(middle,new LinearLayout.LayoutParams(-1,0,1));
         buildLeftHud(middle);
         board=new LinearLayout(this);board.setOrientation(LinearLayout.VERTICAL);
-        board.setBackground(tint(0xff40352b,0xff22282d,4));
+        board.setBackground(tint(0xff493226,0xff261f1b,4));
         board.setPadding(dp(4),dp(3),dp(4),dp(3));
         LinearLayout.LayoutParams fieldParams=new LinearLayout.LayoutParams(0,-1,1);
         fieldParams.setMargins(dp(5),dp(4),dp(5),dp(4));
@@ -116,7 +120,7 @@ public final class BattleActivity extends Activity {
 
         LinearLayout bottom=new LinearLayout(this);
         bottom.setGravity(Gravity.CENTER_VERTICAL);
-        bottom.setBackground(tint(0xff282d32,0xff101b27,0));
+        bottom.setBackground(tint(0xff3b2821,0xff160e0e,0));
         root.addView(bottom,new LinearLayout.LayoutParams(-1,dp(116)));
         LinearLayout info=new LinearLayout(this);info.setOrientation(LinearLayout.VERTICAL);
         info.setPadding(dp(5),dp(5),dp(5),dp(5));
@@ -133,7 +137,7 @@ public final class BattleActivity extends Activity {
         action.setPadding(dp(6),dp(7),dp(8),dp(7));
         bottom.addView(action,new LinearLayout.LayoutParams(dp(139),-1));
         endButton=button("END TURN  ›",()->endTurn());
-        endButton.setBackground(tint(0xff927042,0xff57422b,9));
+        endButton.setBackground(tint(0xffb58c46,0xff654623,9));
         action.addView(endButton,new LinearLayout.LayoutParams(-1,0,1));
         hintText=text("Tap a card or drag it onto your field",10,false,MUTED);
         action.addView(hintText,new LinearLayout.LayoutParams(-1,dp(38)));
@@ -141,25 +145,28 @@ public final class BattleActivity extends Activity {
     private void buildLeftHud(LinearLayout parent){
         LinearLayout hud=new LinearLayout(this);hud.setOrientation(LinearLayout.VERTICAL);
         hud.setPadding(dp(5),dp(9),dp(4),dp(9));
-        hud.setBackground(tint(0xff202d39,0xff151f2a,5));
+        hud.setBackground(tint(0xff3b291d,0xff191614,5));
         parent.addView(hud,new LinearLayout.LayoutParams(dp(111),-1));
         TextView e=text("OPPONENT",11,true,ENEMY);
         hud.addView(e,new LinearLayout.LayoutParams(-1,dp(28)));
         opponentText=text("CPU",16,true,CREAM);hud.addView(opponentText,new LinearLayout.LayoutParams(-1,0,1));
         roundText=text("ROUND\n1 / 6",18,true,GOLD);
-        roundText.setBackground(panel(0xff263440,0xff87734e,11));
+        roundText.setBackground(panel(0xff30251e,0xffb5945c,11));
         LinearLayout.LayoutParams roundParams=new LinearLayout.LayoutParams(-1,dp(88));
         roundParams.setMargins(0,dp(6),0,dp(6));hud.addView(roundText,roundParams);
+        roundMarkers=new LinearLayout(this);
+        roundMarkers.setGravity(Gravity.CENTER);
+        hud.addView(roundMarkers,new LinearLayout.LayoutParams(-1,dp(22)));
         TextView me=text("YOU",16,true,CREAM);hud.addView(me,new LinearLayout.LayoutParams(-1,0,1));
         hud.addView(text("OFFENSIVE / DEFENSIVE",9,false,BLUE),new LinearLayout.LayoutParams(-1,dp(20)));
     }
     private void buildRightHud(LinearLayout parent){
         sidePanel=new LinearLayout(this);sidePanel.setOrientation(LinearLayout.VERTICAL);
         sidePanel.setPadding(dp(5),dp(8),dp(6),dp(8));
-        sidePanel.setBackground(tint(0xff192b3a,0xff101d29,5));
+        sidePanel.setBackground(tint(0xff38281d,0xff201713,5));
         parent.addView(sidePanel,new LinearLayout.LayoutParams(dp(151),-1));
         scoreText=text("0    :    0",24,true,GOLD);
-        scoreText.setBackground(panel(0xff212e38,0xff705a3c,9));
+        scoreText.setBackground(panel(0xff312820,0xffad894f,9));
         sidePanel.addView(scoreText,new LinearLayout.LayoutParams(-1,dp(58)));
         sidePanel.addView(text("YOUR POWER   :   CPU POWER",10,true,MUTED),new LinearLayout.LayoutParams(-1,dp(25)));
         TextView label=text("MATCH EVENTS",10,true,BLUE);label.setGravity(Gravity.CENTER_VERTICAL);
@@ -274,6 +281,14 @@ public final class BattleActivity extends Activity {
     private void refresh(){
         if(game==null)return;
         roundText.setText("ROUND\n"+game.round+" / "+ShadowEngine.ROUNDS);
+        roundMarkers.removeAllViews();
+        for(int n=1;n<=ShadowRules.ROUNDS;n++){
+            TextView pip=text(String.valueOf(n),10,n==game.round,n==game.round?0xff1a1715:GOLD);
+            pip.setBackground(panel(n==game.round?GOLD:0xff3d2d22,0xffba975e,12));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(16),dp(18));
+            lp.setMargins(dp(1),0,dp(1),0);roundMarkers.addView(pip,lp);
+        }
+        opponentHandText.setText("CPU  ▤ "+game.cpu.hand.size());
         scoreText.setText(game.score(game.human)+"   :   "+game.score(game.cpu));
         turnText.setText(game.finished?"DUEL COMPLETE":
            game.humanTurn?"YOUR TURN  •  "+(game.humanFirst?"OFFENSIVE":"DEFENSIVE"):
@@ -295,7 +310,7 @@ public final class BattleActivity extends Activity {
         LinearLayout strip=new LinearLayout(this);
         strip.setGravity(Gravity.CENTER_VERTICAL);
         strip.setPadding(dp(1),dp(1),dp(1),dp(1));
-        strip.setBackground(tint(mine?0xff273848:0xff382e2b,0xff1c232a,4));
+        strip.setBackground(tint(mine?0xff3c2d29:0xff382720,mine?0xff241b1e:0xff231816,4));
         LinearLayout.LayoutParams height=new LinearLayout.LayoutParams(-1,0,1);
         height.setMargins(0,dp(1),0,dp(1));board.addView(strip,height);
         TextView rowLabel=text(title.replace(" ","\n"),8,true,mine?BLUE:ENEMY);
@@ -306,8 +321,8 @@ public final class BattleActivity extends Activity {
             FrameLayout slot=new FrameLayout(this);
             boolean highlighted=mine && selectedHand>=0 &&
                 game.isPlayablePlacement(game.human,selectedHand,row,column);
-            slot.setBackground(panel(unit==null?(highlighted?0xff426c75:0xff182533):0xff2e3e4c,
-                highlighted?0xffb1d8cf:0xff715843,5));
+            slot.setBackground(panel(unit==null?(highlighted?0xff435a53:0xff211b1b):0xff4a3531,
+                highlighted?0xffe4bf73:0xff9b774e,5));
             LinearLayout.LayoutParams width=new LinearLayout.LayoutParams(0,-1,1);
             width.setMargins(dp(2),dp(1),dp(2),dp(1));strip.addView(slot,width);
             if(unit==null){
@@ -320,11 +335,11 @@ public final class BattleActivity extends Activity {
                 image.setMargins(dp(2),dp(2),dp(2),dp(15));
                 slot.addView(art,image);CardArt.bind(this,unit.card,art);
                 TextView power=text(String.valueOf(game.power(unit)),11,true,CREAM);
-                power.setBackground(panel(0xff386495,0xffa3cde6,6));
+                power.setBackground(panel(0xff465d79,0xffb4d6f4,13));
                 FrameLayout.LayoutParams upper=new FrameLayout.LayoutParams(dp(27),dp(21),Gravity.TOP|Gravity.LEFT);
                 slot.addView(power,upper);
                 TextView cost=text(unit.card.cost,10,true,GOLD);
-                cost.setBackground(panel(0xff20252e,0xffb6975d,6));
+                cost.setBackground(panel(0xff356c96,0xffb4d6f4,13));
                 FrameLayout.LayoutParams costPos=new FrameLayout.LayoutParams(dp(25),dp(21),Gravity.TOP|Gravity.RIGHT);
                 slot.addView(cost,costPos);
                 TextView footer=text(unit.card.name,9,true,CREAM);
@@ -378,7 +393,7 @@ public final class BattleActivity extends Activity {
             ShadowData.Card card=game.human.hand.get(i);
             boolean chosen=i==selectedHand,playable=game.humanTurn&&game.affordable(game.human,i);
             FrameLayout frame=new FrameLayout(this);
-            frame.setBackground(panel(chosen?0xff566886:playable?0xff364557:0xff212c38,
+            frame.setBackground(panel(chosen?0xff6a503b:playable?0xff453526:0xff2d2421,
                 chosen?GOLD:playable?BLUE:0xff5a504a,7));
             LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(dp(83),dp(106));
             params.leftMargin=i==0?dp(0):-dp(9);params.rightMargin=dp(3);
