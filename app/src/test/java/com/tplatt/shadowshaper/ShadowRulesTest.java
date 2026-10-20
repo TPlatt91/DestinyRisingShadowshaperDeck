@@ -153,4 +153,37 @@ public class ShadowRulesTest {
         game.human.board[1][2]=new ShadowEngine.Unit(game.human,partner,1,2);
         assertEquals(1,game.targetOptions(game.human,cabal,1,3).size());
     }
+
+    @Test public void constructedDeckEnforcesSizeAndCopyLimit(){
+        LinkedHashMap<String,ShadowData.Card> cards=catalog();
+        LinkedHashMap<String,Integer> chosen=deck();
+        assertEquals("",ShadowData.validate(chosen,cards));
+        chosen.remove("Test Unit 14");
+        assertTrue(ShadowData.validate(chosen,cards).contains("exactly 15"));
+        chosen.put("Test Unit 0",3);
+        assertTrue(ShadowData.validate(chosen,cards).contains("Maximum two copies"));
+        chosen.put("Test Unit 0",2);
+        assertEquals("",ShadowData.validate(chosen,cards));
+    }
+    @Test public void constructedDeckEnforcesExoticAndMythicCaps(){
+        LinkedHashMap<String,ShadowData.Card> cards=catalog();
+        LinkedHashMap<String,Integer> chosen=deck();
+        for(int i=0;i<4;i++)cards.get("Test Unit "+i).rarity="Exotic";
+        assertTrue(ShadowData.validate(chosen,cards).contains("No more than 3 Exotic"));
+        cards.get("Test Unit 3").rarity="Rare";
+        assertEquals("",ShadowData.validate(chosen,cards));
+        for(int i=4;i<10;i++)cards.get("Test Unit "+i).rarity="Mythic";
+        assertTrue(ShadowData.validate(chosen,cards).contains("No more than 5 Mythic"));
+    }
+    @Test public void summonedOnlyCardsCannotBeAddedToLegalDeck(){
+        LinkedHashMap<String,ShadowData.Card> cards=catalog();
+        LinkedHashMap<String,Integer> chosen=deck();
+        ShadowData.Card summoned=cards.get("Test Unit 0");
+        summoned.classification="Summoned unit";
+        assertFalse(ShadowData.validate(chosen,cards).isEmpty());
+        summoned.classification="";
+        summoned.cost="";
+        assertFalse(ShadowData.validate(chosen,cards).isEmpty());
+    }
+
 }
