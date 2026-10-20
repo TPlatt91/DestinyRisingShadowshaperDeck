@@ -14,6 +14,19 @@ The app opens to the new four-section **HomeActivity**. BattleActivity is single
 
 Native Android Studio (Java) deck creator. Current catalog: **110 distinct names** from TodayInDestiny and a detailed community list; this is **not guaranteed to be the full current game roster**.
 
+
+### Current visual and gameplay progress (October 2026)
+
+- The Android battle screen uses a bronze-and-gold Shadowshaper-inspired landscape interface: six round markers, opponent hand counter, visible Power/Light badges, a Power scoreboard and an overlapping hand.
+- Hand controls now support deliberate tap, press-and-hold inspection, and native press-drag placement (a previous touch-dispatch bug was fixed).
+- Abilities with legal choices use **in-board highlighted targets** with a Cancel Target action instead of a text-list dialog.
+- The CPU places cards sequentially, with UI updates between each play. Dialogs pause AI progression; a placement animates once, and each new round highlights once.
+- Deck construction shows base deck Power, copies and rarity counts, and a six-cost distribution, reflecting the real game's deck summary layout.
+- **Scorpius** has a community-documented corrected Back Row, two-target end-turn ability; two regression tests protect the correction.
+- The core source contains **19 local JUnit tests** across two test files. These are committed but **not executed**; no GitHub Actions workflows were invoked.
+
+For reference sources, what is implemented, and remaining exact-match limitations, read [UI fidelity audit](docs/UI_FIDELITY_AUDIT.md) and [rules audit](docs/RULES_AUDIT.md). Do not treat source-level structural checks as an Android build or visual test.
+
 ## Card collection and details
 
 - Original card-face artwork displayed for 34 TodayInDestiny catalog entries when internet access is available; successful images are cached.
