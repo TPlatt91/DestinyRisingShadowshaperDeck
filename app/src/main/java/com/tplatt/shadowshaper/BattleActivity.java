@@ -250,6 +250,7 @@ public final class BattleActivity extends Activity {
               "Build the greatest total Power on your side.\n"+
               "Opening hand: "+game.human.hand.size()+" cards.")
           .setPositiveButton("START DUEL",(d,w)->{dialogShowing=false;scheduleCpu();})
+          .setCancelable(false)
           .show();
     }
     private void scheduleCpu(){
@@ -294,7 +295,7 @@ public final class BattleActivity extends Activity {
         for(int n=1;n<=ShadowRules.ROUNDS;n++){
             TextView pip=text(String.valueOf(n),10,n==game.round,n==game.round?0xff1a1715:GOLD);
             pip.setBackground(panel(n==game.round?GOLD:0xff3d2d22,0xffba975e,12));
-            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(16),dp(18));
+            LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(dp(14),dp(18));
             lp.setMargins(dp(1),0,dp(1),0);roundMarkers.addView(pip,lp);
         }
         opponentHandText.setText("CPU  ▤ "+game.cpu.hand.size());
@@ -576,19 +577,49 @@ public final class BattleActivity extends Activity {
             .setNegativeButton("CLOSE",null).show();
     }
     private void pauseMenu(){
+        if(dialogShowing)return;
+        dialogShowing=true;
+        handler.removeCallbacks(cpuAction);
+        final boolean[] resumeOnDismiss={true};
         String[] items={"Resume Duel","Restart / Change Deck","Rules","Return Home"};
-        new AlertDialog.Builder(this).setTitle("SHADOWSHAPER DUELS")
+        AlertDialog menu=new AlertDialog.Builder(this).setTitle("SHADOWSHAPER DUELS")
             .setItems(items,(d,selection)->{
                 switch(selection){
-                    case 1: selectDeck(false);break;
-                    case 2: startActivity(new Intent(this,RulesActivity.class));break;
-                    case 3: new AlertDialog.Builder(this).setTitle("Leave the match?")
-                        .setMessage("The current match will be lost.")
-                        .setPositiveButton("LEAVE",(dialog,which)->finish())
-                        .setNegativeButton("STAY",null).show();break;
+                    case 1:
+                        resumeOnDismiss[0]=false;
+                        selectDeck(false);
+                        break;
+                    case 2:
+                        resumeOnDismiss[0]=false;
+                        startActivity(new Intent(this,RulesActivity.class));
+                        break;
+                    case 3:
+                        resumeOnDismiss[0]=false;
+                        new AlertDialog.Builder(this).setTitle("Leave the match?")
+                            .setMessage("The current match will be lost.")
+                            .setPositiveButton("LEAVE",(dialog,which)->finish())
+                            .setNegativeButton("STAY",(dialog,which)->{
+                                dialogShowing=false;scheduleCpu();
+                            }).show();
+                        break;
                     default:break;
                 }
-            }).show();
+            }).create();
+        menu.setOnDismissListener(d->{
+            if(resumeOnDismiss[0]){
+                dialogShowing=false;
+                if(!isFinishing())scheduleCpu();
+            }
+        });
+        menu.show();
+    }
+    @Override protected void onPause(){
+        handler.removeCallbacks(cpuAction);
+        super.onPause();
+    }
+    @Override protected void onResume(){
+        super.onResume();
+        if(game!=null&&!dialogShowing&&!game.finished)scheduleCpu();
     }
     @Override public void onBackPressed(){pauseMenu();}
     @Override protected void onDestroy(){handler.removeCallbacks(cpuAction);super.onDestroy();}
