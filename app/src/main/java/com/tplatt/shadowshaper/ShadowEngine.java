@@ -200,7 +200,7 @@ public final class ShadowEngine {
         switch(name){
             case "Morgran":case "Hyssop":case "Knight":case "Wizard":case "Guarding Servitor":
             case "Finnala":case "Chinnawat":case "Attal":case "Estela":case "Vigile":
-            case "Zhong Wenbin":case "Sabikis":case "Gladiator":case "Shinka Gladiator":
+            case "Sabikis":case "Gladiator":case "Shinka Gladiator":
             case "Shinka Psion":case "Inquisitor":case "Psion":case "Tracer Shank":
             case "Vandal":case "Wretch":case "Incendior":case "Resilient Marauder":
             case "Augmented Shank":case "High Servitor":case "Thinktank":case "Amu-Atu":
@@ -250,6 +250,9 @@ public final class ShadowEngine {
             if("Hyssop".equals(card.name)&&unit.bonus<=0)continue;
             if("Wolf".equals(card.name)&&power(unit)<=8)continue;
             if("Vigile".equals(card.name)&&!line(unit,2))continue;
+            if(("Gladiator".equals(card.name)||"Shinka Gladiator".equals(card.name))&&r!=1)continue;
+            if("Sabikis".equals(card.name)&&c==0)continue; // chosen unit needs a left neighbor
+            if("Sabikis".equals(card.name)&&side.board[r][c-1]==null)continue;
             options.add(new Target(side,r,c));
         }
         return options;
@@ -302,7 +305,7 @@ public final class ShadowEngine {
     }
     public boolean isPlayablePlacement(Player side,int index,int row,int column){
         // Useful for UI drop highlighting; target choice is resolved after drop.
-        if(side!=human&&side!=cpu||finished||side!=(humanTurn?human:cpu))return false;
+        if((side!=human&&side!=cpu)||finished||side!=(humanTurn?human:cpu))return false;
         if(index<0||index>=side.hand.size())return false;
         return affordable(side,index) && side.hand.get(index).numericPower()>=0
             && empty(side,row,column);
@@ -660,7 +663,7 @@ public final class ShadowEngine {
             }
         }
         for(Unit unit:new ArrayList<>(all(side))){
-            if(unit.suppressed)continue;
+            if(side.board[unit.row][unit.column]!=unit||unit.suppressed)continue;
             switch(unit.card.name){
                 case "Scorpius":case "Shinka Scorpius":
                     if(unit.card.name.equals("Shinka Scorpius")&&!line(unit,3))break;
@@ -679,6 +682,7 @@ public final class ShadowEngine {
     }
     public void endTurn(){
         if(finished)return;
+        lastActionError="";
         Player current=humanTurn?human:cpu;
         endSide(current);
         completedTurns++;
