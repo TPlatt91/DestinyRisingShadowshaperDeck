@@ -233,9 +233,42 @@ public final class ShadowEngine {
         if(requirement.contains("front row")&&row!=1)return false;
         return true;
     }
+    /**
+     * Line length INCLUDING the card proposed for an empty position.
+     * An uninterrupted line only counts cards of the same faction in
+     * the same row; visually adjacent units from other factions break it.
+     */
+    public int projectedFactionLine(Player player,ShadowData.Card card,int row,int column){
+        if(player==null||card==null||!ShadowRules.isOnBoard(row,column))return 0;
+        if(player.board[row][column]!=null)return 0;
+        int length=1;
+        for(int c=column-1;c>=0;c--){
+            Unit neighbor=player.board[row][c];
+            if(neighbor==null||!neighbor.card.faction.equalsIgnoreCase(card.faction))break;
+            length++;
+        }
+        for(int c=column+1;c<COLUMNS;c++){
+            Unit neighbor=player.board[row][c];
+            if(neighbor==null||!neighbor.card.faction.equalsIgnoreCase(card.faction))break;
+            length++;
+        }
+        return length;
+    }
+    private int requiredFactionLine(String name){
+        switch(name){
+            case "Shinka Psion":return 2;
+            case "Shinka Incendior":case "Shinka Vigile":return 3;
+            case "Shinka Gladiator":case "Goliath Tank":return 5;
+            case "Thagrius":return 6;
+            default:return 0;
+        }
+    }
     public List<Target> targetOptions(Player me,ShadowData.Card card,int row,int column){
         ArrayList<Target> options=new ArrayList<>();
-        if(!isTargeted(card.name)||!activeInRow(card,row))return options;
+        if(me==null||card==null||!isTargeted(card.name)||!activeInRow(card,row))return options;
+        if(!ShadowRules.isOnBoard(row,column) || !empty(me,row,column))return options;
+        int needed=requiredFactionLine(card.name);
+        if(needed>0&&projectedFactionLine(me,card,row,column)<needed)return options;
         Player side=targetsEnemy(card.name)?other(me):me;
         for(int r=0;r<2;r++)for(int c=0;c<COLUMNS;c++){
             Unit unit=side.board[r][c];
@@ -700,35 +733,54 @@ public final class ShadowEngine {
             humanTurn=!humanTurn;
         }
     }
+    /** Position-aware CPU heuristic. Only sends legal plays through the same engine API. */
     public void cpuTurn(){
         if(finished||humanTurn)return;
         int safety=40;
         while(safety-->0){
-            double highest=Double.NEGATIVE_INFINITY;int chosen=-1;int[] location=null;
-            for(int i=0;i<cpu.hand.size();i++){
-                ShadowData.Card c=cpu.hand.get(i);
-                if(c.numericCost()<1||c.numericCost()>cpu.points)continue;
-                int[] slot=chooseSlot(c);
-                if(slot==null)continue;
-                double value=(Math.max(0,c.numericPower())+0.5)/(double)c.numericCost();
-                if(isTargeted(c.name)&&!targetOptions(cpu,c,slot[0],slot[1]).isEmpty())value+=0.6;
-                value+=rng.nextDouble()*0.2;
-                if(value>highest){highest=value;chosen=i;location=slot;}
+            int bestIndex=-1,bestRow=-1,bestColumn=-1;
+            double bestValue=Double.NEGATIVE_INFINITY;
+            for(int index=0;index<cpu.hand.size();index++){
+                ShadowData.Card card=cpu.hand.get(index);
+                if(card.numericCost()<1||card.numericCost()>cpu.points)continue;
+                for(int row=0;row<ShadowRules.ROWS;row++)
+                    for(int column=0;column<COLUMNS;column++){
+                        if(!isPlayablePlacement(cpu,index,row,column))continue;
+                        double value=evaluateCpuPlacement(card,row,column);
+                        if(value>bestValue){
+                            bestValue=value;bestIndex=index;bestRow=row;bestColumn=column;
+                        }
+                    }
             }
-            if(chosen==-1||location==null)break;
-            ShadowData.Card c=cpu.hand.get(chosen);
-            Target target=chooseAI(cpu,c,location[0],location[1]);
-            if(!play(cpu,chosen,location[0],location[1],target))break;
+            if(bestIndex<0)break;
+            ShadowData.Card chosen=cpu.hand.get(bestIndex);
+            Target target=chooseAI(cpu,chosen,bestRow,bestColumn);
+            if(!play(cpu,bestIndex,bestRow,bestColumn,target)){
+                log("CPU could not make selected legal move: "+lastActionError);
+                break;
+            }
         }
         endTurn();
     }
-    private int[] chooseSlot(ShadowData.Card card){
-        String text=card.trigger.toLowerCase(Locale.ROOT);
-        if(text.isEmpty())text=card.effect.toLowerCase(Locale.ROOT);
-        int preferred=text.contains("back row")?0:1;
-        for(int row:new int[]{preferred,1-preferred})
-            for(int col=0;col<COLUMNS;col++)if(empty(cpu,row,col))return new int[]{row,col};
-        return null;
+    private double evaluateCpuPlacement(ShadowData.Card card,int row,int column){
+        double value=(Math.max(0,card.numericPower())+0.5)/(double)card.numericCost();
+        String trigger=card.trigger.toLowerCase(Locale.ROOT);
+        if(trigger.isEmpty())trigger=card.effect.toLowerCase(Locale.ROOT);
+        if(trigger.contains("front row")&&row==1)value+=2.2;
+        if(trigger.contains("back row")&&row==0)value+=2.2;
+        if(trigger.contains("front row")&&row!=1)value-=2.8;
+        if(trigger.contains("back row")&&row!=0)value-=2.8;
+        int lineLength=projectedFactionLine(cpu,card,row,column);
+        value+=Math.max(0,lineLength-1)*1.1;
+        int needed=requiredFactionLine(card.name);
+        if(needed>0 && lineLength>=needed)value+=4.0;
+        else if(needed>0)value-=1.5;
+        if(cpu.board[1-row][column]!=null)value+=0.9;
+        if(column>0&&cpu.board[row][column-1]!=null)value+=0.3;
+        if(column<COLUMNS-1&&cpu.board[row][column+1]!=null)value+=0.3;
+        if(isTargeted(card) && !targetOptions(cpu,card,row,column).isEmpty())value+=1.3;
+        if(isTargeted(card) && targetOptions(cpu,card,row,column).isEmpty())value-=1.0;
+        return value+rng.nextDouble()*0.12;
     }
     public String result(){
         if(!finished)return "";
