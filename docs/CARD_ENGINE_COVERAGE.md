@@ -65,7 +65,7 @@ gradlew.bat :app:testDebugUnitTest
 gradlew.bat :app:assembleDebug
 ```
 
-The coverage CSV can help triage every record. **The 30 authored JUnit tests have not been executed** in this environment. No device build has been verified.
+The coverage CSV can help triage every record. **The 31 authored JUnit tests have not been executed** in this environment. No device build has been verified.
 
 ## Source references
 
