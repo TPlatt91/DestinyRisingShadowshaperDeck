@@ -508,7 +508,21 @@ public final class BattleActivity extends Activity {
         all.setGravity(Gravity.LEFT|Gravity.TOP);all.setPadding(dp(16),dp(12),dp(16),dp(12));
         scroll.addView(all);
         new AlertDialog.Builder(this).setTitle("Duel events").setView(scroll)
-            .setPositiveButton("CLOSE",null).show();
+            .setNeutralButton("COPY REPORT",(d,w)->{
+                android.content.ClipboardManager clipboard=
+                    (android.content.ClipboardManager)getSystemService(CLIPBOARD_SERVICE);
+                clipboard.setPrimaryClip(ClipData.newPlainText("Shadowshaper match report",
+                    game.diagnosticReport()));
+                android.widget.Toast.makeText(this,"Match report copied",android.widget.Toast.LENGTH_SHORT).show();
+            })
+            .setPositiveButton("SHARE REPORT",(d,w)->{
+                Intent share=new Intent(Intent.ACTION_SEND);
+                share.setType("text/plain");
+                share.putExtra(Intent.EXTRA_SUBJECT,"Shadowshaper duel test report");
+                share.putExtra(Intent.EXTRA_TEXT,game.diagnosticReport());
+                startActivity(Intent.createChooser(share,"Share match report"));
+            })
+            .setNegativeButton("CLOSE",null).show();
     }
     private void pauseMenu(){
         String[] items={"Resume Duel","Restart / Change Deck","Rules","Return Home"};
