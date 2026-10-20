@@ -40,6 +40,7 @@ public final class BattleActivity extends Activity {
     private static final int CREAM=0xfff7e9cb, ENEMY=0xffd09b8a;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private ShadowEngine game;
+    private ShadowBattleCoordinator coordinator;
     private LinkedHashMap<String,ShadowData.Card> cards;
     private LinearLayout root,board,hand,sidePanel;
     private TextView roundText,scoreText,turnText,pointsText,deckText,hintText,events,opponentText,opponentHandText;
@@ -54,12 +55,12 @@ public final class BattleActivity extends Activity {
     private boolean starting=false,dialogShowing=false;
     private final Runnable cpuAction=()->{
         if(game==null||game.finished||game.humanTurn||dialogShowing)return;
-        if(game.cpuPlayOne()){
+        if(coordinator.cpuPlayOne()){
             selectedHand=-1;
             refresh(); // Show the CPU card and its Power before the next play.
             handler.postDelayed(cpuAction,560);
         }else{
-            game.endTurn();
+            coordinator.endTurn();
             refresh();finishIfOver();
             if(game!=null&&!game.finished&&!game.humanTurn)scheduleCpu();
         }
@@ -235,8 +236,9 @@ public final class BattleActivity extends Activity {
     private void launchMatch(String title,LinkedHashMap<String,Integer> deck,String faction){
         enemyFaction=faction;
         LinkedHashMap<String,Integer> enemy=ShadowData.opponentDeck(cards,faction);
-        game=new ShadowEngine(cards,System.nanoTime());
-        try{game.start(deck,enemy);}catch(Exception error){
+        coordinator=new ShadowBattleCoordinator(cards,System.nanoTime());
+        game=coordinator.engine;
+        try{coordinator.start(deck,enemy);}catch(Exception error){
             new AlertDialog.Builder(this).setTitle("Unable to start duel")
               .setMessage(error.getMessage()).setPositiveButton("Choose Deck",(d,w)->selectDeck(true)).show();return;
         }
@@ -291,7 +293,7 @@ public final class BattleActivity extends Activity {
     }
     private void finishTurn(){
         if(game==null||game.finished||!game.humanTurn)return;
-        selectedHand=-1;game.endTurn();refresh();finishIfOver();scheduleCpu();
+        selectedHand=-1;coordinator.endTurn();refresh();finishIfOver();scheduleCpu();
     }
     private void finishIfOver(){
         if(game==null||!game.finished)return;
@@ -410,7 +412,7 @@ public final class BattleActivity extends Activity {
             }
             if(relocationSlot){
                 slot.setOnClickListener(v->{
-                    if(game.resolveMove(game.human,row,column)){
+                    if(coordinator.resolveMove(game.human,row,column)){
                         hintText.setText("Unit moved. Continue your turn.");
                         refresh();
                     }else hintText.setText(game.lastActionError);
@@ -568,7 +570,7 @@ public final class BattleActivity extends Activity {
         }
     }
     private void commitPlay(int handIndex,int row,int col,ShadowEngine.Target target){
-        if(game.play(game.human,handIndex,row,col,target)){
+        if(coordinator.play(game.human,handIndex,row,col,target)){
             clearTargetSelection();selectedHand=-1;
             hintText.setText("Card played • choose next card or end turn");
             refresh();finishIfOver();
