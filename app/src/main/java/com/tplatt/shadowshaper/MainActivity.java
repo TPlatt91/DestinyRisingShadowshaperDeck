@@ -42,6 +42,18 @@ public class MainActivity extends Activity {
         try(BufferedReader in = new BufferedReader(new InputStreamReader(getAssets().open("cards.tsv"), StandardCharsets.UTF_8))) {
             String line; while((line=in.readLine())!=null) { String[] p=line.split("\\|",2); if(p.length==2)cards.add(new Card(p[0],p[1])); }
         } catch(Exception e) { Toast.makeText(this,"Catalog load error: "+e.getMessage(),Toast.LENGTH_LONG).show(); }
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(getAssets().open("community_cards.tsv"), StandardCharsets.UTF_8))) {
+            String line;
+            while((line=in.readLine())!=null) {
+                String[] p=line.split("\\|",6);
+                if(p.length==6 && getCard(p[0])==null) {
+                    Card card=new Card(p[0],p[5]);
+                    card.image="";
+                    card.effect=p[5]+"  •  "+p[2]+" / "+p[1]+" / Cost "+p[3]+" / Power "+p[4];
+                    cards.add(card);
+                }
+            }
+        } catch(Exception e) { Toast.makeText(this,"Supplemental catalog error: "+e.getMessage(),Toast.LENGTH_LONG).show(); }
         loadNames(); loadDeck(currentDeck); frame(); showCollection();
     }
     private int dp(float d){ return (int)(getResources().getDisplayMetrics().density*d+0.5f); }
@@ -216,7 +228,7 @@ public class MainActivity extends Activity {
     }
     private void toast(String msg){Toast.makeText(this,msg,Toast.LENGTH_LONG).show();}
     private void loadImage(Card card,ImageView view){
-        view.setImageDrawable(bg(0xff28334f,8));view.setContentDescription(card.name);
+        view.setImageDrawable(bg(0xff28334f,8));view.setContentDescription(card.name);\n        if(card.image.isEmpty()) return;
         Bitmap cached; synchronized(memory){cached=memory.get(card.slug);}
         if(cached!=null){view.setImageBitmap(cached);return;}
         view.setTag(card.slug);
