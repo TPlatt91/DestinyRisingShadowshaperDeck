@@ -27,11 +27,16 @@ public final class ShadowEngine {
         public final ShadowData.Card card;
         public final Player owner;
         public int row,column,power,bonus,scorched,scorchTurns;
+        public final ArrayList<TimedBonus> timedBonuses=new ArrayList<>();
         public boolean inspired,suppressed;
         public Unit(Player owner,ShadowData.Card card,int row,int col) {
             this.owner=owner;this.card=card;this.row=row;this.column=col;
             this.power=Math.max(0,card.numericPower());
         }
+    }
+    private static final class TimedBonus {
+        int turns,value;
+        TimedBonus(int value,int turns){this.value=value;this.turns=turns;}
     }
     public static final class Player {
         public final boolean human;
@@ -400,7 +405,7 @@ public final class ShadowEngine {
             case "Cursed Thrall":
                 incomplete(actor.card,"Opponent-side delayed-death transfer remains under verification.");break;
             case "Shinka Scorpius":case "Scorpius":case "Elite Walker":
-            case "Pandora-7":case "Hexguard":break;
+            case "Pandora-7":break;
             default:
                 if(!noEffect(actor.card)&&!isKnownSustained(actor.card.name))
                     incomplete(actor.card,"No verified scripted resolver.");
@@ -441,6 +446,11 @@ public final class ShadowEngine {
             return;
         }
         Unit unit=new Unit(me,card,row,col);me.board[row][col]=unit;
+        if(name.equals("Dreg")){
+            for(Unit watcher:all(me))if(watcher!=unit&&!watcher.suppressed&&watcher.card.name.equals("Unrelenting Captain")){
+                unit.power++;unit.bonus++;log("Unrelenting Captain buffs summoned Dreg.");
+            }
+        }
         log("SUMMON ▶ "+name+" at "+(row==0?"back ":"front ")+(col+1));
         fireEnemyPlacement(unit);
     }
@@ -465,7 +475,12 @@ public final class ShadowEngine {
         log("BUFF +"+applied+" ▶ "+target.card.name);
         onBuff(target);
     }
+    private int resolutionDepth=0;
     private void onBuff(Unit target){
+        if(resolutionDepth++>32){
+            resolutionDepth--;unresolvedEffects++;
+            log("SAFETY: recursive Power triggers capped after 32 resolutions.");return;
+        }
         Player own=target.owner,foe=other(own);
         // Copy the snapshot to avoid iteration changes during triggers.
         for(Unit unit:new ArrayList<>(all(own))){
@@ -496,6 +511,7 @@ public final class ShadowEngine {
         if(target.row==1)for(Unit sniper:all(foe))if(sniper.card.name.equals("Elite Sniper Vandal")&&!sniper.suppressed)
             damage(sniper,target,1);
         sweep();
+        resolutionDepth--;
     }
     private Unit randomUnit(Player player){
         ArrayList<Unit> units=all(player);
@@ -505,6 +521,7 @@ public final class ShadowEngine {
         if(target==null)return;
         target.power-=target.bonus;target.bonus=0;
         target.suppressed=true;target.inspired=false;target.scorched=0;target.scorchTurns=0;
+        target.timedBonuses.clear();
         log("SUPPRESSED ▶ "+target.card.name);
     }
     private void damage(Unit source,Unit target,int amount){
@@ -531,11 +548,12 @@ public final class ShadowEngine {
             if(watcher.suppressed)continue;
             if(newUnit.row==1&&watcher.card.name.equals("Ayuela")&&watcher.row==0){
                 newUnit.scorched=2;newUnit.scorchTurns=2;
-                dealDirect(watcher,newUnit,2);
+                log("SCORCHED ▶ "+newUnit.card.name+" for 2 turns.");
             }
             if(newUnit.row==1&&watcher.card.name.equals("Zhiyao")){
                 watcher.power++;watcher.bonus++;
-                log("Zhiyao reacts +1 Power.");
+                watcher.timedBonuses.add(new TimedBonus(1,3));
+                log("Zhiyao reacts +1 Power for 3 turns.");
             }
             if(newUnit.row==0&&watcher.card.name.equals("Resilient Grenade Dreg")&&watcher.row==0){
                 newUnit.scorched=2;newUnit.scorchTurns=2;
@@ -566,6 +584,14 @@ public final class ShadowEngine {
             if(unit.owner.board[unit.row][unit.column]!=unit)continue;
             if(unit.inspired&&!unit.suppressed)buff(unit,1);
             if(unit.scorchTurns>0){unit.scorchTurns--;dealDirect(unit,unit,unit.scorched);}
+            for(int i=unit.timedBonuses.size()-1;i>=0;i--){
+                TimedBonus active=unit.timedBonuses.get(i);
+                if(--active.turns<=0){
+                    unit.power-=active.value;unit.bonus=Math.max(0,unit.bonus-active.value);
+                    unit.timedBonuses.remove(i);
+                    log(unit.card.name+" temporary bonus expired.");
+                }
+            }
         }
         for(Unit unit:new ArrayList<>(all(side))){
             if(unit.suppressed)continue;
