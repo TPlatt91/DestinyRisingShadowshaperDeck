@@ -692,7 +692,7 @@ public final class ShadowEngine {
     }
     private void damage(Unit source,Unit target,int amount){
         if(target==null||amount<=0)return;
-        int actual=Math.max(0,amount+extraDamage(source)-reduction(target));
+        int actual=ShadowDamageRules.afterAuras(amount,extraDamage(source),reduction(target));
         for(Unit ally:all(source.owner))if(!ally.suppressed &&
                 ally.card.name.equals("Jolder") && !ally.damageDoublerConsumed){
             actual*=2;ally.damageDoublerConsumed=true;
