@@ -392,7 +392,8 @@ public final class BattleActivity extends Activity {
                 @Override public boolean onTouch(View view,MotionEvent event){
                     switch(event.getActionMasked()){
                         case MotionEvent.ACTION_DOWN:
-                            downX=event.getRawX();downY=event.getRawY();dragged=false;return true;
+                            downX=event.getRawX();downY=event.getRawY();dragged=false;
+                            return false; // Let View dispatch click and native long-press detection.
                         case MotionEvent.ACTION_MOVE:
                             if(!dragged && game!=null&&game.humanTurn&&!game.finished &&
                                 game.affordable(game.human,cardIndex) &&
@@ -402,10 +403,10 @@ public final class BattleActivity extends Activity {
                                 view.startDragAndDrop(dragData,new View.DragShadowBuilder(view),null,0);
                                 return true;
                             }
-                            return true;
+                            return dragged; // Non-drag moves still permit long-press inspection.
                         case MotionEvent.ACTION_UP:
-                            if(!dragged)view.performClick();return true;
-                        case MotionEvent.ACTION_CANCEL:return true;
+                            return dragged; // Native click fires for non-drag taps.
+                        case MotionEvent.ACTION_CANCEL:return dragged;
                     }return false;
                 }
             });
