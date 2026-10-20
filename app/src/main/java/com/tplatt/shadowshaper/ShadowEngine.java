@@ -23,7 +23,7 @@ public final class ShadowEngine {
     public String lastActionError="";
     public boolean humanFirst, humanTurn, finished;
     public int round=1, completedTurns=0, unresolvedEffects=0;
-    public int lastPlacedSide=-1,lastPlacedRow=-1,lastPlacedColumn=-1;
+    public int lastPlacedSide=-1,lastPlacedRow=-1,lastPlacedColumn=-1,placementRevision=0;
 
     public static final class Unit {
         public final ShadowData.Card card;
@@ -79,7 +79,7 @@ public final class ShadowEngine {
         cpu.drawPile.addAll(ShadowData.expanded(cpuDeck,catalog));
         Collections.shuffle(human.drawPile,rng);Collections.shuffle(cpu.drawPile,rng);
         humanFirst=rng.nextBoolean();humanTurn=humanFirst;finished=false;
-        round=1;completedTurns=0;lastPlacedSide=-1;lastPlacedRow=-1;lastPlacedColumn=-1;resolutionDepth=0;
+        round=1;completedTurns=0;lastPlacedSide=-1;lastPlacedRow=-1;lastPlacedColumn=-1;placementRevision=0;resolutionDepth=0;
         draw(human,ShadowRules.openingHand(humanFirst));
         draw(cpu,ShadowRules.openingHand(!humanFirst));
         human.points=ShadowRules.lightForRound(1);cpu.points=ShadowRules.lightForRound(1);
@@ -354,7 +354,7 @@ public final class ShadowEngine {
         ShadowData.Card card=me.hand.get(handIndex);
         me.points-=card.numericCost();me.hand.remove(handIndex);
         Unit placed=new Unit(me,card,row,column);me.board[row][column]=placed;
-        lastPlacedSide=me.human?0:1;lastPlacedRow=row;lastPlacedColumn=column;
+        lastPlacedSide=me.human?0:1;lastPlacedRow=row;lastPlacedColumn=column;placementRevision++;
         log((me.human?"YOU":"CPU")+" ▶ "+card.name+" • "+(row==0?"BACK":"FRONT")+" "+(column+1));
         onPlayed(placed,target);
         fireEnemyPlacement(placed);
