@@ -21,18 +21,18 @@ public class RulesActivity extends Activity {
         t.setPadding(dp(2),dp(6),dp(2),dp(6));return t;
     }
     private void section(LinearLayout stack,String title,String body){
-        TextView heading=label(title,20,true,0xffa8c6ff);
+        TextView heading=label(title,20,true,0xffeac17c);
         LinearLayout.LayoutParams h=new LinearLayout.LayoutParams(-1,-2);h.topMargin=dp(18);stack.addView(heading,h);
-        TextView copy=label(body,15,false,0xffdfebff);copy.setLineSpacing(dp(3),1.1f);stack.addView(copy);
+        TextView copy=label(body,15,false,0xffe5d3b8);copy.setLineSpacing(dp(3),1.1f);stack.addView(copy);
     }
     @Override public void onCreate(Bundle state){
-        super.onCreate(state);getWindow().setStatusBarColor(0xff0c1324);
-        getWindow().setNavigationBarColor(0xff0c1324);
-        ScrollView s=new ScrollView(this);s.setBackgroundColor(0xff0c1324);setContentView(s);
+        super.onCreate(state);getWindow().setStatusBarColor(0xff171210);
+        getWindow().setNavigationBarColor(0xff171210);
+        ScrollView s=new ScrollView(this);s.setBackgroundColor(0xff171210);setContentView(s);
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);
         content.setPadding(dp(20),dp(22),dp(20),dp(35));s.addView(content);
         TextView header=label("SHADOWSHAPER RULES",27,true,Color.WHITE);content.addView(header);
-        content.addView(label("Destiny: Rising • In-game duel basics",13,false,0xffa1b6d7));
+        content.addView(label("Destiny: Rising • In-game duel basics",13,false,0xffbfa78e));
         section(content,"Objective","Score more total Power than your opponent after round 6. Your score is the sum of surviving unit Power on your side of the battlefield. A tied Power total is a draw.");
         section(content,"Deck Construction","Exactly 15 cards per deck. Maximum 2 copies of a card with the same name, maximum 3 Exotic cards, and maximum 5 Mythic cards. Summoned-only tokens cannot be placed directly in your constructed deck.");
         section(content,"Rounds & Play Points","The game runs for six rounds. Round 1 grants 1 play point, round 2 grants 2, and so on through round 6. Each card has a cost. You can play multiple cards if you can afford them. Unspent play points do not carry into the next round.");
