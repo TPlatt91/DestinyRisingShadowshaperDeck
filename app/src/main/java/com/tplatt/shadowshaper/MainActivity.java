@@ -25,7 +25,7 @@ public class MainActivity extends Activity {
     private EditText search;
     private String currentDeck = "My Deck";
     private boolean showingDeck = false;
-    private int background = Color.rgb(12,17,31), panel = Color.rgb(25,34,56), accent = Color.rgb(128,173,255);
+    private int background = Color.rgb(24,19,18), panel = Color.rgb(55,40,32), accent = Color.rgb(224,184,112);
 
     static class Card {
         String name, effect, slug, image;
@@ -269,6 +269,50 @@ public class MainActivity extends Activity {
         return "LEGAL • 15/15 cards • "+ex+"/3 Exotic • "+my+"/5 Mythic";
     }
 
+    private void addDeckStatistics() {
+        int power=0,quantity=0,exotic=0,mythic=0;
+        int[] curve=new int[6];
+        for(Map.Entry<String,Integer> entry:active.entrySet()){
+            Card card=getCard(entry.getKey());
+            if(card==null)continue;
+            int copies=entry.getValue();
+            quantity+=copies;
+            power+=Math.max(0,whole(card.power))*copies;
+            int cost=whole(card.cost);
+            if(cost>=1)curve[Math.min(6,cost)-1]+=copies;
+            if(card.rarity.equalsIgnoreCase("Exotic"))exotic+=copies;
+            if(card.rarity.equalsIgnoreCase("Mythic"))mythic+=copies;
+        }
+        LinearLayout totals=new LinearLayout(this);
+        totals.setGravity(Gravity.CENTER_VERTICAL);
+        totals.setBackground(bg(0xff4c3526,12));
+        totals.setPadding(dp(10),dp(5),dp(10),dp(5));
+        body.addView(totals,new LinearLayout.LayoutParams(-1,dp(66)));
+        LinearLayout powerColumn=new LinearLayout(this);
+        powerColumn.setOrientation(LinearLayout.VERTICAL);
+        totals.addView(powerColumn,new LinearLayout.LayoutParams(0,-2,1));
+        TextView powerNumber=label(power+" POWER",22,true);
+        powerNumber.setTextColor(0xfff1c976);powerColumn.addView(powerNumber);
+        TextView subtext=label("BASE DECK POWER • "+exotic+"/3 EXOTIC • "+mythic+"/5 MYTHIC",10,false);
+        subtext.setTextColor(0xffe1c9aa);powerColumn.addView(subtext);
+        TextView countLabel=label(quantity+"/15",21,true);
+        countLabel.setTextColor(0xfff1d9b2);countLabel.setGravity(Gravity.CENTER);
+        totals.addView(countLabel,new LinearLayout.LayoutParams(dp(71),-2));
+
+        LinearLayout curveRow=new LinearLayout(this);
+        curveRow.setBackground(bg(0xff2e231e,10));
+        curveRow.setPadding(dp(5),dp(4),dp(5),dp(4));
+        body.addView(curveRow,new LinearLayout.LayoutParams(-1,dp(54)));
+        for(int n=0;n<curve.length;n++){
+            TextView pip=label((n==5?"6+":" "+(n+1))+"\n"+curve[n],12,true);
+            pip.setGravity(Gravity.CENTER);
+            pip.setTextColor(curve[n]>0?0xfff4d19a:0xffa69684);
+            pip.setBackground(bg(curve[n]>0?0xff4e3d30:0xff302b28,9));
+            LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(0,-1,1);
+            params.setMargins(dp(2),0,dp(2),0);
+            curveRow.addView(pip,params);
+        }
+    }
     private void showDeck(){
         showingDeck=true;clear();
         LinearLayout actions=new LinearLayout(this);body.addView(actions);
@@ -277,6 +321,7 @@ public class MainActivity extends Activity {
         actions.addView(button("Delete",()->deleteDeck()),new LinearLayout.LayoutParams(0,dp(52),1));
         TextView title=label(currentDeck+"   •   "+count()+" cards",19,true);title.setTextColor(accent);body.addView(title);
         TextView legality=label(deckStatus(),12,true);legality.setTextColor(deckStatus().startsWith("LEGAL")?0xff9fe4bb:0xffffcc8c);body.addView(legality);
+        addDeckStatistics();
         body.addView(button("⚔  Sim Battle with This Deck",()->{
             if(!deckStatus().startsWith("LEGAL")){toast("Cannot start: "+deckStatus());return;}
             android.content.Intent intent=new android.content.Intent(this,BattleActivity.class);
