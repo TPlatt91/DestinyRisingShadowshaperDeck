@@ -1,5 +1,8 @@
 # Destiny Rising — Shadowshaper Deck Companion
 
+> **Kotlin + Jetpack Compose migration (October 20, 2026):** The primary launcher, Home, Deck Construction, Card Collection, Card Details, and Rules screens now use Kotlin/Compose. The Kotlin `ShadowDeckViewModel` and `ShadowDeckRepository` preserve existing named decks and card counts, while Kotlin modules own deck legality, faction-line positioning, damage math, and battle StateFlow orchestration. The existing Java landscape battle renderer and card-specific effect switch remain operational and will be migrated in audited families. This is a **staged migration, not a full Java removal**. [Migration detail](docs/KOTLIN_MIGRATION.md).
+
+
 Native Android Studio (Java) single-player Shadowshaper Duels companion.
 
 ## Main menu (four sections)
@@ -9,7 +12,7 @@ Native Android Studio (Java) single-player Shadowshaper Duels companion.
 3. **Card Collection** — browse the 110 known card records, original card-face images where available, stats, rarity, faction, effects, and source details; search by name/faction/rarity/effect.
 4. **Rules** — in-app Shadowshaper deck limits, six-round scoring, positioning, Inspired/Sustained/Suppressed definitions, and gameplay source link.
 
-The app opens to the new four-section **HomeActivity**. BattleActivity is single-player against a legal CPU practice deck; it is not a reimplementation of Destiny Rising's online PvP client. No background multiplayer or game-account access.
+The app opens to the new four-section **ShadowComposeActivity** (Kotlin/Compose). The original Java HomeActivity remains as a rollback fallback. BattleActivity is single-player against a legal CPU practice deck; it is not a reimplementation of Destiny Rising's online PvP client. No background multiplayer or game-account access.
 
 
 Native Android Studio (Java) deck creator. Current catalog: **110 distinct names** from TodayInDestiny and a detailed community list; this is **not guaranteed to be the full current game roster**.
@@ -23,7 +26,7 @@ Native Android Studio (Java) deck creator. Current catalog: **110 distinct names
 - The CPU places cards sequentially, with UI updates between each play. Dialogs pause AI progression; a placement animates once, and each new round highlights once.
 - Deck construction shows base deck Power, copies and rarity counts, and a six-cost distribution, reflecting the real game's deck summary layout.
 - **Scorpius** has a community-documented corrected Back Row, two-target end-turn ability; two regression tests protect the correction.
-- The core source contains **31 local JUnit tests** across two test files. These are committed but **not executed**; no GitHub Actions workflows were invoked.
+- The project has **36 locally authored JUnit tests** (31 Java + 5 Kotlin) across two test files. These are committed but **not executed**; no GitHub Actions workflows were invoked.
 
 For reference sources, what is implemented, and remaining exact-match limitations, read [UI fidelity audit](docs/UI_FIDELITY_AUDIT.md) and [rules audit](docs/RULES_AUDIT.md). Do not treat source-level structural checks as an Android build or visual test.
 
