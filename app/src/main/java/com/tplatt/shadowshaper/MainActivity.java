@@ -90,7 +90,8 @@ public class MainActivity extends Activity {
         readSupplemental("expanded_cards.tsv");
         readDetails();
         Collections.sort(cards,(a,b)->a.name.compareToIgnoreCase(b.name));
-        loadNames();loadDeck(currentDeck);frame();showCollection();
+        loadNames();loadDeck(currentDeck);frame();
+        if("deck".equals(getIntent().getStringExtra("start_page")))showDeck();else showCollection();
     }
     private int dp(float d){ return (int)(getResources().getDisplayMetrics().density*d+0.5f); }
     private TextView label(String text,int size,boolean bold) {
@@ -104,7 +105,9 @@ public class MainActivity extends Activity {
     }
     private void frame(){
         root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);root.setBackgroundColor(background);setContentView(root);
-        TextView title=label("SHADOWSHAPER  •  DECK ARCHIVE",19,true);title.setTextColor(accent);root.addView(title);
+        LinearLayout masthead=new LinearLayout(this);masthead.setGravity(Gravity.CENTER_VERTICAL);root.addView(masthead);
+        masthead.addView(button("‹ Home",()->finish()),new LinearLayout.LayoutParams(dp(87),dp(48)));
+        TextView title=label("SHADOWSHAPER DUELS",18,true);title.setTextColor(accent);masthead.addView(title);
         LinearLayout tabs=new LinearLayout(this);root.addView(tabs);
         Button catalog=button("Card Collection",()->showCollection());tabs.addView(catalog,new LinearLayout.LayoutParams(0,dp(48),1));
         Button decks=button("Deck Builder",()->showDeck());tabs.addView(decks,new LinearLayout.LayoutParams(0,dp(48),1));
@@ -221,12 +224,51 @@ public class MainActivity extends Activity {
         }
         AlertDialog dialog=new AlertDialog.Builder(this)
           .setTitle("Card details").setView(scroller)
-          .setPositiveButton("Add copy",(d,w)->{active.put(c.name,active.getOrDefault(c.name,0)+1);saveDeck();if(showingDeck)showDeck();else showCollection();})
+          .setPositiveButton("Add copy",(d,w)->{String problem=addProblem(c);if(!problem.isEmpty()){toast(problem);return;}active.put(c.name,active.getOrDefault(c.name,0)+1);saveDeck();if(showingDeck)showDeck();else showCollection();})
           .setNeutralButton("Remove copy",(d,w)->{int n=active.getOrDefault(c.name,0);if(n<=1)active.remove(c.name);else active.put(c.name,n-1);saveDeck();if(showingDeck)showDeck();else showCollection();})
           .setNegativeButton("Close",null).create();
         dialog.show();
         if(dialog.getWindow()!=null)dialog.getWindow().setLayout(-1,-2);
     }
+    private int whole(String value){
+        try {return Integer.parseInt(value);}catch(Exception ignored){return -1;}
+    }
+    private boolean playable(Card card){
+        return whole(card.cost)>0&&whole(card.power)>=0 &&
+            !"Summoned unit".equalsIgnoreCase(card.classification);
+    }
+    private int rarityCount(String rarity){
+        int count=0;for(Map.Entry<String,Integer> entry:active.entrySet()){
+            Card card=getCard(entry.getKey());
+            if(card!=null&&card.rarity.equalsIgnoreCase(rarity))count+=entry.getValue();
+        }
+        return count;
+    }
+    private String addProblem(Card card){
+        if(!playable(card))return card.name+" cannot be decked (token or missing verified stats).";
+        if(active.getOrDefault(card.name,0)>=2)return "Maximum 2 copies of a card.";
+        int total=0;for(int n:active.values())total+=n;
+        if(total>=15)return "A Shadowshaper deck has exactly 15 cards.";
+        if(card.rarity.equalsIgnoreCase("Exotic")&&rarityCount("Exotic")>=3)
+            return "Maximum 3 Exotic cards per deck.";
+        if(card.rarity.equalsIgnoreCase("Mythic")&&rarityCount("Mythic")>=5)
+            return "Maximum 5 Mythic cards per deck.";
+        return "";
+    }
+    private String deckStatus(){
+        int total=0;for(int n:active.values())total+=n;
+        for(Map.Entry<String,Integer> e:active.entrySet()){
+            Card card=getCard(e.getKey());
+            if(card==null||!playable(card))return "Contains a token or incomplete card: "+e.getKey();
+            if(e.getValue()>2)return "Too many copies of "+e.getKey()+" (max 2).";
+        }
+        int ex=rarityCount("Exotic"),my=rarityCount("Mythic");
+        if(ex>3)return ex+" Exotic cards (max 3).";
+        if(my>5)return my+" Mythic cards (max 5).";
+        if(total!=15)return total+"/15 cards • "+ex+"/3 Exotic • "+my+"/5 Mythic";
+        return "LEGAL • 15/15 cards • "+ex+"/3 Exotic • "+my+"/5 Mythic";
+    }
+
     private void showDeck(){
         showingDeck=true;clear();
         LinearLayout actions=new LinearLayout(this);body.addView(actions);
@@ -234,6 +276,12 @@ public class MainActivity extends Activity {
         actions.addView(button("Rename",()->renameDeck()),new LinearLayout.LayoutParams(0,dp(52),1));
         actions.addView(button("Delete",()->deleteDeck()),new LinearLayout.LayoutParams(0,dp(52),1));
         TextView title=label(currentDeck+"   •   "+count()+" cards",19,true);title.setTextColor(accent);body.addView(title);
+        TextView legality=label(deckStatus(),12,true);legality.setTextColor(deckStatus().startsWith("LEGAL")?0xff9fe4bb:0xffffcc8c);body.addView(legality);
+        body.addView(button("⚔  Sim Battle with This Deck",()->{
+            if(!deckStatus().startsWith("LEGAL")){toast("Cannot start: "+deckStatus());return;}
+            android.content.Intent intent=new android.content.Intent(this,BattleActivity.class);
+            intent.putExtra("selected_deck",currentDeck);startActivity(intent);
+        }),new LinearLayout.LayoutParams(-1,dp(49)));
         LinearLayout io=new LinearLayout(this);body.addView(io);
         io.addView(button("Import text",()->importDeck()),new LinearLayout.LayoutParams(0,dp(50),1));
         io.addView(button("Copy deck",()->copyDeck()),new LinearLayout.LayoutParams(0,dp(50),1));
@@ -325,7 +373,21 @@ public class MainActivity extends Activity {
                 if(c==null||qty<1||qty>999){unknown.add(line);continue;}
                 incoming.put(c.name,incoming.getOrDefault(c.name,0)+qty);
             }
-            if(!incoming.isEmpty()){active.clear();active.putAll(incoming);saveDeck();showDeck();}
+            if(!incoming.isEmpty()){
+                int count=0,exotic=0,mythic=0;String problem="";
+                for(Map.Entry<String,Integer> entry:incoming.entrySet()){
+                    Card c=getCard(entry.getKey());int qty=entry.getValue();count+=qty;
+                    if(qty>2){problem="No more than 2 copies of "+c.name;break;}
+                    if(!playable(c)){problem="Unplayable token or missing stats: "+c.name;break;}
+                    if(c.rarity.equalsIgnoreCase("Exotic"))exotic+=qty;
+                    if(c.rarity.equalsIgnoreCase("Mythic"))mythic+=qty;
+                }
+                if(problem.isEmpty()&&count>15)problem="Deck may not exceed 15 cards.";
+                if(problem.isEmpty()&&exotic>3)problem="Deck may not exceed 3 Exotic cards.";
+                if(problem.isEmpty()&&mythic>5)problem="Deck may not exceed 5 Mythic cards.";
+                if(problem.isEmpty()){active.clear();active.putAll(incoming);saveDeck();showDeck();}
+                else{toast(problem+" Import not applied.");return;}
+            }
             toast("Imported "+incoming.size()+" unique cards; "+unknown.size()+" lines skipped");
             if(!unknown.isEmpty())new AlertDialog.Builder(this).setTitle("Unrecognized lines").setMessage(android.text.TextUtils.join("\n",unknown)).setPositiveButton("OK",null).show();
         }).setNegativeButton("Cancel",null).show();
