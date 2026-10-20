@@ -156,7 +156,7 @@ public class MainActivity extends Activity {
         TextView effect=label(c.effect,12,false);effect.setTextColor(0xffccd6eb);
         effect.setMaxLines(2);info.addView(effect);
         TextView owned=label("In deck: "+active.getOrDefault(c.name,0)+
-            (c.image.isEmpty() ? "   •   Image needed" : ""),11,false);
+            (c.image.isEmpty() && bundledImageName(c).isEmpty() ? "   •   Image needed" : ""),11,false);
         owned.setTextColor(0xffb7c7e0);info.addView(owned);
         row.setOnClickListener(v->inspect(c));
     }
