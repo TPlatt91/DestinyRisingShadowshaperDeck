@@ -113,6 +113,27 @@ public final class ShadowData {
         }
         return output;
     }
+    /** Build a legal local practice opponent by faction, without fake or token cards. */
+    public static LinkedHashMap<String,Integer> opponentDeck(Map<String,Card> catalog,String faction){
+        if(faction==null || faction.equalsIgnoreCase("Mixed"))return opponentDeck(catalog);
+        ArrayList<Card> choices=new ArrayList<>();
+        for(Card c:catalog.values()){
+            if(c.isPlayable()&&c.faction.equalsIgnoreCase(faction))choices.add(c);
+        }
+        // Cheap cards first: give the CPU playable openings while retaining stronger finishers.
+        choices.sort((a,b)->Integer.compare(a.numericCost(),b.numericCost()));
+        LinkedHashMap<String,Integer> result=new LinkedHashMap<>();
+        int exotic=0,mythic=0;
+        for(Card c:choices){
+            if(c.rarity.equalsIgnoreCase("Exotic")&&exotic>=EXOTIC_LIMIT)continue;
+            if(c.rarity.equalsIgnoreCase("Mythic")&&mythic>=MYTHIC_LIMIT)continue;
+            result.put(c.name,1);
+            if(c.rarity.equalsIgnoreCase("Exotic"))exotic++;
+            if(c.rarity.equalsIgnoreCase("Mythic"))mythic++;
+            if(result.size()==DECK_SIZE)break;
+        }
+        return result.size()==DECK_SIZE?result:opponentDeck(catalog);
+    }
     public static LinkedHashMap<String,Integer> opponentDeck(Map<String,Card> catalog){
         // Default CPU practice build. Same legality restrictions as player decks.
         LinkedHashMap<String,Integer> result=new LinkedHashMap<>();
