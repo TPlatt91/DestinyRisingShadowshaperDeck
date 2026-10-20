@@ -30,7 +30,7 @@ This local metadata audit does not use GitHub Actions or GitHub usage credits.
 
 ## Opening in Android Studio
 
-Open the repository root folder in Android Studio, using JDK 17 and the Gradle 8.11.1 distribution compatible with Android Gradle Plugin 8.9.2. The project does not yet contain a Gradle wrapper JAR. If Android Studio requires a Gradle wrapper, run `gradle wrapper --gradle-version 8.11.1` with a local Gradle installation and JDK 17, then sync and build the `app` module.
+Open the repository root folder in Android Studio, using JDK 17 and the Gradle 8.11.1 distribution compatible with Android Gradle Plugin 8.9.2. The project includes the Gradle wrapper JAR and launcher scripts. Open the repository root in Android Studio and sync; the wrapper will download Gradle 8.11.1 on first run. On Windows, run `gradlew.bat :app:assembleDebug` from the project root if you want a local command-line build. This needs internet for the first Gradle download but does not use GitHub Actions or GitHub usage credits.
 
 **Status:** Android project and viewer source committed, but full Gradle compilation and on-device verification have not yet been completed.
 
