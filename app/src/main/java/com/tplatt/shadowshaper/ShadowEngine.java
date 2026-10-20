@@ -83,6 +83,7 @@ public final class ShadowEngine {
         draw(human,ShadowRules.openingHand(humanFirst));
         draw(cpu,ShadowRules.openingHand(!humanFirst));
         human.points=ShadowRules.lightForRound(1);cpu.points=ShadowRules.lightForRound(1);
+        log("MATCH SEED: "+seed);
         log(humanFirst?"Offensive: you act first.":"Defensive: CPU acts first.");
         log("Round 1 — 1 play point.");
     }
@@ -781,6 +782,40 @@ public final class ShadowEngine {
         if(isTargeted(card) && !targetOptions(cpu,card,row,column).isEmpty())value+=1.3;
         if(isTargeted(card) && targetOptions(cpu,card,row,column).isEmpty())value-=1.0;
         return value+rng.nextDouble()*0.12;
+    }
+    /** Full deterministic match diagnostic for locally reproducing card/rule problems. */
+    public String diagnosticReport(){
+        StringBuilder report=new StringBuilder();
+        report.append("SHADOWSHAPER DUELS • LOCAL SIMULATOR\n")
+          .append("Seed: ").append(seed).append("\n")
+          .append("Round: ").append(round).append("/").append(ROUNDS).append("\n")
+          .append("Turn: ").append(turnLabel()).append("\n")
+          .append("Offensive: ").append(humanFirst?"Player":"CPU").append("\n")
+          .append("Score: ").append(score(human)).append(" / ").append(score(cpu)).append("\n")
+          .append("Light: player ").append(human.points).append(", CPU ").append(cpu.points).append("\n")
+          .append("Pending card effects: ").append(unresolvedEffects).append("\n")
+          .append("Match complete: ").append(finished).append("\n\n");
+        appendPlayerReport(report,"PLAYER",human);
+        appendPlayerReport(report,"CPU",cpu);
+        report.append("\nEVENTS\n");
+        for(String event:journal)report.append(event).append('\n');
+        return report.toString();
+    }
+    private void appendPlayerReport(StringBuilder report,String label,Player side){
+        report.append(label).append(": Deck ").append(side.drawPile.size())
+          .append(" / Hand ").append(side.hand.size()).append('\n');
+        for(int row=0;row<2;row++){
+            report.append(row==0?"BACK: ":"FRONT: ");
+            for(int col=0;col<COLUMNS;col++){
+                Unit u=side.board[row][col];
+                report.append('[').append(col+1).append(' ');
+                if(u!=null)report.append(u.card.name).append(" Power=").append(power(u))
+                    .append(" Inspired=").append(u.inspired).append(" Suppressed=").append(u.suppressed);
+                else report.append("EMPTY");
+                report.append("] ");
+            }
+            report.append('\n');
+        }
     }
     public String result(){
         if(!finished)return "";
