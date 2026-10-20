@@ -22,7 +22,7 @@ public final class ShadowEffectCoverage {
             case "Drop Pod":
                 return "INCOMPLETE: Original random Cabal Line summon pool must be verified.";
             case "Xuan Wei":
-                return "PARTIAL: Damage works; destination-selection movement is pending.";
+                return "PARTIAL: Damage and relocation work; exact destination-choice rules need in-game verification.";
             default:
                 return "SCRIPTED / QA PENDING: Engine references this effect, but full rules accuracy is not certified.";
         }
