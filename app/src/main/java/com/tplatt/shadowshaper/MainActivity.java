@@ -51,6 +51,15 @@ public class MainActivity extends Activity {
                 card.rarity=p[1]; card.faction=p[2];card.cost=p[3];card.power=p[4];
                 card.image="";
                 card.source="https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/shadowshaper_card_list/";
+                String effect=card.effect;
+                int colon=effect.indexOf(':');
+                if(colon>=0) {
+                    String prefix=effect.substring(0,colon);
+                    if(prefix.startsWith("When Played")||prefix.startsWith("Sustained")||
+                       prefix.startsWith("Upon")||prefix.startsWith("At the end"))
+                        card.trigger=prefix;
+                }
+                if(card.cost.equalsIgnoreCase("Token"))card.classification="Summoned unit";
                 cards.add(card);
             }
         } catch(Exception e){Toast.makeText(this,"Could not load "+filename+": "+e.getMessage(),Toast.LENGTH_LONG).show();}
@@ -172,13 +181,13 @@ public class MainActivity extends Activity {
         LinearLayout stack=new LinearLayout(this);stack.setPadding(dp(12),dp(10),dp(12),dp(14));
         stack.setOrientation(LinearLayout.VERTICAL);stack.setBackgroundColor(background);
         scroller.addView(stack);
-        if(!c.image.isEmpty()){
+        if(!c.image.isEmpty()||!bundledImageName(c).isEmpty()){
             ImageView art=new ImageView(this);art.setScaleType(ImageView.ScaleType.FIT_CENTER);
             stack.addView(art,new LinearLayout.LayoutParams(-1,dp(360)));loadImage(c,art);
-            TextView imageNote=label("Original card face · online image cached when available",11,false);
+            TextView imageNote=label("Card-face image · bundled artwork takes priority over online cache",11,false);
             imageNote.setGravity(Gravity.CENTER);imageNote.setTextColor(0xffaab7ca);stack.addView(imageNote);
         } else {
-            TextView absent=label("CARD ARTWORK NOT YET VERIFIED\nThis card is documented, but no matching original card-face image has been found.",14,true);
+            TextView absent=label("CARD ARTWORK NOT YET VERIFIED\nThis card is documented, but no original image is available yet. Add card_art/" + c.slug + ".webp to this project.",14,true);
             absent.setGravity(Gravity.CENTER);absent.setTextColor(0xffc2cde3);
             absent.setBackground(bg(panel,12));
             stack.addView(absent,new LinearLayout.LayoutParams(-1,dp(180)));
@@ -302,7 +311,7 @@ public class MainActivity extends Activity {
     }
     private void importDeck(){
         EditText input=new EditText(this);input.setMinLines(7);input.setGravity(Gravity.TOP);
-        input.setHint("2x Ayuela\\n1x Mu Ying");input.setTextColor(Color.BLACK);
+        input.setHint("2x Ayuela\\n1x Mu Ying");input.setTextColor(Color.WHITE);
         ScrollView container=new ScrollView(this);container.setPadding(dp(12),0,dp(12),0);container.addView(input);
         new AlertDialog.Builder(this).setTitle("Import deck text").setMessage("Replaces current deck. Unknown card names will be reported.").setView(container)
         .setPositiveButton("Import",(d,w)->{
@@ -322,39 +331,56 @@ public class MainActivity extends Activity {
         }).setNegativeButton("Cancel",null).show();
     }
     private void toast(String msg){Toast.makeText(this,msg,Toast.LENGTH_LONG).show();}
+    // Drop official card art in app/src/main/assets/card_art/<card_slug>.webp
+    // (png or jpg also supported). Embedded art always takes priority over network art.
+    private String bundledImageName(Card c) {
+        for(String extension:new String[]{"webp","png","jpg","jpeg"}) {
+            String name="card_art/"+c.slug+"."+extension;
+            try(InputStream input=getAssets().open(name)) {return name;}
+            catch(IOException ignored){}
+        }
+        return "";
+    }
     private void loadImage(Card card,ImageView view){
         view.setImageDrawable(bg(0xff28334f,8));
         view.setContentDescription(card.name);
         view.setTag(card.slug);
-        if(card.image.isEmpty())return;
         Bitmap cached;
         synchronized(memory){cached=memory.get(card.slug);}
         if(cached!=null){view.setImageBitmap(cached);return;}
         images.execute(()->{
             Bitmap bitmap=null;
-            File directory=new File(getCacheDir(),"shadowshaper_cards");
-            if(!directory.exists())directory.mkdirs();
-            File file=new File(directory,card.slug+".webp");
-            try {
-                if(file.isFile())bitmap=BitmapFactory.decodeFile(file.getAbsolutePath());
-                if(bitmap==null) {
-                    HttpURLConnection conn=(HttpURLConnection)new URL(card.image).openConnection();
-                    conn.setConnectTimeout(6000);conn.setReadTimeout(10000);
-                    conn.setRequestProperty("User-Agent","ShadowshaperDeck/0.2");
-                    try {
-                        if(conn.getResponseCode()==HttpURLConnection.HTTP_OK &&
-                           conn.getContentType()!=null && conn.getContentType().startsWith("image/")) {
-                            try(InputStream input=conn.getInputStream();
-                                FileOutputStream output=new FileOutputStream(file)){
-                                byte[] bytes=new byte[8192];int length;
-                                while((length=input.read(bytes))!=-1)output.write(bytes,0,length);
+            String bundled=bundledImageName(card);
+            if(!bundled.isEmpty()) {
+                try(InputStream input=getAssets().open(bundled)){
+                    bitmap=BitmapFactory.decodeStream(input);
+                }catch(IOException ignored){}
+            }
+            if(bitmap==null && !card.image.isEmpty()){
+                File directory=new File(getCacheDir(),"shadowshaper_cards");
+                if(!directory.exists())directory.mkdirs();
+                File file=new File(directory,card.slug+".webp");
+                try {
+                    if(file.isFile())bitmap=BitmapFactory.decodeFile(file.getAbsolutePath());
+                    if(bitmap==null) {
+                        HttpURLConnection conn=(HttpURLConnection)new URL(card.image).openConnection();
+                        conn.setConnectTimeout(6000);conn.setReadTimeout(10000);
+                        conn.setRequestProperty("User-Agent","ShadowshaperDeck/0.2");
+                        try {
+                            if(conn.getResponseCode()==HttpURLConnection.HTTP_OK &&
+                               conn.getContentType()!=null && conn.getContentType().startsWith("image/")) {
+                                try(InputStream input=conn.getInputStream();
+                                    FileOutputStream output=new FileOutputStream(file)){
+                                    byte[] bytes=new byte[8192];int length;
+                                    while((length=input.read(bytes))!=-1)output.write(bytes,0,length);
+                                }
+                                bitmap=BitmapFactory.decodeFile(file.getAbsolutePath());
                             }
-                            bitmap=BitmapFactory.decodeFile(file.getAbsolutePath());
-                        }
-                    }finally {conn.disconnect();}
-                    if(bitmap==null)file.delete();
-                }
-            }catch(Exception ignored){ /* Image errors never hide the card metadata. */ }
+                        }finally {conn.disconnect();}
+                        if(bitmap==null)file.delete();
+                    }
+                }catch(Exception ignored){ /* Image problems must not block card details. */ }
+            }
             if(bitmap!=null){
                 synchronized(memory){memory.put(card.slug,bitmap);}
                 final Bitmap completed=bitmap;
