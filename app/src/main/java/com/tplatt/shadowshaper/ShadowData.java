@@ -23,7 +23,7 @@ public final class ShadowData {
     public static final int EXOTIC_LIMIT=ShadowRules.EXOTIC_LIMIT;
     public static final int MYTHIC_LIMIT=ShadowRules.MYTHIC_LIMIT;
     public static class Card {
-        public String name="", rarity="", faction="", cost="", power="", effect="", classification="", trigger="";
+        public String name="", rarity="", faction="", cost="", power="", effect="", classification="", trigger="", cardNumber="", acquisition="", notes="", source="";
         public boolean onlineArt=false;
         public int numericCost(){try{return Integer.parseInt(cost);}catch(Exception ignored){return -1;}}
         public int numericPower(){try{return Integer.parseInt(power);}catch(Exception ignored){return -1;}}
@@ -46,6 +46,7 @@ public final class ShadowData {
                 card.faction=fields[1];card.rarity=fields[2];
                 card.cost=fields[3];card.power=fields[4];
                 card.classification=fields[5];card.trigger=fields[6];
+                card.acquisition=fields[7];card.notes=fields[8];card.cardNumber=fields[9];
             }
         }catch(Exception ignored){}
         return result;
@@ -58,6 +59,7 @@ public final class ShadowData {
                 if(fields.length!=(expanded?6:2))continue;
                 if(map.containsKey(fields[0]))continue;
                 Card card=new Card();card.name=fields[0];card.onlineArt=!expanded;
+                card.source=expanded?"https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/":"https://www.todayindestiny.com/rising/shadowshaper_duels/cards";
                 if(expanded){card.rarity=fields[1];card.faction=fields[2];card.cost=fields[3];card.power=fields[4];card.effect=fields[5];}
                 else card.effect=fields[1];
                 map.put(card.name,card);
@@ -91,22 +93,9 @@ public final class ShadowData {
     public static String selectedDeck(Context context){
         return context.getSharedPreferences("MainActivity",Context.MODE_PRIVATE).getString("selected_deck","My Deck");
     }
+    /** Kotlin is now the canonical deck legality implementation. */
     public static String validate(Map<String,Integer> deck,Map<String,Card> catalog){
-        int total=0,exotic=0,mythic=0;
-        for(Map.Entry<String,Integer> entry:deck.entrySet()){
-            Card card=catalog.get(entry.getKey());
-            if(card==null)return "Unknown card: "+entry.getKey();
-            int amount=entry.getValue();
-            if(amount<1||amount>COPIES_LIMIT)return "Maximum two copies of "+card.name;
-            if(!card.isPlayable())return card.name+" is a token or missing its Power / cost.";
-            total+=amount;
-            if(card.rarity.equalsIgnoreCase("Exotic"))exotic+=amount;
-            if(card.rarity.equalsIgnoreCase("Mythic"))mythic+=amount;
-        }
-        if(total!=DECK_SIZE)return "A playable deck needs exactly 15 cards ("+total+"/15).";
-        if(exotic>EXOTIC_LIMIT)return "No more than 3 Exotic cards (currently "+exotic+").";
-        if(mythic>MYTHIC_LIMIT)return "No more than 5 Mythic cards (currently "+mythic+").";
-        return "";
+        return ShadowDeckRules.validate(deck,catalog);
     }
     public static ArrayList<Card> expanded(Map<String,Integer> deck,Map<String,Card> catalog){
         ArrayList<Card> output=new ArrayList<>();
