@@ -1,0 +1,122 @@
+package com.tplatt.shadowshaper;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+import java.util.LinkedHashMap;
+
+/** Core rules regression tests. Run locally, not in GitHub Actions. */
+public class ShadowRulesTest {
+    @Test public void deckAndRoundNumbersAreCentralized(){
+        assertEquals(15,ShadowRules.DECK_SIZE);
+        assertEquals(2,ShadowRules.COPY_LIMIT);
+        assertEquals(3,ShadowRules.EXOTIC_LIMIT);
+        assertEquals(5,ShadowRules.MYTHIC_LIMIT);
+        assertEquals(6,ShadowRules.ROUNDS);
+        assertEquals(5,ShadowRules.openingHand(true));
+        assertEquals(4,ShadowRules.openingHand(false));
+        assertEquals(1,ShadowRules.lightForRound(1));
+        assertEquals(6,ShadowRules.lightForRound(6));
+        assertTrue(ShadowRules.isOnBoard(0,0));
+        assertTrue(ShadowRules.isOnBoard(1,5));
+        assertFalse(ShadowRules.isOnBoard(-1,0));
+        assertFalse(ShadowRules.isOnBoard(0,6));
+        assertEquals("DRAW",ShadowRules.result(8,8));
+        assertEquals("VICTORY",ShadowRules.result(9,8));
+        assertEquals("DEFEAT",ShadowRules.result(7,8));
+    }
+    private LinkedHashMap<String,ShadowData.Card> catalog(){
+        LinkedHashMap<String,ShadowData.Card> set=new LinkedHashMap<>();
+        for(int i=0;i<15;i++){
+            ShadowData.Card card=new ShadowData.Card();
+            card.name="Test Unit "+i;card.rarity="Rare";card.faction="Humans";
+            card.cost="1";card.power="2";card.effect="No special effects.";
+            set.put(card.name,card);
+        }
+        ShadowData.Card morgran=new ShadowData.Card();
+        morgran.name="Morgran";morgran.rarity="Legendary";morgran.faction="Humans";
+        morgran.cost="3";morgran.power="6";morgran.effect="Grants +1 Power to a unit.";
+        set.put(morgran.name,morgran);
+        return set;
+    }
+    private LinkedHashMap<String,Integer> deck(){
+        LinkedHashMap<String,Integer> chosen=new LinkedHashMap<>();
+        for(int i=0;i<15;i++)chosen.put("Test Unit "+i,1);
+        return chosen;
+    }
+    private ShadowEngine humanFirst(){
+        LinkedHashMap<String,ShadowData.Card> cards=catalog();
+        for(long seed=0;seed<600;seed++){
+            ShadowEngine game=new ShadowEngine(cards,seed);
+            game.start(deck(),deck());
+            if(game.humanFirst)return game;
+        }
+        throw new AssertionError("Unable to find offensive test seed");
+    }
+    @Test public void rejectedOutOfBoundsPlacementIsAtomic(){
+        ShadowEngine game=humanFirst();
+        int oldLight=game.human.points,oldHand=game.human.hand.size();
+        assertFalse(game.play(game.human,0,1,6,null));
+        assertEquals("Invalid battlefield position.",game.lastActionError);
+        assertEquals(oldLight,game.human.points);
+        assertEquals(oldHand,game.human.hand.size());
+        assertEquals(0,game.score(game.human));
+    }
+    @Test public void cannotPlayOnOtherSideTurn(){
+        ShadowEngine game=humanFirst();
+        assertFalse(game.play(game.cpu,0,1,0,null));
+        assertEquals("It is not this player's turn.",game.lastActionError);
+        assertEquals(1,game.cpu.points);
+        assertNull(game.cpu.board[1][0]);
+    }
+    @Test public void paymentAndOccupiedSlotsAreValidated(){
+        ShadowEngine game=humanFirst();
+        assertTrue(game.play(game.human,0,1,0,null));
+        assertEquals(0,game.human.points);
+        int hand=game.human.hand.size();
+        assertFalse(game.play(game.human,0,1,1,null));
+        assertEquals("Insufficient Light.",game.lastActionError);
+        assertEquals(hand,game.human.hand.size());
+        game.human.points=1;
+        assertFalse(game.play(game.human,0,1,0,null));
+        assertEquals("Position is already occupied.",game.lastActionError);
+        assertEquals(hand,game.human.hand.size());
+        assertEquals(1,game.human.points);
+    }
+    @Test public void targetedPlaysRequireLegalSelectionsAndDoNotChargeForErrors(){
+        ShadowEngine game=humanFirst();
+        game.human.points=3;
+        game.human.hand.clear();
+        game.human.hand.add(game.catalog.get("Morgran"));
+        // A friendly unit is a legal buff target.
+        game.human.board[0][0]=new ShadowEngine.Unit(game.human,game.catalog.get("Test Unit 0"),0,0);
+        // And the enemy unit is alive but illegal for Morgran.
+        game.cpu.board[0][0]=new ShadowEngine.Unit(game.cpu,game.catalog.get("Test Unit 1"),0,0);
+        int light=game.human.points;
+        assertFalse(game.play(game.human,0,1,1,null));
+        assertTrue(game.lastActionError.contains("Choose a target"));
+        assertFalse(game.play(game.human,0,1,1,new ShadowEngine.Target(game.cpu,0,0)));
+        assertTrue(game.lastActionError.contains("not a legal target"));
+        assertEquals(light,game.human.points);
+        assertEquals(1,game.human.hand.size());
+        assertNull(game.human.board[1][1]);
+        assertTrue(game.play(game.human,0,1,1,new ShadowEngine.Target(game.human,0,0)));
+        assertEquals(0,game.human.points);
+        assertEquals(3,game.power(game.human.board[0][0]));
+    }
+    @Test public void firstPlayerMovesFirstEachRoundAndUnusedLightDoesNotCarry(){
+        ShadowEngine game=humanFirst();
+        game.human.points=0;
+        game.endTurn();
+        assertFalse(game.humanTurn);
+        game.endTurn();
+        assertEquals(2,game.round);
+        assertTrue(game.humanTurn);
+        assertEquals(2,game.human.points);
+        assertEquals(2,game.cpu.points);
+        game.human.points=1;
+        game.endTurn();game.endTurn();
+        assertEquals(3,game.round);
+        assertEquals(3,game.human.points);
+    }
+}
