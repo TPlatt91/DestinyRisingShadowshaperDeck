@@ -1,0 +1,46 @@
+Hexguard|Legendary|Hive|1|1|When Played: Gains Inspired.
+Cursed Thrall|Legendary|Hive|1|1|When Played: Moves to opponent's front row; dies at start of your next turn and deals 2 damage to adjacent units.
+Acolyte|Rare|Hive|1|2|No special effects.
+Thrall|Rare|Hive|1|2|No special effects.
+Tenacious Shielded Knight|Mythic|Hive|2|3|When Played: Grants Inspired to adjacent Hive units.
+The Disfavored|Mythic|Hive|2|3|Sustained (Front Row): When buffed, grants +2 Power to a random allied Hive unit.
+Tenacious Thrall|Legendary|Hive|2|5|No special effects.
+Inquisitor|Legendary|Hive|3|3|When Played (Back Row): Deals 4 damage to an opposing unit.
+Knight|Legendary|Hive|3|5|When Played: Grants +3 Power to an Inspired Hive unit.
+Wizard|Legendary|Hive|3|4|When Played: Grants Inspired to an allied Hive unit.
+Ogre|Legendary|Hive|3|2|Sustained: When buffed, deals 1 damage to 2 random opposing units.
+Shrieker|Legendary|Hive|3|2|When buffed, deals 2 damage to a random opposing unit.
+Tomb Ship|Exotic|Hive|4|6|When Played: Summons 2 random Hive units to its left and right.
+Tenacious Knight|Mythic|Hive|4|6|When Played (Front Row): Gives +3 Power to 2 random Inspired Hive units.
+Tenacious Ogre|Mythic|Hive|4|5|Sustained: When buffed, deals 1 damage to 4 random opposing units.
+Tenacious Wizard|Mythic|Hive|4|5|When Played: Grants Inspired to 2 random Hive units.
+Paradoxical Neophyte|Exotic|Hive|6|10|When Played: Summons 1 Shade on the left.
+Paradoxical Neophyte's Shade|Exotic|Hive|Token|1|Sustained: Gains +4 Power for each Inspired Hive on your field.
+Shinka Decurion|Mythic|Cabal|1|1|Sustained (3-Unit Line): Cabal units deal 2 additional damage.
+Legionary|Rare|Cabal|1|2|Sustained (Column): Gains +1 Power.
+War Beast|Rare|Cabal|1|2|No special effects.
+Centurion|Mythic|Cabal|2|5|Sustained (4-Unit Line): Adjacent units gain +2 Power.
+Shinka Psion|Legendary|Cabal|2|3|When Played (2-Unit Line): Deals 3 damage to a unit.
+Shinka Legionary|Legendary|Cabal|2|4|Sustained (Column): Gains +2 Power.
+Shinka Phalanx|Legendary|Cabal|2|3|Sustained (Column): Units in front or behind take 1 less damage.
+Incendior|Legendary|Cabal|2|2|When Played: Deals 3 damage to an opposing front-row unit.
+Decurion|Legendary|Cabal|2|3|Sustained (Column): Grants +2 Power to units in front or behind.
+Psion|Rare|Cabal|2|2|When Played (Back Row): Deals 2 damage to a unit.
+Scorpius|Legendary|Cabal|3|4|Sustained: At end of turn, deals 1 damage to a random opposing unit.
+Vigile|Legendary|Cabal|3|5|When Played (Front Row): Gives a Line unit +2 Power.
+Phalanx|Legendary|Cabal|3|4|Sustained (3-Unit Line): Allied Cabal units take 1 less damage.
+Juggernaut|Mythic|Cabal|4|8|Sustained (Column): Adjacent Cabal units deal 1 more damage.
+Shinka Gladiator|Mythic|Cabal|5|8|When Played (5-Unit Line): Chosen unit and adjacent units deal 2 more damage.
+Shinka Centurion|Legendary|Cabal|5|6|Sustained (Column): Adjacent units gain +3 Power.
+Goliath Tank|Exotic|Cabal|6|10|When Played (5-Unit Line): Deals 3 damage to all units in a row.
+Buhr|Exotic|Cabal|6|10|When Played (Column): Grants +3 Power to all units in a column.
+Thagrius|Exotic|Cabal|6|10|When Played (6-Unit Line): Deals twice the number of Line units as damage to a unit.
+Gwynn|Exotic|Humans|4|6|When Played (Front Row): Deals 3 damage to target and adjacent units; loses 2 Power.
+Saladin|Exotic|Humans|4|6|Sustained: Whenever your Human unit takes damage, it gains +3 Power.
+Radegast|Mythic|Humans|4|7|When Played: If opponent has Fallen, gives Guerrillas in this row +4 Power.
+Bazinet|Mythic|Humans|4|2|When Played (Back Row): Deals 3 damage to all buffed opposing units.
+Pandora-7|Legendary|Humans|4|5|Sustained: At end of turn grants right-hand unit +2 Power.
+Ikora|Exotic|Humans|6|13|When Played: Deals 2 damage to every opposing unit in a row.
+Estela|Exotic|Humans|6|13|When Played: Grants unit Power equal to twice opposing front-row unit count.
+Vanok|Exotic|Fallen|6|10|When Played: Grants +2 Power to all your Fallen units.
+Sabikis|Mythic|Fallen|6|8|When Played (Back Row): Gives a unit Power equal to unit on its left.
