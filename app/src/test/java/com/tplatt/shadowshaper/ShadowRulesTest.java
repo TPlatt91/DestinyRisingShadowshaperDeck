@@ -216,4 +216,35 @@ public class ShadowRulesTest {
         assertEquals(4,game.score(game.cpu));
     }
 
+    @Test public void cpuCanPlayOneCardAtATimeAndWaitBetweenVisibleActions(){
+        LinkedHashMap<String,ShadowData.Card> cards=catalog();
+        ShadowEngine game=null;
+        for(long seed=0;seed<600;seed++){
+            ShadowEngine candidate=new ShadowEngine(cards,seed);
+            candidate.start(deck(),deck());
+            if(!candidate.humanFirst){game=candidate;break;}
+        }
+        assertNotNull(game);
+        assertFalse(game.humanTurn);
+        int originalHand=game.cpu.hand.size();
+        assertTrue(game.cpuPlayOne());
+        assertFalse(game.humanTurn); // The UI gets to render before next AI action.
+        assertEquals(originalHand-1,game.cpu.hand.size());
+        assertEquals(0,game.cpu.points);
+        assertEquals(2,game.score(game.cpu));
+        assertFalse(game.cpuPlayOne());
+        assertFalse(game.humanTurn);
+        game.endTurn();
+        assertTrue(game.humanTurn);
+    }
+    @Test public void diagnosticReportIncludesSeedRoundAndBattlefield(){
+        ShadowEngine game=humanFirst();
+        String report=game.diagnosticReport();
+        assertTrue(report.contains("Seed: "));
+        assertTrue(report.contains("Round: 1/6"));
+        assertTrue(report.contains("PLAYER: Deck "));
+        assertTrue(report.contains("CPU: Deck "));
+        assertTrue(report.contains("EVENTS"));
+    }
+
 }
