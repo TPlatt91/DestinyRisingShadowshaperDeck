@@ -47,6 +47,8 @@ public final class BattleActivity extends Activity {
     private String enemyFaction="Mixed";
     private Button endButton;
     private int selectedHand=-1,lastShownLog=0;
+    private int pendingHand=-1,pendingRow=-1,pendingColumn=-1;
+    private final ArrayList<ShadowEngine.Target> pendingTargets=new ArrayList<>();
     private boolean starting=false,dialogShowing=false;
     private final Runnable cpuAction=()->{
         if(game==null||game.finished||game.humanTurn||dialogShowing)return;
@@ -236,6 +238,7 @@ public final class BattleActivity extends Activity {
             new AlertDialog.Builder(this).setTitle("Unable to start duel")
               .setMessage(error.getMessage()).setPositiveButton("Choose Deck",(d,w)->selectDeck(true)).show();return;
         }
+        clearTargetSelection();
         selectedHand=-1;hintText.setText("Tap to select • drag to place • hold to inspect");
         opponentText.setText("CPU\n"+enemyFaction.toUpperCase(Locale.ROOT));
         refresh();
@@ -258,6 +261,12 @@ public final class BattleActivity extends Activity {
         if(game!=null&&!game.finished&&!game.humanTurn&&!dialogShowing)handler.postDelayed(cpuAction,560);
     }
     private void endTurn(){
+        if(!pendingTargets.isEmpty()){
+            clearTargetSelection();
+            hintText.setText("Target selection canceled.");
+            refresh();
+            return;
+        }
         if(game==null||game.finished||!game.humanTurn)return;
         boolean playable=false;
         for(int i=0;i<game.human.hand.size();i++)
@@ -305,6 +314,7 @@ public final class BattleActivity extends Activity {
            "CPU TURN  •  "+(game.humanFirst?"DEFENSIVE":"OFFENSIVE"));
         pointsText.setText(game.human.points+" / "+game.round+"\nLIGHT");
         deckText.setText("DECK "+game.human.drawPile.size()+"  •  HAND "+game.human.hand.size());
+        endButton.setText(pendingTargets.isEmpty()?"END TURN  ›":"CANCEL TARGET");
         endButton.setEnabled(!game.finished&&game.humanTurn);
         endButton.setAlpha(game.humanTurn&&!game.finished?1f:0.48f);
         board.removeAllViews();
@@ -329,10 +339,12 @@ public final class BattleActivity extends Activity {
             final int row=index,column=col;
             final ShadowEngine.Unit unit=owner.board[row][col];
             FrameLayout slot=new FrameLayout(this);
-            boolean highlighted=mine && selectedHand>=0 &&
+            final boolean targetHighlighted=isPendingTarget(owner,row,column);
+            boolean highlighted=pendingTargets.isEmpty()&&mine && selectedHand>=0 &&
                 game.isPlayablePlacement(game.human,selectedHand,row,column);
-            slot.setBackground(panel(unit==null?(highlighted?0xff435a53:0xff211b1b):0xff4a3531,
-                highlighted?0xffe4bf73:0xff9b774e,5));
+            slot.setBackground(panel(targetHighlighted?0xff557058:
+                unit==null?(highlighted?0xff435a53:0xff211b1b):0xff4a3531,
+                targetHighlighted?0xffffe2a2:highlighted?0xffe4bf73:0xff9b774e,5));
             LinearLayout.LayoutParams width=new LinearLayout.LayoutParams(0,-1,1);
             width.setMargins(dp(2),dp(1),dp(2),dp(1));strip.addView(slot,width);
             if(unit==null){
@@ -362,7 +374,13 @@ public final class BattleActivity extends Activity {
                     mark.bottomMargin=dp(16);slot.addView(star,mark);
                 }
                 if(unit.suppressed)slot.setAlpha(0.62f);
-                slot.setOnClickListener(v->inspectUnit(unit));
+                slot.setOnClickListener(v->{
+                    if(targetHighlighted){
+                        commitPlay(pendingHand,pendingRow,pendingColumn,
+                            new ShadowEngine.Target(owner,row,column));
+                    }else inspectUnit(unit);
+                });
+                slot.setOnLongClickListener(v->{inspectUnit(unit);return true;});
                 if(game.lastPlacedSide==(mine?0:1)&&game.lastPlacedRow==row&&game.lastPlacedColumn==column){
                     slot.setScaleX(.88f);slot.setScaleY(.88f);
                     slot.animate().scaleX(1f).scaleY(1f).setDuration(170).start();
@@ -370,11 +388,12 @@ public final class BattleActivity extends Activity {
             }
             if(mine&&unit==null){
                 slot.setOnClickListener(v->{
+                    if(!pendingTargets.isEmpty())return;
                     if(selectedHand>=0)attemptPlay(selectedHand,row,column);
                     else hintText.setText("Select a card in your hand before choosing a position.");
                 });
                 slot.setOnDragListener((v,drag)->{
-                    if(game==null||game.finished||!game.humanTurn)return false;
+                    if(game==null||game.finished||!game.humanTurn||!pendingTargets.isEmpty())return false;
                     switch(drag.getAction()){
                         case DragEvent.ACTION_DRAG_STARTED:
                             return drag.getClipDescription()!=null &&
@@ -424,6 +443,7 @@ public final class BattleActivity extends Activity {
             frame.setContentDescription(card.name+"; cost "+card.cost+"; Power "+card.power);
             frame.setOnClickListener(v->{
                 if(game.finished||!game.humanTurn){inspectCard(card);return;}
+                clearTargetSelection();
                 selectedHand=(selectedHand==cardIndex?-1:cardIndex);
                 hintText.setText(selectedHand<0?"Select card to play":"Tap or drag to an empty YOUR row slot");
                 refresh();
@@ -482,6 +502,16 @@ public final class BattleActivity extends Activity {
         }
         if(game.human.hand.isEmpty())hand.addView(text("EMPTY HAND",12,true,MUTED));
     }
+    /** Target directly from the battlefield rather than using an obstructive list. */
+    private boolean isPendingTarget(ShadowEngine.Player owner,int row,int column){
+        for(ShadowEngine.Target target:pendingTargets)
+            if(target.owner==owner&&target.row==row&&target.column==column)return true;
+        return false;
+    }
+    private void clearTargetSelection(){
+        pendingHand=-1;pendingRow=-1;pendingColumn=-1;
+        pendingTargets.clear();
+    }
     private void attemptPlay(int handIndex,int row,int col){
         if(game==null||game.finished||!game.humanTurn||handIndex<0||handIndex>=game.human.hand.size())return;
         ShadowData.Card card=game.human.hand.get(handIndex);
@@ -492,24 +522,21 @@ public final class BattleActivity extends Activity {
         }
         List<ShadowEngine.Target> options=game.targetOptions(game.human,card,row,col);
         if(game.isTargeted(card)&&!options.isEmpty()){
-            String[] labels=new String[options.size()];
-            for(int i=0;i<options.size();i++){
-                ShadowEngine.Target target=options.get(i);
-                ShadowEngine.Unit unit=target.unit();
-                labels[i]=unit.card.name+"  •  "+game.power(unit)+" Power"+
-                    "  •  "+(target.row==1?"Front":"Back")+" "+(target.column+1);
-            }
-            new AlertDialog.Builder(this)
-                .setTitle(card.name+" • Choose "+(options.get(0).owner==game.human?"ally":"target"))
-                .setItems(labels,(d,index)->commitPlay(handIndex,row,col,options.get(index)))
-                .setNegativeButton("CANCEL",null).show();
+            clearTargetSelection();
+            pendingHand=handIndex;pendingRow=row;pendingColumn=col;
+            pendingTargets.addAll(options);
+            selectedHand=handIndex;
+            hintText.setText("Choose a gold-highlighted "+
+                (options.get(0).owner==game.human?"ally":"opposing card")+
+                " for "+card.name);
+            refresh();
         }else{
             commitPlay(handIndex,row,col,null);
         }
     }
     private void commitPlay(int handIndex,int row,int col,ShadowEngine.Target target){
         if(game.play(game.human,handIndex,row,col,target)){
-            selectedHand=-1;
+            clearTargetSelection();selectedHand=-1;
             hintText.setText("Card played • choose next card or end turn");
             refresh();finishIfOver();
         }else{
