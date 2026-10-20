@@ -30,7 +30,7 @@ public final class ShadowEngine {
         public final Player owner;
         public int row,column,power,bonus,scorched,scorchTurns;
         public final ArrayList<TimedBonus> timedBonuses=new ArrayList<>();
-        public boolean inspired,suppressed;
+        public boolean inspired,suppressed,bonusDoublerConsumed;
         public Unit(Player owner,ShadowData.Card card,int row,int col) {
             this.owner=owner;this.card=card;this.row=row;this.column=col;
             this.power=Math.max(0,card.numericPower());
@@ -187,13 +187,15 @@ public final class ShadowEngine {
         }
         return reduce;
     }
-    private int extraDamage(Player attacking){
+    private int extraDamage(Unit source){
         int bonus=0;
-        for(Unit other:all(attacking)){
+        for(Unit other:all(source.owner)){
             if(other.suppressed)continue;
             if(other.card.name.equals("Servitor"))bonus++;
-            if(other.card.name.equals("Juggernaut")&&partnerInColumn(other))bonus++;
-            if(other.card.name.equals("Shinka Decurion")&&line(other,3))bonus+=2;
+            if(other.card.name.equals("Juggernaut")&&
+                source.card.faction.equalsIgnoreCase("Cabal")&&adjacent(other,source))bonus++;
+            if(other.card.name.equals("Shinka Decurion")&&line(other,3)&&
+                source.card.faction.equalsIgnoreCase("Cabal"))bonus+=2;
         }
         return bonus;
     }
@@ -547,11 +549,6 @@ public final class ShadowEngine {
             return;
         }
         Unit unit=new Unit(me,card,row,col);me.board[row][col]=unit;
-        if(name.equals("Dreg")){
-            for(Unit watcher:all(me))if(watcher!=unit&&!watcher.suppressed&&watcher.card.name.equals("Unrelenting Captain")){
-                unit.power++;unit.bonus++;log("Unrelenting Captain buffs summoned Dreg.");
-            }
-        }
         log("SUMMON ▶ "+name+" at "+(row==0?"back ":"front ")+(col+1));
         fireEnemyPlacement(unit);
     }
@@ -569,8 +566,12 @@ public final class ShadowEngine {
         if(target==null||amount<=0)return;
         Player owner=target.owner;
         int applied=amount;
-        for(Unit u:all(owner))if(u!=target&&!u.suppressed&&u.card.name.equals("Tan-2")){
-            applied*=2;suppress(u);log("Tan-2 doubles bonus.");break;
+        for(Unit u:all(owner))if(!u.suppressed && u.card.name.equals("Tan-2") &&
+                !u.bonusDoublerConsumed){
+            applied*=2;
+            u.bonusDoublerConsumed=true;
+            log("Tan-2 doubles next Power bonus (+ "+applied+"); remains on battlefield.");
+            break;
         }
         target.power+=applied;target.bonus+=applied;
         log("BUFF +"+applied+" ▶ "+target.card.name);
@@ -605,8 +606,10 @@ public final class ShadowEngine {
             if(unit==target&&name.equals("Guerrilla Captain")){
                 Unit victim=randomUnit(foe);if(victim!=null)damage(unit,victim,2);
             }
-            if(unit==target&&(name.equals("Denzin")||name.equals("Unrelenting Captain")))
-                incomplete(unit.card,"Summoned token stats not verified.");
+            if(unit==target && name.equals("Denzin"))
+                incomplete(unit.card,"Guerrilla token Power unknown; cannot safely summon.");
+            if(unit==target && name.equals("Unrelenting Captain"))
+                spawnAt(own,unit.row,unit.column-1,"Dreg");
             if(unit==target&&name.equals("Xur"))
                 incomplete(unit.card,"Rock summon destination/token Power missing.");
         }
@@ -629,7 +632,7 @@ public final class ShadowEngine {
     }
     private void damage(Unit source,Unit target,int amount){
         if(target==null||amount<=0)return;
-        int actual=Math.max(0,amount+extraDamage(source.owner)-reduction(target));
+        int actual=Math.max(0,amount+extraDamage(source)-reduction(target));
         for(Unit ally:all(source.owner))if(ally!=source&&!ally.suppressed&&ally.card.name.equals("Jolder")){
             actual*=2;suppress(ally);break;
         }
