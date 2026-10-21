@@ -5,6 +5,12 @@
 
 Native Android Studio (Kotlin + Jetpack Compose) single-player Shadowshaper Duels companion.
 
+## Updated Shadowshaper battle presentation
+
+The active Kotlin/Compose simulator now has a dark bronze tabletop with gold dividers, portrait card faces, rarity-colored frames, Power and Light in their respective upper corners, status emblems, six-round milestones, blue Light crystals, a two-sided Power display, and concealed CPU hand backs. The bottom hand uses a slight fan, selection lift, drag preview and on-field legal-placement/target highlights. Game rules remain in `ShadowEngine.kt` and `ShadowCardEffects.kt`, not in the UI.
+
+These changes approximate the game's published visual language. They are **not** verified pixel-for-pixel against a complete in-game battle screenshot or tested on Android hardware yet. See [UI Fidelity Audit](docs/UI_FIDELITY_AUDIT.md).
+
 ## Main menu (four sections)
 
 1. **Sim Battle** — six-round playable practice match against CPU. Choose a legal saved deck, draw a starting hand, place cards in front/back-row positions, spend 1–6 round play points, inspect cards, end turns, and see total Power scores and final victory/draw/defeat. Includes original card art when a matching online or bundled image exists. Now uses a dedicated `ShadowEngine` with shared targeting, damage, buffs, turn resolution, line/column synergies and AI opponents. Incomplete effects are explicitly logged rather than treated as resolved. See `docs/GAMEPLAY_IMPLEMENTATION.md` and [`docs/RULES_AUDIT.md`](docs/RULES_AUDIT.md) for rules, verified assumptions, and unimplemented interactions.
