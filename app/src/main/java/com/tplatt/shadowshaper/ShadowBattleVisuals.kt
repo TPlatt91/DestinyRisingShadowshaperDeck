@@ -131,17 +131,33 @@ internal fun DuelLightMeter(light: Int, round: Int) {
 
 @Composable
 internal fun DuelCardBacks(count: Int) {
+    val activity = LocalContext.current as? Activity
     Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
         repeat(count.coerceIn(0, 5)) {
             Box(
-                Modifier.width(18.dp).height(27.dp)
-                    .background(Color(0xFF362433), RoundedCornerShape(2.dp))
-                    .border(1.dp, Color(0xFF9B83B1), RoundedCornerShape(2.dp))
-                    .padding(2.dp)
-                    .border(1.dp, Color(0xFF775A88), RoundedCornerShape(1.dp)),
+                Modifier.width(20.dp).height(29.dp)
+                    .clip(RoundedCornerShape(3.dp))
+                    .background(Color(0xFF322529))
+                    .border(1.dp, Color(0xFFAD8D6C), RoundedCornerShape(3.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("◇", color = Color(0xFFCCA9E5), fontSize = 13.sp)
+                // Shown if the bundled image and cached image are both missing.
+                Text("♢", color = Color(0xFFBFA68F), fontSize = 15.sp)
+                if (activity != null) {
+                    AndroidView(
+                        factory = { ctx ->
+                            ImageView(ctx).apply {
+                                scaleType = ImageView.ScaleType.FIT_XY
+                                CardArt.bindCover(activity, this, "default")
+                            }
+                        },
+                        update = { image ->
+                            if (image.tag != "cover_default")
+                                CardArt.bindCover(activity, image, "default")
+                        },
+                        modifier = Modifier.fillMaxSize().padding(1.dp)
+                    )
+                }
             }
         }
     }
