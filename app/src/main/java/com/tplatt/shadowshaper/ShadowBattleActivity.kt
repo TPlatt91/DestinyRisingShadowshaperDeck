@@ -10,6 +10,9 @@ import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -136,6 +139,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var inspectedUnit by remember { mutableStateOf<ShadowEngine.Unit?>(null) }
     var inspectedCard by remember { mutableStateOf<ShadowData.Card?>(null) }
     var message by remember { mutableStateOf("Tap a card, then choose an empty position.") }
+    var turnAnnouncement by remember { mutableStateOf<String?>(null) }
+    var effectAnnouncement by remember { mutableStateOf<String?>(null) }
     var draggedIndex by remember { mutableIntStateOf(-1) }
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
     var rootTopLeftInWindow by remember { mutableStateOf(Offset.Zero) }
@@ -240,6 +245,28 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
+    // Short on-screen announcements make turn/ability changes visible without
+    // making the player read the entire event log on every action.
+    LaunchedEffect(current, snapshot?.round, snapshot?.playerTurn) {
+        if (snapshot == null || current == null || snapshot.finished) {
+            turnAnnouncement = null
+        } else {
+            turnAnnouncement = "ROUND ${snapshot.round}  •  " +
+                if (snapshot.playerTurn) "YOUR TURN" else "OPPONENT TURN"
+            delay(850)
+            turnAnnouncement = null
+        }
+    }
+    LaunchedEffect(current, snapshot?.revision) {
+        if (snapshot == null || snapshot.revision == 0 || current == null) {
+            effectAnnouncement = null
+        } else {
+            effectAnnouncement = current.engine.journal.lastOrNull()?.take(100)
+            delay(1450)
+            effectAnnouncement = null
+        }
+    }
+
     Box(Modifier.fillMaxSize().onGloballyPositioned {
         val position = it.boundsInWindow().topLeft
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
@@ -257,6 +284,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             Text(
                 when {
                     snapshot?.finished == true -> "DUEL COMPLETE"
+                    engine?.pendingMovedUnit != null && engine.pendingMoveCaster === engine.human ->
+                        "CHOOSE DESTINATION"
+                    pendingPosition != null -> "SELECT EFFECT TARGET"
                     snapshot?.playerTurn == true -> "YOUR TURN"
                     snapshot != null -> "CPU TURN"
                     else -> "SINGLE PLAYER"
@@ -403,11 +433,12 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                     contentPadding = PaddingValues(horizontal = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                    horizontalArrangement = Arrangement.spacedBy((-11).dp)
                 ) {
                     itemsIndexed(engine.human.hand.toList()) { index, card ->
                         Card(
                             modifier = Modifier.width(82.dp).fillMaxHeight()
+                                .zIndex(if (selectedIndex == index || draggedIndex == index) 5f else index.toFloat() / 100f)
                                 .graphicsLayer {
                                     val midpoint = (engine.human.hand.size - 1) / 2f
                                     rotationZ = if (selectedIndex == index) 0f
@@ -486,7 +517,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (pendingPosition != null) "CANCEL" else "END TURN  ›", fontSize = 11.sp,
+                        Text(when {
+                            pendingPosition != null -> "CANCEL TARGET"
+                            engine.pendingMovedUnit != null -> "MOVE UNIT"
+                            else -> "END TURN  ›"
+                        }, fontSize = 11.sp,
                             fontWeight = FontWeight.Black)
                     }
                     Text(message, color = BattleFaded, fontSize = 9.sp,
@@ -497,6 +532,49 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text("Choose a legal 15-card deck to start.", color = BattleFaded)
             }
+        }
+    }
+    AnimatedVisibility(
+        visible = turnAnnouncement != null && !openingDialog && !deckDialog && !factionDialog,
+        enter = fadeIn(), exit = fadeOut(),
+        modifier = Modifier.align(Alignment.Center).zIndex(12f)
+    ) {
+        Box(Modifier.background(Color(0xE929221F), RoundedCornerShape(10.dp))
+            .border(2.dp, DuelPalette.gold, RoundedCornerShape(10.dp))
+            .padding(horizontal = 32.dp, vertical = 14.dp),
+            contentAlignment = Alignment.Center) {
+            Text(turnAnnouncement.orEmpty(), color = DuelPalette.gold,
+                fontSize = 19.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
+        }
+    }
+    AnimatedVisibility(
+        visible = effectAnnouncement != null && turnAnnouncement == null,
+        enter = fadeIn(), exit = fadeOut(),
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 53.dp).zIndex(9f)
+    ) {
+        Text(effectAnnouncement.orEmpty(),
+            modifier = Modifier.background(Color(0xEB261D19), RoundedCornerShape(7.dp))
+                .border(1.dp, DuelPalette.rim, RoundedCornerShape(7.dp))
+                .padding(horizontal = 14.dp, vertical = 6.dp),
+            color = DuelPalette.cream, fontSize = 11.sp, maxLines = 2,
+            textAlign = TextAlign.Center)
+    }
+    if (pendingPosition != null || engine?.pendingMovedUnit != null) {
+        Box(
+            modifier = Modifier.align(Alignment.BottomCenter)
+                .padding(bottom = 134.dp).fillMaxWidth(0.72f)
+                .background(Color(0xEC241E1B), RoundedCornerShape(6.dp))
+                .border(1.dp, DuelPalette.gold, RoundedCornerShape(6.dp))
+                .padding(horizontal = 12.dp, vertical = 5.dp).zIndex(8f),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                if (engine?.pendingMovedUnit != null)
+                    "MOVE ${engine.pendingMovedUnit?.card?.name ?: "UNIT"} TO A HIGHLIGHTED EMPTY SLOT"
+                else "CHOOSE A GOLD-HIGHLIGHTED CARD TO RESOLVE THE EFFECT",
+                color = DuelPalette.gold, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center, maxLines = 2
+            )
         }
     }
     // Floating card stays under the finger while the user drags across the field.
