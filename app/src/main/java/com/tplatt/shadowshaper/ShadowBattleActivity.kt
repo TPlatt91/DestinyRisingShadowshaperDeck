@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -97,6 +98,7 @@ private val BattleBlue = Color(0xFF94C8ED)
 private val BattleFaded = Color(0xFFCAB7A2)
 private val BattleDanger = Color(0xFFDDA89A)
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRules: () -> Unit) {
     val context = LocalContext.current
