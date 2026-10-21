@@ -3,6 +3,10 @@ package com.tplatt.shadowshaper
 import android.app.Activity
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.ImageDecoder
+import android.graphics.drawable.Animatable
+import android.graphics.drawable.Drawable
+import android.os.Build
 import android.widget.ImageView
 import java.io.File
 import java.net.HttpURLConnection
@@ -107,18 +111,47 @@ object CardArt {
     @JvmStatic
     fun bind(activity: Activity, card: ShadowData.Card, view: ImageView) {
         val id = slug(card.name)
+        // Keep an already-running local GIF playing through Compose recompositions.
+        if (view.tag == id && view.drawable is Animatable) return
+        (view.drawable as? Animatable)?.stop()
         view.tag = id
         view.contentDescription = card.name + " card art"
         view.setImageResource(android.R.color.transparent)
 
-        memory[id]?.let {
-            view.setImageBitmap(it)
-            return
-        }
+        // Only static artwork is shared as a Bitmap. AnimatedImageDrawable is
+        // deliberately decoded per ImageView so animations do not share state.
         val context = activity.applicationContext
         workers.execute {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                val animated: Drawable? = try {
+                    ImageDecoder.decodeDrawable(
+                        ImageDecoder.createSource(context.assets, "card_art/$id.gif")
+                    )
+                } catch (_: Exception) {
+                    null
+                }
+                if (animated != null) {
+                    activity.runOnUiThread {
+                        if (view.tag == id && !activity.isFinishing) {
+                            (view.drawable as? Animatable)?.stop()
+                            view.setImageDrawable(animated)
+                            (animated as? Animatable)?.start()
+                        }
+                    }
+                    return@execute
+                }
+            }
+
+            memory[id]?.let { cached ->
+                activity.runOnUiThread {
+                    if (view.tag == id && !activity.isFinishing) view.setImageBitmap(cached)
+                }
+                return@execute
+            }
             var bitmap: Bitmap? = null
-            for (extension in listOf("webp", "png", "jpg", "jpeg")) {
+            // On Android 8-8.1, GIFs gracefully display their first frame.
+            // Android 9+ instead plays the complete animation above.
+            for (extension in listOf("gif", "webp", "png", "jpg", "jpeg")) {
                 val path = "card_art/$id.$extension"
                 bitmap = try {
                     context.assets.open(path).use(BitmapFactory::decodeStream)
