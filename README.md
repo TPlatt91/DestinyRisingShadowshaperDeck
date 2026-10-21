@@ -9,7 +9,13 @@ Native Android Studio (Kotlin + Jetpack Compose) single-player Shadowshaper Duel
 
 The simulator now has a larger in-match card inspector showing readable effects, current Power and status flags. Battle turns and triggered events have brief on-screen announcements; pending target/relocation choices remain highlighted. The bottom hand overlaps like a compact fan, and the card-drag preview now compensates for window insets so it stays under the finger. `DuelHitTestingTest.kt` adds five local regression checks for player-only drop zones and drag coordinates.
 
-**41 local tests are authored** (previous 36 plus the five hit-testing checks), but the test suite has **not been run**, and APK/device behavior remains unverified. The visuals are a closer recreation rather than a confirmed pixel-perfect copy.
+**48 local tests are authored** (previous 41 plus five battlefield scaling and two card-back catalog checks), but the test suite has **not been run**, and APK/device behavior remains unverified. The visuals are a closer recreation rather than a confirmed pixel-perfect copy.
+
+### Responsive field and original covers
+
+The game now fits portrait card art into the actual slot dimensions on short landscape screens, with narrower HUD panels and an adaptive hand dock. Deck Construction also lets you choose from the nine original Shadowshaper card-back designs listed in TodayInDestiny; each choice is saved alongside its deck and displayed over that deck's draw pile in battle. The opponent hand uses the default card cover. Original cover images are loaded from bundled assets when available or downloaded and cached over HTTPS; offline-first installs still show a matching placeholder until an asset is available.
+
+These changes **do not alter gameplay rules or deck card counts**. Android compilation, unit test execution, and exact pixel-level comparison against the original game's battle interface remain pending.
 
 ## Updated Shadowshaper battle presentation
 
