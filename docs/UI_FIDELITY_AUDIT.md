@@ -44,6 +44,20 @@ The active battle UI is now the Kotlin Compose `ShadowBattleActivity.kt`. Its ne
 
 **Source grounding:** The [Game8 mechanics guide](https://game8.co/games/Destiny-Rising/archives/546603) identifies the two rows, six rounds, card Power/cost positions, scoring to the right and End Turn to the right. The [Shacknews deck screenshot](https://www.shacknews.com/article/146121/otk-triumph-destiny-rising) illustrates the game's physical card faces and bronze/gold palette. These sources support the directions above, but **do not provide an exact full-resolution battle-field skin or asset set**.
 
+## Follow-up UI and touch pass — October 20, 2026
+
+This pass updates the live Kotlin landscape simulator, without touching the gameplay effect resolvers:
+
+- **Window-coordinate drag fix:** all hand-card drag pointers and battlefield hit rectangles use window coordinates. The floating card preview converts back to coordinates relative to the root Compose Box; status-bar height and root offsets no longer shift it.
+- **Drop restrictions:** drop hit-testing accepts only the player battlefield, then delegates to the engine's legality checks. Drops on opponent slots, outside the field, or on malformed positions cannot place cards.
+- **Hand visibility:** cards overlap in a compact, slightly fanned arrangement; selected cards draw in front with enough vertical inset not to clip the lift/preview.
+- **Turn and ability readability:** short animated overlays announce new turns and the most recent card event, while the full event log remains accessible.
+- **Decision clarity:** the top-right action label distinguishes ordinary turns from ability target selection and a pending relocation; a compact on-field instruction identifies the required next action.
+- **Deck-to-battle continuity:** launching from an already selected legal deck opens the CPU faction choice directly rather than forcing another deck-selection prompt.
+- **Offline local tests:** `DuelHitTestingTest.kt` adds five tests for legal player slots, rejection of enemy slots, rejection of off-board/malformed cells, and window-to-root overlay conversion. Tests were committed, **not executed**.
+
+These updates preserve the six-row-wide prototype board and simulated card effects, which still require game-client verification. The drag bug fix is source-reviewed but has not been validated on Android hardware.
+
 ## Still not confirmed identical
 
 - **Precise board zone count and spacing:** the simulator uses 6 columns and 2 rows per side pending frame comparison.
