@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Artwork fills the adaptive mask; no white background or padding. -->
+    <background android:drawable="@drawable/shadow_shaper_duels_icon" />
+    <foreground android:drawable="@android:color/transparent" />
+</adaptive-icon>
