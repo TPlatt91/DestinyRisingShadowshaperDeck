@@ -157,6 +157,19 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
+    // A legal deck explicitly selected in Deck Construction should continue
+    // directly to opponent choice, without forcing a second deck selection.
+    LaunchedEffect(requestedDeck) {
+        if (!requestedDeck.isNullOrBlank()) {
+            val saved = validDecks.firstOrNull { it.first == requestedDeck }
+            if (saved != null) {
+                chosenDeck = saved.second
+                deckDialog = false
+                factionDialog = true
+            }
+        }
+    }
+
     fun startMatch(faction: String) {
         val cpu = ShadowData.opponentDeck(catalog, faction)
         val candidate = ShadowBattleCoordinator(catalog, System.nanoTime())
@@ -432,7 +445,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 }
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(horizontal = 4.dp),
+                    contentPadding = PaddingValues(horizontal = 9.dp, vertical = 16.dp),
                     horizontalArrangement = Arrangement.spacedBy((-11).dp)
                 ) {
                     itemsIndexed(engine.human.hand.toList()) { index, card ->
@@ -443,9 +456,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                     val midpoint = (engine.human.hand.size - 1) / 2f
                                     rotationZ = if (selectedIndex == index) 0f
                                         else (index - midpoint) * 1.6f
-                                    translationY = if (selectedIndex == index) (-7).dp.toPx() else 0f
-                                    scaleX = if (selectedIndex == index) 1.035f else 1f
-                                    scaleY = if (selectedIndex == index) 1.035f else 1f
+                                    translationY = if (selectedIndex == index) (-3).dp.toPx() else 0f
                                 }
                                 .onGloballyPositioned { cardBounds[index] = it.boundsInWindow() }
                                 .pointerInput(index, card.name) {
