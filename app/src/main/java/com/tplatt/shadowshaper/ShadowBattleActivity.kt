@@ -713,39 +713,14 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     if (inspectedUnit != null || inspectedCard != null) {
         val unit = inspectedUnit
         val card = inspectedCard ?: unit?.card
-        if (card != null) AlertDialog(
-            onDismissRequest = { inspectedUnit = null; inspectedCard = null },
-            title = { Text(card.name) },
-            text = {
-                Column {
-                    BattleFace(card, Modifier.fillMaxWidth().height(145.dp))
-                    Text(card.rarity + " • " + card.faction, color = BattleGold)
-                    Text("POWER " + (unit?.let { engine?.power(it) } ?: card.power) +
-                        " • LIGHT " + card.cost, color = BattleBlue)
-                    Text(card.effect, color = BattleCream)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { inspectedUnit = null; inspectedCard = null }) { Text("CLOSE") }
-            }
-        )
-    }
-}
-
-@Composable
-private fun BattleFace(card: ShadowData.Card, modifier: Modifier = Modifier) {
-    val activity = LocalContext.current as? android.app.Activity
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            ImageView(context).apply {
-                scaleType = ImageView.ScaleType.FIT_CENTER
-                if (activity != null) CardArt.bind(activity, card, this)
-            }
-        },
-        update = { view ->
-            if (activity != null && view.contentDescription != card.name + " card art")
-                CardArt.bind(activity, card, view)
+        if (card != null) {
+            DuelCardInspection(
+                card = card,
+                unit = unit,
+                power = unit?.let { engine?.power(it) } ?: card.numericPower(),
+                onClose = { inspectedUnit = null; inspectedCard = null }
+            )
         }
-    )
+    }
+
 }
