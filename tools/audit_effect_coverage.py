@@ -11,8 +11,8 @@ import sys
 
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/"app/src/main/assets"
-ENGINE=ROOT/"app/src/main/java/com/tplatt/shadowshaper/ShadowEngine.java"
-SCRIPTED=ENGINE.read_text(encoding="utf-8")
+ENGINE=ROOT/"app/src/main/java/com/tplatt/shadowshaper/ShadowEngine.kt"
+SCRIPTED=ENGINE.read_text(encoding="utf-8") + "\n" + (ENGINE.parent/"ShadowCardEffects.kt").read_text(encoding="utf-8")
 MAIN=ASSETS/"cards.tsv"
 TABLES=[MAIN,ASSETS/"community_cards.tsv",ASSETS/"expanded_cards.tsv"]
 DETAILS=ASSETS/"card_details.tsv"
