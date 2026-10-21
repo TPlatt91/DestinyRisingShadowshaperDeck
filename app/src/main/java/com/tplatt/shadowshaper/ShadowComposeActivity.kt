@@ -192,7 +192,7 @@ private fun HomeScreen(onBattle: () -> Unit, onOpen: (String) -> Unit, catalogCo
         item {
             Text("DESTINY: RISING", color = Gold, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
             Spacer(Modifier.height(9.dp))
-            Text("SHADOWSHAPER\nDUELS", fontSize = 37.sp, lineHeight = 40.sp,
+            Text("SHADOW SHAPER\nDUELS", fontSize = 37.sp, lineHeight = 40.sp,
                 color = Cream, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(7.dp))
             Text("CARD ARCHIVE & SINGLE-PLAYER SIMULATOR", fontSize = 11.sp, color = Secondary)
@@ -510,7 +510,7 @@ private fun DeckScreen(
     if (coverDialog) {
         AlertDialog(
             onDismissRequest = { coverDialog = false },
-            title = { Text("SHADOWSHAPER CARD BACK") },
+            title = { Text("SHADOW SHAPER CARD BACK") },
             text = {
                 Column(
                     Modifier.heightIn(max = 380.dp)
@@ -652,7 +652,7 @@ private fun RulesScreen(onBack: () -> Unit) {
         "SIMULATOR ACCURACY" to "The engine is under verification. Board dimensions, exact Line geometry, later-round draw timing and some complex card effects remain provisional. A scripted ability is not automatically a fully tested ability."
     )
     Column(Modifier.fillMaxSize()) {
-        PageHeading("RULES", "Shadowshaper Duels • six-round gameplay", onBack)
+        PageHeading("RULES", "Shadow Shaper Duels • six-round gameplay", onBack)
         LazyColumn(
             modifier = Modifier.weight(1f),
             contentPadding = PaddingValues(horizontal = 17.dp, vertical = 10.dp),
