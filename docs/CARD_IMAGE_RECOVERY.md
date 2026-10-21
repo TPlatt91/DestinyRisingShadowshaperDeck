@@ -5,7 +5,7 @@ Audit date: **21 October 2026**. This is an audit of the project's **110 known c
 ## Verified repository inventory
 
 - **110** distinct catalog names: 34 in `cards.tsv`, 46 in `community_cards.tsv`, 30 in `expanded_cards.tsv`.
-- **0 bundled card-face image binaries** in `app/src/main/assets/card_art`. The folder currently contains only a README.
+- **Initial audit:** zero bundled card-face images. **After Batch 01:** 8 bundled files (5 WebP, 3 GIF), of which seven match the original 110-name catalog. Rossi-11 is not yet in the catalog. See [Batch 01 audit](BATCH_01_ART_AUDIT.md).
 - **34 names appear with individual image links** in the [TodayInDestiny Shadowshaper card gallery](https://www.todayindestiny.com/rising/shadowshaper_duels/cards). The `reference_url` values in `card_image_inventory.tsv` follow those published slugs; a URL is **not the same as a successfully retrieved binary**.
 - **76** catalog names absent from that gallery. All 76 require other original-image sources or carefully selected card frames.
 - Inventory: [`app/src/main/assets/card_image_inventory.tsv`](../app/src/main/assets/card_image_inventory.tsv). Status is intentionally **published-source versus video-review-required**, not “image downloaded.”
@@ -45,6 +45,6 @@ For direct video URLs, `video --url https://www.youtube.com/watch?v=...` additio
 
 ## Blocker currently observed
 
-This environment cannot resolve/reach the external media or YouTube hosts for direct binary downloads. The clean source links were inspected via web tools, but the **original WebP file transfers failed**; YouTube video bytes are likewise unavailable here. Consequently **no card images have been claimed to be extracted or committed**. The 110-card inventory and repeatable recovery scripts are committed so work can resume as soon video bytes or a working download route is available.
+This environment cannot resolve/reach the external media or YouTube hosts for direct binary downloads. The clean source links were inspected via web tools, but the **original WebP file transfers failed**; YouTube video bytes are likewise unavailable here. The original media transfers failed at the time of the baseline audit, but subsequently the user provided and committed **eight** card images from their own recording. More images are still required. The 110-card inventory and repeatable recovery scripts are committed so work can resume as soon video bytes or a working download route is available.
 
 **Copyright note:** Original Destiny: Rising artwork belongs to its respective rightsholders. Keep original-source attribution; do not misrepresent edits or extracted stills as newly licensed assets.
