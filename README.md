@@ -1,5 +1,19 @@
 # Destiny Rising — Shadowshaper Deck Companion
 
+## Card artwork recovery (21 October 2026)
+
+A source-to-repository audit found **110 distinct named cards** but **zero bundled card-face image binaries**. The TodayInDestiny reference gallery lists original card images for **34** names; the other **76** require additional sourcing or carefully verified full-card YouTube frame extraction. The manifest does not falsely label links or unidentified screenshots as completed images.
+
+- [110-card image inventory](app/src/main/assets/card_image_inventory.tsv)
+- [Sourced gallery/video recovery guide](docs/CARD_IMAGE_RECOVERY.md)
+- [Original artwork/video recovery helper](tools/recover_shadowshaper_art.py)
+- [Original card-face asset folder](app/src/main/assets/card_art)
+
+Video review sources are organized by faction: all-card Hive and Fallen showcases, Cabal gameplay, and a mixed/OTK demonstration. The repository tool can stage timestamped frames and crop verified cards into the exact filenames the Kotlin artwork loader expects.
+
+**Source assets were not transferred this turn.** Direct binary downloads from the original card server and YouTube were blocked in the current execution environment; consequently the count of bundled original cards remains **0**, and 34 image URLs remain reference links rather than repository images. No GitHub Actions or CI credits were consumed.
+
+
 ## App name and launcher icon
 
 - **Installed application name:** `Shadow Shaper Duels` (from `app/src/main/res/values/strings.xml`).
