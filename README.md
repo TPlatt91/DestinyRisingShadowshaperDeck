@@ -5,6 +5,12 @@
 
 Native Android Studio (Kotlin + Jetpack Compose) single-player Shadowshaper Duels companion.
 
+### Current battle UI follow-up
+
+The simulator now has a larger in-match card inspector showing readable effects, current Power and status flags. Battle turns and triggered events have brief on-screen announcements; pending target/relocation choices remain highlighted. The bottom hand overlaps like a compact fan, and the card-drag preview now compensates for window insets so it stays under the finger. `DuelHitTestingTest.kt` adds five local regression checks for player-only drop zones and drag coordinates.
+
+**41 local tests are authored** (previous 36 plus the five hit-testing checks), but the test suite has **not been run**, and APK/device behavior remains unverified. The visuals are a closer recreation rather than a confirmed pixel-perfect copy.
+
 ## Updated Shadowshaper battle presentation
 
 The active Kotlin/Compose simulator now has a dark bronze tabletop with gold dividers, portrait card faces, rarity-colored frames, Power and Light in their respective upper corners, status emblems, six-round milestones, blue Light crystals, a two-sided Power display, and concealed CPU hand backs. The bottom hand uses a slight fan, selection lift, drag preview and on-field legal-placement/target highlights. Game rules remain in `ShadowEngine.kt` and `ShadowCardEffects.kt`, not in the UI.
