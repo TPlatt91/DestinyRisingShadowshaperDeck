@@ -600,7 +600,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     fun diagnosticReport(): String = buildString {
-        append("SHADOWSHAPER DUELS • LOCAL SIMULATOR\n")
+        append("SHADOW SHAPER DUELS • LOCAL SIMULATOR\n")
         append("Seed: ").append(seed).append("\n")
         append("Round: ").append(round).append("/").append(ROUNDS).append("\n")
         append("Turn: ").append(turnLabel()).append("\n")
