@@ -46,6 +46,8 @@ object ShadowData {
         readCatalog(context, result, "cards.tsv", expanded = false)
         readCatalog(context, result, "community_cards.tsv", expanded = true)
         readCatalog(context, result, "expanded_cards.tsv", expanded = true)
+        // Captured directly from user-supplied in-game card-detail recordings.
+        readCatalog(context, result, "verified_video_cards.tsv", expanded = true)
         try {
             context.assets.open("card_details.tsv").bufferedReader(StandardCharsets.UTF_8).use { reader ->
                 reader.forEachLine { line ->
@@ -84,9 +86,11 @@ object ShadowData {
                     val card = Card()
                     card.name = fields[0]
                     card.onlineArt = !expanded
-                    card.source = if (expanded)
-                        "https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/"
-                    else "https://www.todayindestiny.com/rising/shadowshaper_duels/cards"
+                    card.source = when (file) {
+                        "verified_video_cards.tsv" -> "User-supplied in-game video 38646.mp4"
+                        "cards.tsv" -> "https://www.todayindestiny.com/rising/shadowshaper_duels/cards"
+                        else -> "https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/"
+                    }
                     if (expanded) {
                         card.rarity = fields[1]
                         card.faction = fields[2]
