@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <application android:theme="@android:style/Theme.Material.NoActionBar"
-        android:label="Shadowshaper Duels" android:usesCleartextTraffic="false" android:allowBackup="true">
+        android:label="@string/app_name" android:icon="@drawable/shadow_shaper_duels_icon" android:roundIcon="@drawable/shadow_shaper_duels_icon" android:usesCleartextTraffic="false" android:allowBackup="true">
         <activity android:name=".ShadowComposeActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
