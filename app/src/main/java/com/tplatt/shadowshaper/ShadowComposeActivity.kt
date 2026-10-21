@@ -281,8 +281,8 @@ private fun CardTile(card: ShadowData.Card, copies: Int, onClick: () -> Unit) {
                         modifier = Modifier.weight(1f))
                     if (copies > 0) Text("×$copies", color = Gold, fontWeight = FontWeight.Bold)
                 }
-                Text("\${card.rarity}  •  \${card.faction}", fontSize = 12.sp, color = Gold)
-                Text("POWER \${card.power.ifBlank { "?" }}   LIGHT \${card.cost.ifBlank { "?" }}",
+                Text("${card.rarity}  •  ${card.faction}", fontSize = 12.sp, color = Gold)
+                Text("POWER ${card.power.ifBlank { "?" }}   LIGHT ${card.cost.ifBlank { "?" }}",
                     fontSize = 12.sp, fontWeight = FontWeight.SemiBold, color = CoolBlue)
                 Spacer(Modifier.height(5.dp))
                 Text(card.effect.ifBlank { "No effect documented" },
@@ -310,7 +310,7 @@ private fun CollectionScreen(
         }
     }
     Column(Modifier.fillMaxSize()) {
-        PageHeading("CARD COLLECTION", "\${filtered.size} visible of \${vm.catalog.size} cards", onBack)
+        PageHeading("CARD COLLECTION", "${filtered.size} visible of ${vm.catalog.size} cards", onBack)
         OutlinedTextField(
             value = query, onValueChange = { query = it },
             label = { Text("Search name, faction or ability") },
@@ -436,7 +436,7 @@ private fun DeckScreen(
                                 .padding(vertical = 5.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text(if (index == 5) "6+" else "\${index + 1}",
+                            Text(if (index == 5) "6+" else "${index + 1}",
                                 color = Gold, fontSize = 11.sp)
                             Text("$amount", color = Cream, fontWeight = FontWeight.Bold)
                         }
@@ -463,7 +463,7 @@ private fun DeckScreen(
             Button(onClick = onBattle, enabled = legality.isEmpty(),
                 modifier = Modifier.weight(1f)) { Text("⚔  BATTLE") }
             OutlinedButton(onClick = { pasteDialog = true }) { Text("IMPORT") }
-            OutlinedButton(onClick = { exportFile.launch("\${state.selected}.txt") }) { Text("SAVE FILE") }
+            OutlinedButton(onClick = { exportFile.launch("${state.selected}.txt") }) { Text("SAVE FILE") }
         }
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -591,7 +591,7 @@ private fun DeckScreen(
     }
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false },
-        title = { Text("Delete \${state.selected}?") },
+        title = { Text("Delete ${state.selected}?") },
         text = { Text("This saved deck will be deleted. The card collection remains unchanged.") },
         confirmButton = {
             TextButton(onClick = { vm.delete(); confirmDelete = false }) { Text("DELETE", color = Warn) }
@@ -612,14 +612,14 @@ private fun CardDetailsDialog(
             Column {
                 CardArtPreview(card, Modifier.fillMaxWidth().height(225.dp))
                 Spacer(Modifier.height(8.dp))
-                Text("\${card.rarity}  •  \${card.faction}", color = Gold, fontWeight = FontWeight.Bold)
-                Text("POWER: \${card.power.ifBlank { "Unknown" }}     LIGHT: \${card.cost.ifBlank { "Unknown" }}",
+                Text("${card.rarity}  •  ${card.faction}", color = Gold, fontWeight = FontWeight.Bold)
+                Text("POWER: ${card.power.ifBlank { "Unknown" }}     LIGHT: ${card.cost.ifBlank { "Unknown" }}",
                     color = CoolBlue, fontWeight = FontWeight.Bold)
-                if (card.cardNumber.isNotBlank()) Text("Card number: \${card.cardNumber}", color = Secondary)
+                if (card.cardNumber.isNotBlank()) Text("Card number: ${card.cardNumber}", color = Secondary)
                 if (card.trigger.isNotBlank()) Text(card.trigger, fontSize = 12.sp, color = Gold)
                 Spacer(Modifier.height(5.dp))
                 Text(card.effect, color = Cream, maxLines = 7)
-                if (card.acquisition.isNotBlank()) Text("Obtain: \${card.acquisition}",
+                if (card.acquisition.isNotBlank()) Text("Obtain: ${card.acquisition}",
                     fontSize = 11.sp, color = Secondary)
                 Text(ShadowEffectCoverage.status(card.name, card.effect, card.cost, card.power),
                     fontSize = 11.sp, color = Secondary, modifier = Modifier.padding(top = 7.dp))
