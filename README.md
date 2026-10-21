@@ -1,5 +1,9 @@
 # Destiny Rising — Shadowshaper Deck Companion
 
+## Batch 03 video-confirmed metadata (recording 38646.mp4)
+
+All eight Batch 03 card records now carry the original video's printed Power, Light cost, faction, rarity, effect text, trigger and acquisition source. **Rossi-11** and **Mind Disruptor** are newly added through `app/src/main/assets/verified_video_cards.tsv`; existing records were corrected in the original catalogs and their `card_details.tsv` overlays. The catalog now contains **112 distinct names**. The data changes have been audited for uniqueness and field counts; **gameplay handlers for several special effects remain incomplete or incorrect** and need a separate mechanics pass. See [Batch 03 metadata audit](docs/BATCH_03_METADATA_AUDIT.md).
+
 ## Batch 02 card metadata and Wolf animation (recording 38645.mp4)
 
 All eight Batch 02 cards are already present in the catalog with matching printed cost, Power, faction and rarity. Video-confirmed abilities are now reflected in `cards.tsv`, including **Mishra +3 adjacent Power** and Wolf's **more than five allied units / target 5+ Power** conditional destruction. Both are wired into the gameplay engine, with local Wolf threshold tests authored but not run through Android Studio. See [Batch 02 metadata audit](docs/BATCH_02_METADATA_AUDIT.md).
@@ -63,13 +67,13 @@ These changes approximate the game's published visual language. They are **not**
 
 1. **Sim Battle** — six-round playable practice match against CPU. Choose a legal saved deck, draw a starting hand, place cards in front/back-row positions, spend 1–6 round play points, inspect cards, end turns, and see total Power scores and final victory/draw/defeat. Includes original card art when a matching online or bundled image exists. Now uses a dedicated `ShadowEngine` with shared targeting, damage, buffs, turn resolution, line/column synergies and AI opponents. Incomplete effects are explicitly logged rather than treated as resolved. See `docs/GAMEPLAY_IMPLEMENTATION.md` and [`docs/RULES_AUDIT.md`](docs/RULES_AUDIT.md) for rules, verified assumptions, and unimplemented interactions.
 2. **Deck Construction** — local multiple saved decks, rename/delete, copy/share/import deck text, enforce the maximum 2 copies per name, 3 Exotic, 5 Mythic and 15-card total. Incomplete decks can be saved but **cannot enter Sim Battle**. Tokens and entries without verified Power or cost cannot be added. Launch a valid deck straight into battle.
-3. **Card Collection** — browse the 110 known card records, original card-face images where available, stats, rarity, faction, effects, and source details; search by name/faction/rarity/effect.
+3. **Card Collection** — browse the 112 known card records, original card-face images where available, stats, rarity, faction, effects, and source details; search by name/faction/rarity/effect.
 4. **Rules** — in-app Shadowshaper deck limits, six-round scoring, positioning, Inspired/Sustained/Suppressed definitions, and gameplay source link.
 
 The app opens to the four-section **ShadowComposeActivity** (Kotlin/Compose). The simulator launches the Kotlin **ShadowBattleActivity** in landscape. BattleActivity is single-player against a legal CPU practice deck; it is not a reimplementation of Destiny Rising's online PvP client. No background multiplayer or game-account access.
 
 
-Native Android Studio (Java) deck creator. Current catalog: **110 distinct names** from TodayInDestiny and a detailed community list; this is **not guaranteed to be the full current game roster**.
+Native Android Studio (Java) deck creator. Current catalog: **112 distinct names** from TodayInDestiny, community lists, and two video-verified additions; this is **not guaranteed to be the full current game roster**.
 
 
 ### Current visual and gameplay progress (October 2026)
