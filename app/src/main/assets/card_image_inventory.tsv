@@ -1,7 +1,7 @@
 card_name	slug	faction	catalog_source	image_inventory_status	reference_url	video_source_id	expected_local_asset
 Ayuela	ayuela	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/ayuela.webp		card_art/ayuela.webp
 Carrier	carrier	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/carrier.webp		card_art/carrier.webp
-Clone	clone	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/clone.webp		card_art/clone.webp
+Clone	clone	Humans	cards.tsv	EXTRACTED_AWAITING_UPLOAD	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/clone.webp	screen_20261021_171136	card_art/clone.gif
 Denzin	denzin	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/denzin.webp		card_art/denzin.webp
 Donovan-17	donovan_17	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/donovan_17.webp		card_art/donovan_17.webp
 Dreg	dreg	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/dreg.webp		card_art/dreg.webp
@@ -15,7 +15,7 @@ Marauder	marauder	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.m
 Mishra	mishra	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/mishra.webp		card_art/mishra.webp
 Morgran	morgran	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/morgran.webp		card_art/morgran.webp
 Mu Ying	mu_ying	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/mu_ying.webp		card_art/mu_ying.webp
-Ning Fei	ning_fei	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/ning_fei.webp		card_art/ning_fei.webp
+Ning Fei	ning_fei	Humans	cards.tsv	EXTRACTED_AWAITING_UPLOAD	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/ning_fei.webp	screen_20261021_171136	card_art/ning_fei.gif
 Novice Marauder	novice_marauder	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/novice_marauder.webp		card_art/novice_marauder.webp
 Resilient Captain	resilient_captain	UNKNOWN	cards.tsv	BUNDLED_LOCAL_GIF	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/resilient_captain.webp		card_art/resilient_captain.gif
 Resilient Dreg	resilient_dreg	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/resilient_dreg.webp		card_art/resilient_dreg.webp
@@ -23,7 +23,7 @@ Rock	rock	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.tod
 Rock Pile	rock_pile	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/rock_pile.webp		card_art/rock_pile.webp
 Shank	shank	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/shank.webp		card_art/shank.webp
 Sparrow	sparrow	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/sparrow.webp		card_art/sparrow.webp
-Tan-2	tan_2	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/tan_2.webp		card_art/tan_2.webp
+Tan-2	tan_2	Humans	cards.tsv	EXTRACTED_AWAITING_UPLOAD	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/tan_2.webp	screen_20261021_171136	card_art/tan_2.gif
 Tracer Shank	tracer_shank	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/tracer_shank.webp		card_art/tracer_shank.webp
 Tracker	tracker	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/tracker.webp		card_art/tracker.webp
 Unrelenting Captain	unrelenting_captain	UNKNOWN	cards.tsv	BUNDLED_LOCAL_GIF	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/unrelenting_captain.webp		card_art/unrelenting_captain.gif
@@ -33,10 +33,10 @@ Wu Ming	wu_ming	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.med
 Xur	xur	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/xur.webp		card_art/xur.webp
 Zhiyao	zhiyao	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/zhiyao.webp		card_art/zhiyao.webp
 Zhong Wenbin	zhong_wenbin	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/zhong_wenbin.webp		card_art/zhong_wenbin.webp
-Hexguard	hexguard	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/hexguard.webp
-Cursed Thrall	cursed_thrall	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/cursed_thrall.webp
-Acolyte	acolyte	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/acolyte.webp
-Thrall	thrall	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/thrall.webp
+Hexguard	hexguard	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/hexguard.webp
+Cursed Thrall	cursed_thrall	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/cursed_thrall.webp
+Acolyte	acolyte	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/acolyte.webp
+Thrall	thrall	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/thrall.webp
 Tenacious Shielded Knight	tenacious_shielded_knight	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/tenacious_shielded_knight.webp
 The Disfavored	the_disfavored	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/the_disfavored.webp
 Tenacious Thrall	tenacious_thrall	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/tenacious_thrall.webp
@@ -52,8 +52,8 @@ Tenacious Wizard	tenacious_wizard	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED
 Paradoxical Neophyte	paradoxical_neophyte	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/paradoxical_neophyte.webp
 Paradoxical Neophyte's Shade	paradoxical_neophyte_s_shade	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/paradoxical_neophyte_s_shade.webp
 Shinka Decurion	shinka_decurion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_decurion.webp
-Legionary	legionary	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/legionary.webp
-War Beast	war_beast	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/war_beast.webp
+Legionary	legionary	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/legionary.webp
+War Beast	war_beast	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/war_beast.webp
 Centurion	centurion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/centurion.webp
 Shinka Psion	shinka_psion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_psion.webp
 Shinka Legionary	shinka_legionary	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_legionary.webp
