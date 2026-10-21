@@ -10,6 +10,7 @@ data class ShadowDeckUiState(
     val names: List<String> = listOf("My Deck"),
     val selected: String = "My Deck",
     val cards: Map<String, Int> = emptyMap(),
+    val cover: String = "default",
     val message: String? = null
 ) {
     val count: Int get() = cards.values.sum()
@@ -25,7 +26,13 @@ class ShadowDeckViewModel(application: Application) : AndroidViewModel(applicati
 
     private fun loadState(message: String? = null): ShadowDeckUiState {
         val selected = repository.selectedDeck()
-        return ShadowDeckUiState(repository.deckNames(), selected, repository.read(selected), message)
+        return ShadowDeckUiState(
+            names = repository.deckNames(),
+            selected = selected,
+            cards = repository.read(selected),
+            cover = repository.cover(selected),
+            message = message
+        )
     }
 
     fun refresh() { _state.value = loadState() }
@@ -46,6 +53,10 @@ class ShadowDeckViewModel(application: Application) : AndroidViewModel(applicati
     fun create(name: String) = runMutation { repository.create(name.trim()) }
     fun rename(new: String) = runMutation { repository.rename(_state.value.selected, new.trim()) }
     fun delete() = runMutation { repository.delete(_state.value.selected) }
+
+    fun selectCover(coverId: String) = runMutation {
+        repository.setCover(_state.value.selected, coverId)
+    }
 
     fun add(card: ShadowData.Card) {
         val now = _state.value
