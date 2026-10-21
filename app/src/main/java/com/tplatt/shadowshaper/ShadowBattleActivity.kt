@@ -299,7 +299,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { settingsDialog = true }) { Text("☰ MENU", color = BattleGold) }
-            Text("SHADOWSHAPER  •  DUELS", color = DuelPalette.cream,
+            Text("SHADOW SHAPER  •  DUELS", color = DuelPalette.cream,
                 letterSpacing = 2.sp, fontSize = 14.sp, fontWeight = FontWeight.Black)
             Text(
                 when {
@@ -675,7 +675,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     )
     if (settingsDialog) AlertDialog(
         onDismissRequest = { settingsDialog = false },
-        title = { Text("SHADOWSHAPER DUELS") },
+        title = { Text("SHADOW SHAPER DUELS") },
         text = {
             Column {
                 TextButton(onClick = { settingsDialog = false }) { Text("RESUME") }
