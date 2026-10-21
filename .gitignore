@@ -1,0 +1,14 @@
+# Video samples and intermediate extracted frames (review, do not commit wholesale)
+artwork_review/
+
+# Python caches and logs
+__pycache__/
+*.py[cod]
+
+# Build/IDE outputs
+.gradle/
+build/
+app/build/
+.idea/
+*.iml
+local.properties
