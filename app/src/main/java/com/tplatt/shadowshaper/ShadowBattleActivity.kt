@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -55,6 +56,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.zIndex
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
@@ -229,6 +234,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF17110E),Color(0xFF302018),Color(0xFF19151A))))) {
         Row(Modifier.fillMaxWidth().height(44.dp)
             .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
@@ -384,26 +390,48 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     itemsIndexed(engine.human.hand.toList()) { index, card ->
                         Card(
                             modifier = Modifier.width(82.dp).fillMaxHeight()
+                                .graphicsLayer {
+                                    val midpoint = (engine.human.hand.size - 1) / 2f
+                                    rotationZ = if (selectedIndex == index) 0f
+                                        else (index - midpoint) * 1.6f
+                                    translationY = if (selectedIndex == index) (-7).dp.toPx() else 0f
+                                    scaleX = if (selectedIndex == index) 1.035f else 1f
+                                    scaleY = if (selectedIndex == index) 1.035f else 1f
+                                }
                                 .onGloballyPositioned { cardBounds[index] = it.boundsInWindow() }
                                 .pointerInput(index, card.name) {
                                     detectDragGestures(
                                         onDragStart = { start ->
-                                            draggedIndex = index
-                                            dragPosition = (cardBounds[index]?.topLeft ?: Offset.Zero) + start
-                                            selectedIndex = index
+                                            if (snapshot.playerTurn && !snapshot.finished &&
+                                                pendingPosition == null &&
+                                                engine.pendingMovedUnit == null &&
+                                                engine.affordable(engine.human, index)) {
+                                                draggedIndex = index
+                                                selectedIndex = index
+                                                dragPosition =
+                                                    (cardBounds[index]?.topLeft ?: Offset.Zero) + start
+                                            } else {
+                                                draggedIndex = -1
+                                                message = "Resolve the current action or choose an affordable card."
+                                            }
                                         },
                                         onDrag = { change, delta ->
-                                            change.consume()
-                                            dragPosition += delta
+                                            if (draggedIndex == index) {
+                                                change.consume()
+                                                dragPosition += delta
+                                            }
                                         },
                                         onDragEnd = {
-                                            val drop = slotBounds.entries.firstOrNull {
-                                                it.value.contains(dragPosition)
-                                            }?.key
-                                            draggedIndex = -1
-                                            val parts = drop?.split("-")
-                                            if (parts?.size == 3 && parts[0] == "0")
-                                                playAt(parts[1].toInt(), parts[2].toInt())
+                                            if (draggedIndex == index) {
+                                                val drop = slotBounds.entries.firstOrNull {
+                                                    it.value.contains(dragPosition)
+                                                }?.key
+                                                draggedIndex = -1
+                                                val parts = drop?.split("-")
+                                                if (parts?.size == 3 && parts[0] == "0")
+                                                    playAt(parts[1].toInt(), parts[2].toInt())
+                                                else message = "Drag onto a glowing empty slot in your field."
+                                            }
                                         },
                                         onDragCancel = { draggedIndex = -1 }
                                     )
@@ -457,6 +485,23 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             }
         }
     }
+    // Floating card stays under the finger while the user drags across the field.
+    if (engine != null && draggedIndex in engine.human.hand.indices) {
+        val held = engine.human.hand[draggedIndex]
+        Box(
+            Modifier.offset {
+                IntOffset(dragPosition.x.roundToInt() - 48, dragPosition.y.roundToInt() - 88)
+            }.size(width = 96.dp, height = 130.dp).zIndex(40f)
+        ) {
+            DuelCardFrame(
+                card = held, power = held.numericPower(),
+                modifier = Modifier.fillMaxSize(),
+                selected = true, compact = false
+            )
+        }
+    }
+    }
+
     if (deckDialog) AlertDialog(
         onDismissRequest = { if (engine != null) deckDialog = false },
         title = { Text("CHOOSE A DECK") },
