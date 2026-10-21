@@ -30,8 +30,8 @@ VIDEOS = {
 def records():
     with INVENTORY.open(encoding="utf-8", newline="") as f:
         rows = list(csv.DictReader(f, delimiter="\t"))
-    if len(rows) != 110 or len(set(r["slug"] for r in rows)) != 110:
-        raise SystemExit("Catalog must have 110 unique slugs; regenerate inventory.")
+    if not rows or len({r["slug"] for r in rows}) != len(rows):
+        raise SystemExit("Inventory must contain a nonempty list of unique card slugs.")
     return rows
 
 
@@ -48,9 +48,27 @@ def art_path(row):
     return ART / (row["slug"] + ".webp")
 
 
+def is_gif(path):
+    try:
+        with path.open("rb") as f:
+            signature = f.read(6)
+        return path.stat().st_size > 1024 and signature in (b"GIF87a", b"GIF89a")
+    except OSError:
+        return False
+
+
+def bundled_path(row):
+    """GIF takes priority, matching the Android card loader on API 28+."""
+    gif = ART / (row["slug"] + ".gif")
+    if is_gif(gif):
+        return gif
+    webp = art_path(row)
+    return webp if is_webp(webp) else None
+
+
 def audit(args):
     rows = records()
-    bundled = [r for r in rows if is_webp(art_path(r))]
+    bundled = [r for r in rows if bundled_path(r) is not None]
     referenced = [r for r in rows if r["reference_url"] and r not in bundled]
     missing = [r for r in rows if not r["reference_url"] and r not in bundled]
     print(f"Inventory: {len(rows)} | bundled: {len(bundled)} | original online source only: "
@@ -63,7 +81,7 @@ def gallery(args):
     ART.mkdir(parents=True, exist_ok=True)
     failures, imported = [], 0
     for r in records():
-        if not r["reference_url"] or is_webp(art_path(r)):
+        if not r["reference_url"] or bundled_path(r) is not None:
             continue
         if args.limit and imported >= args.limit:
             break
