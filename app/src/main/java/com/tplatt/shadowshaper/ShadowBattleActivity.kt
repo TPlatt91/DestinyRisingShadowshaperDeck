@@ -696,21 +696,24 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         },
         dismissButton = { TextButton(onClick = { endConfirmation = false }) { Text("KEEP PLAYING") } }
     )
-    if (snapshot?.finished == true) AlertDialog(
-        onDismissRequest = {},
-        title = { Text(engine?.result() ?: "DUEL COMPLETE") },
-        text = { Text("FINAL POWER\nYOU " + snapshot.playerPower + " • CPU " + snapshot.cpuPower +
-            "\nUnresolved effects: " + snapshot.unresolvedEffects +
-            "\nResults are provisional where card effects are incomplete.") },
-        confirmButton = {
-            TextButton(onClick = {
+    if (snapshot?.finished == true) {
+        DuelMatchResult(
+            playerPower = snapshot.playerPower,
+            cpuPower = snapshot.cpuPower,
+            unresolvedEffects = snapshot.unresolvedEffects,
+            onRematch = {
                 coordinator = null
                 deckDialog = true
+                factionDialog = false
+                openingDialog = false
+                pendingPosition = null
+                inspectedUnit = null
+                inspectedCard = null
                 selectedIndex = -1
-            }) { Text("NEW MATCH") }
-        },
-        dismissButton = { TextButton(onClick = onExit) { Text("HOME") } }
-    )
+            },
+            onHome = onExit
+        )
+    }
     if (showLog && engine != null) AlertDialog(
         onDismissRequest = { showLog = false },
         title = { Text("BATTLE LOG") },
