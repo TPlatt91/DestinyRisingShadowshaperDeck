@@ -1,0 +1,579 @@
+package com.tplatt.shadowshaper
+
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Bundle
+import android.widget.ImageView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import kotlinx.coroutines.delay
+
+/** Compose landscape battle UI. Rules and AI are resolved by the shared engine. */
+class ShadowBattleActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        setContent {
+            MaterialTheme(colorScheme = darkColorScheme(
+                primary = BattleGold, onPrimary = BattleInk,
+                background = BattleInk, onBackground = BattleCream,
+                surface = BattleBrown, onSurface = BattleCream
+            )) {
+                ShadowBattleScreen(
+                    requestedDeck = intent.getStringExtra("selected_deck"),
+                    onExit = { finish() },
+                    onRules = { startActivity(Intent(this, ShadowComposeActivity::class.java)
+                        .putExtra("start_page", "rules")) }
+                )
+            }
+        }
+    }
+}
+
+private val BattleInk = Color(0xFF17110F)
+private val BattleBrown = Color(0xFF372820)
+private val BattlePanel = Color(0xFF4C3527)
+private val BattleGold = Color(0xFFE9C17C)
+private val BattleCream = Color(0xFFF8EBD6)
+private val BattleBlue = Color(0xFF94C8ED)
+private val BattleFaded = Color(0xFFCAB7A2)
+private val BattleDanger = Color(0xFFDDA89A)
+
+@Composable
+private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRules: () -> Unit) {
+    val context = LocalContext.current
+    val catalog = remember { ShadowData.load(context) }
+    val saves = remember { ShadowDeckRepository(context) }
+    val practice = remember(catalog) { ShadowData.opponentDeck(catalog) }
+    var coordinator by remember { mutableStateOf<ShadowBattleCoordinator?>(null) }
+    val current = coordinator
+    val snapshotState = current?.state?.collectAsState()
+    val snapshot = snapshotState?.value
+    val engine = current?.engine
+
+    var deckDialog by remember { mutableStateOf(true) }
+    var factionDialog by remember { mutableStateOf(false) }
+    var openingDialog by remember { mutableStateOf(false) }
+    var endConfirmation by remember { mutableStateOf(false) }
+    var settingsDialog by remember { mutableStateOf(false) }
+    var exitConfirmation by remember { mutableStateOf(false) }
+    var showLog by remember { mutableStateOf(false) }
+    var chosenDeck by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
+    var selectedIndex by remember { mutableIntStateOf(-1) }
+    var pendingPosition by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    var inspectedUnit by remember { mutableStateOf<ShadowEngine.Unit?>(null) }
+    var inspectedCard by remember { mutableStateOf<ShadowData.Card?>(null) }
+    var message by remember { mutableStateOf("Tap a card, then choose an empty position.") }
+    var draggedIndex by remember { mutableIntStateOf(-1) }
+    var dragPosition by remember { mutableStateOf(Offset.Zero) }
+    val cardBounds = remember { mutableStateMapOf<Int, Rect>() }
+    val slotBounds = remember { mutableStateMapOf<String, Rect>() }
+    val validDecks = remember(catalog, deckDialog) {
+        buildList {
+            if (ShadowDeckRules.validate(practice, catalog).isEmpty())
+                add("Starter Practice Deck" to practice)
+            saves.deckNames().forEach { name ->
+                val deck = saves.read(name)
+                if (ShadowDeckRules.validate(deck, catalog).isEmpty()) add(name to deck)
+            }
+        }
+    }
+
+    fun startMatch(faction: String) {
+        val cpu = ShadowData.opponentDeck(catalog, faction)
+        val candidate = ShadowBattleCoordinator(catalog, System.nanoTime())
+        val ownError = ShadowDeckRules.validate(chosenDeck, catalog)
+        val cpuError = ShadowDeckRules.validate(cpu, catalog)
+        if (ownError.isNotEmpty() || cpuError.isNotEmpty()) {
+            message = "Cannot start: " + ownError.ifEmpty { cpuError }
+            deckDialog = true
+            factionDialog = false
+            return
+        }
+        try {
+            candidate.start(chosenDeck, cpu)
+            coordinator = candidate
+            selectedIndex = -1
+            pendingPosition = null
+            inspectedUnit = null
+            inspectedCard = null
+            deckDialog = false
+            factionDialog = false
+            openingDialog = true
+            message = "Choose a card and position to play."
+        } catch (e: Exception) {
+            message = "Could not start: " + e.message
+            deckDialog = true
+            factionDialog = false
+        }
+    }
+
+    fun playAt(row: Int, column: Int) {
+        val e = engine ?: return
+        val co = current ?: return
+        if (e.pendingMovedUnit != null && e.pendingMoveCaster === e.human) {
+            message = if (co.resolveMove(e.human, row, column)) "Relocation complete." else e.lastActionError
+            return
+        }
+        val index = selectedIndex
+        if (index !in e.human.hand.indices) {
+            message = "Select a card from your hand first."
+            return
+        }
+        if (!e.isPlayablePlacement(e.human, index, row, column)) {
+            message = e.validatePlay(e.human, index, row, column, null)
+                .ifBlank { "Illegal position." }
+            return
+        }
+        val card = e.human.hand[index]
+        if (e.isTargeted(card) && e.targetOptions(e.human, card, row, column).isNotEmpty()) {
+            pendingPosition = row to column
+            message = "Choose a gold-highlighted target for " + card.name
+        } else {
+            if (co.play(e.human, index, row, column, null)) {
+                selectedIndex = -1
+                pendingPosition = null
+                message = "Card played."
+            } else message = e.lastActionError
+        }
+    }
+
+    fun chooseTarget(owner: ShadowEngine.Player, row: Int, column: Int) {
+        val e = engine ?: return
+        val co = current ?: return
+        val position = pendingPosition ?: return
+        if (selectedIndex !in e.human.hand.indices) return
+        if (co.play(e.human, selectedIndex, position.first, position.second,
+                ShadowEngine.Target(owner, row, column))) {
+            selectedIndex = -1
+            pendingPosition = null
+            message = "Effect resolved."
+        } else message = e.lastActionError
+    }
+
+    BackHandler(settingsDialog || engine != null) {
+        if (settingsDialog) settingsDialog = false else exitConfirmation = true
+    }
+
+    // CPU acts once per coroutine tick so the user sees individual plays.
+    LaunchedEffect(current, snapshot?.playerTurn, snapshot?.revision, snapshot?.round,
+        openingDialog, settingsDialog, inspectedUnit, inspectedCard,
+        showLog, deckDialog, factionDialog) {
+        if (current != null && snapshot != null && !snapshot.finished && !snapshot.playerTurn &&
+            !openingDialog && !settingsDialog && inspectedUnit == null && inspectedCard == null &&
+            !showLog && !deckDialog && !factionDialog) {
+            delay(540)
+            if (!current.cpuPlayOne()) current.endTurn()
+        }
+    }
+
+    Column(Modifier.fillMaxSize().background(BattleInk)) {
+        Row(Modifier.fillMaxWidth().height(42.dp).background(BattleBrown).padding(horizontal = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = { settingsDialog = true }) { Text("☰ MENU", color = BattleGold) }
+            Text("SHADOWSHAPER DUELS", color = BattleCream, fontWeight = FontWeight.Bold)
+            Text(
+                when {
+                    snapshot?.finished == true -> "DUEL COMPLETE"
+                    snapshot?.playerTurn == true -> "YOUR TURN"
+                    snapshot != null -> "CPU TURN"
+                    else -> "SINGLE PLAYER"
+                }, color = BattleGold, fontSize = 11.sp
+            )
+        }
+        if (engine != null && snapshot != null) {
+            Row(Modifier.weight(1f).fillMaxWidth().padding(5.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Column(
+                    Modifier.width(90.dp).fillMaxHeight().background(BattleBrown, RoundedCornerShape(7.dp)),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Text("CPU HAND " + snapshot.cpuHand, color = BattleDanger, fontSize = 11.sp)
+                    Text("ROUND\n" + snapshot.round + " / 6", color = BattleGold,
+                        fontWeight = FontWeight.Bold, fontSize = 18.sp,
+                        textAlign = TextAlign.Center)
+                    Text(if (engine.humanFirst) "OFFENSIVE" else "DEFENSIVE",
+                        color = BattleBlue, fontSize = 10.sp)
+                    Text("YOU", color = BattleCream, fontWeight = FontWeight.Bold)
+                }
+                Column(
+                    Modifier.weight(1f).fillMaxHeight().background(BattleBrown).padding(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    val targets = if (pendingPosition != null && selectedIndex in engine.human.hand.indices)
+                        engine.targetOptions(engine.human, engine.human.hand[selectedIndex],
+                            pendingPosition!!.first, pendingPosition!!.second)
+                    else emptyList()
+                    val moving = engine.pendingMovedUnit != null &&
+                        engine.pendingMoveCaster === engine.human
+                    listOf(
+                        Triple("CPU BACK", engine.cpu, 0),
+                        Triple("CPU FRONT", engine.cpu, 1),
+                        Triple("YOUR FRONT", engine.human, 1),
+                        Triple("YOUR BACK", engine.human, 0)
+                    ).forEach { (heading, owner, row) ->
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            Text(heading.replace(" ", "\n"), fontSize = 9.sp,
+                                color = if (owner === engine.human) BattleBlue else BattleDanger,
+                                modifier = Modifier.width(39.dp).align(Alignment.CenterVertically),
+                                lineHeight = 10.sp, textAlign = TextAlign.Center)
+                            for (col in 0 until ShadowRules.COLUMNS) {
+                                val unit = owner.board[row][col]
+                                val targeting = targets.any {
+                                    it.owner === owner && it.row == row && it.column == col
+                                }
+                                val relocating = moving && unit == null &&
+                                    owner === engine.pendingMovedUnit?.owner
+                                val legal = !moving && unit == null && owner === engine.human &&
+                                    pendingPosition == null && selectedIndex >= 0 &&
+                                    engine.isPlayablePlacement(engine.human, selectedIndex, row, col)
+                                val id = (if (owner === engine.human) "0" else "1") + "-$row-$col"
+                                Box(
+                                    Modifier.weight(1f).fillMaxHeight()
+                                        .onGloballyPositioned { slotBounds[id] = it.boundsInWindow() }
+                                        .background(if (targeting || relocating) Color(0xFF567353)
+                                            else if (legal) Color(0xFF3F5D55)
+                                            else Color(0xFF271E1A), RoundedCornerShape(4.dp))
+                                        .then(
+                                            if (targeting || relocating || (owner === engine.human && unit == null))
+                                                Modifier.clickable {
+                                                    if (relocating) playAt(row, col)
+                                                    else if (targeting) chooseTarget(owner, row, col)
+                                                    else if (pendingPosition == null) playAt(row, col)
+                                                }
+                                            else if (unit != null) Modifier.clickable { inspectedUnit = unit }
+                                            else Modifier
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (unit == null) {
+                                        Text(if (legal || relocating) "+" else "·",
+                                            color = if (legal || relocating) BattleGold else BattleFaded)
+                                    } else {
+                                        BattleFace(unit.card, Modifier.fillMaxSize().padding(bottom = 12.dp))
+                                        Text(engine.power(unit).toString(), fontSize = 10.sp,
+                                            color = BattleCream,
+                                            modifier = Modifier.align(Alignment.TopStart)
+                                                .background(Color(0xDD315B7E)).padding(horizontal = 2.dp))
+                                        Text(unit.card.name, color = BattleCream, fontSize = 8.sp,
+                                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                            modifier = Modifier.align(Alignment.BottomCenter)
+                                                .fillMaxWidth().background(Color(0xDA201713)),
+                                            textAlign = TextAlign.Center)
+                                        if (unit.inspired && !unit.suppressed)
+                                            Text("✦", color = BattleGold, modifier = Modifier.align(Alignment.TopEnd))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                Column(
+                    Modifier.width(132.dp).fillMaxHeight().background(BattleBrown).padding(5.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(snapshot.playerPower.toString() + " : " + snapshot.cpuPower,
+                        color = BattleGold, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("YOU : CPU POWER", fontSize = 10.sp, color = BattleFaded)
+                    Spacer(Modifier.height(6.dp))
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+                        engine.journal.takeLast(8).forEach {
+                            Text(it, color = BattleCream, fontSize = 10.sp, lineHeight = 12.sp)
+                        }
+                    }
+                    TextButton(onClick = { showLog = true }) {
+                        Text("MATCH LOG", color = BattleGold, fontSize = 11.sp)
+                    }
+                }
+            }
+            Row(Modifier.fillMaxWidth().height(128.dp).background(BattleBrown).padding(5.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.width(96.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(snapshot.playerLight.toString() + "/" + snapshot.round, color = BattleGold,
+                        fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    Text("LIGHT", color = BattleGold, fontSize = 11.sp)
+                    Text("DECK " + engine.human.drawPile.size, color = BattleFaded, fontSize = 10.sp)
+                }
+                LazyRow(
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    contentPadding = PaddingValues(horizontal = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp)
+                ) {
+                    itemsIndexed(engine.human.hand.toList()) { index, card ->
+                        Card(
+                            modifier = Modifier.width(82.dp).fillMaxHeight()
+                                .onGloballyPositioned { cardBounds[index] = it.boundsInWindow() }
+                                .pointerInput(index, card.name) {
+                                    detectDragGestures(
+                                        onDragStart = { start ->
+                                            draggedIndex = index
+                                            dragPosition = (cardBounds[index]?.topLeft ?: Offset.Zero) + start
+                                            selectedIndex = index
+                                        },
+                                        onDrag = { change, delta ->
+                                            change.consume()
+                                            dragPosition += delta
+                                        },
+                                        onDragEnd = {
+                                            val drop = slotBounds.entries.firstOrNull {
+                                                it.value.contains(dragPosition)
+                                            }?.key
+                                            draggedIndex = -1
+                                            val parts = drop?.split("-")
+                                            if (parts?.size == 3 && parts[0] == "0")
+                                                playAt(parts[1].toInt(), parts[2].toInt())
+                                        },
+                                        onDragCancel = { draggedIndex = -1 }
+                                    )
+                                }
+                                .combinedClickable(
+                                    onClick = {
+                                        selectedIndex = if (selectedIndex == index) -1 else index
+                                        pendingPosition = null
+                                    },
+                                    onLongClick = { inspectedCard = card }
+                                ),
+                            border = BorderStroke(1.dp,
+                                if (selectedIndex == index) BattleGold else Color(0xFF73543D)),
+                            colors = CardDefaults.cardColors(containerColor =
+                                if (selectedIndex == index) Color(0xFF624934) else BattlePanel)
+                        ) {
+                            Box(Modifier.fillMaxSize()) {
+                                BattleFace(card, Modifier.fillMaxSize().padding(3.dp))
+                                Text(card.power + "  ◈ " + card.cost, color = BattleCream,
+                                    fontSize = 10.sp, textAlign = TextAlign.Center,
+                                    modifier = Modifier.align(Alignment.TopCenter)
+                                        .fillMaxWidth().background(Color(0xD02A2023)))
+                                Text(card.name, color = BattleCream, fontSize = 9.sp,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.align(Alignment.BottomCenter)
+                                        .fillMaxWidth().background(Color(0xDE211814)),
+                                    textAlign = TextAlign.Center)
+                            }
+                        }
+                    }
+                }
+                Column(Modifier.width(120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Button(
+                        enabled = snapshot.playerTurn && !snapshot.finished,
+                        onClick = {
+                            if (pendingPosition != null) pendingPosition = null
+                            else if (engine.pendingMovedUnit != null)
+                                message = "Choose a relocation slot first."
+                            else if (engine.human.points > 0 &&
+                                engine.human.hand.indices.any { engine.affordable(engine.human, it) })
+                                endConfirmation = true
+                            else current.endTurn()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(if (pendingPosition != null) "CANCEL" else "END TURN", fontSize = 11.sp)
+                    }
+                    Text(message, color = BattleFaded, fontSize = 9.sp,
+                        lineHeight = 11.sp, maxLines = 3, textAlign = TextAlign.Center)
+                }
+            }
+        } else {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Choose a legal 15-card deck to start.", color = BattleFaded)
+            }
+        }
+    }
+    if (deckDialog) AlertDialog(
+        onDismissRequest = { if (engine != null) deckDialog = false },
+        title = { Text("CHOOSE A DECK") },
+        text = {
+            Column {
+                if (validDecks.isEmpty()) Text("Build a legal 15-card deck in Deck Construction first.")
+                validDecks.forEach { (name, deck) ->
+                    TextButton(onClick = {
+                        chosenDeck = deck
+                        deckDialog = false
+                        factionDialog = true
+                    }) { Text(name) }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onExit) { Text("HOME") } }
+    )
+    if (factionDialog) AlertDialog(
+        onDismissRequest = { factionDialog = false; deckDialog = true },
+        title = { Text("CPU FACTION") },
+        text = {
+            Column {
+                listOf("Mixed", "Fallen", "Hive", "Cabal", "Humans").forEach { faction ->
+                    TextButton(onClick = { startMatch(faction) }) { Text(faction) }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { factionDialog = false; deckDialog = true }) { Text("BACK") }
+        }
+    )
+    if (openingDialog && engine != null) AlertDialog(
+        onDismissRequest = {},
+        title = { Text(if (engine.humanFirst) "OFFENSIVE • YOU GO FIRST" else "DEFENSIVE • CPU FIRST") },
+        text = { Text("Six rounds • 15 cards per deck\nBuild the greatest total surviving Power.\nOpening hand: " + engine.human.hand.size) },
+        confirmButton = { TextButton(onClick = { openingDialog = false }) { Text("START DUEL") } }
+    )
+    if (settingsDialog) AlertDialog(
+        onDismissRequest = { settingsDialog = false },
+        title = { Text("SHADOWSHAPER DUELS") },
+        text = {
+            Column {
+                TextButton(onClick = { settingsDialog = false }) { Text("RESUME") }
+                TextButton(onClick = { settingsDialog = false; deckDialog = true }) { Text("NEW MATCH") }
+                TextButton(onClick = { settingsDialog = false; onRules() }) { Text("RULES") }
+                TextButton(onClick = { settingsDialog = false; exitConfirmation = true }) { Text("HOME") }
+            }
+        },
+        confirmButton = { TextButton(onClick = { settingsDialog = false }) { Text("CLOSE") } }
+    )
+    if (exitConfirmation) AlertDialog(
+        onDismissRequest = { exitConfirmation = false },
+        title = { Text("Leave battle?") },
+        text = { Text("This match will be lost.") },
+        confirmButton = { TextButton(onClick = onExit) { Text("LEAVE") } },
+        dismissButton = { TextButton(onClick = { exitConfirmation = false }) { Text("STAY") } }
+    )
+    if (endConfirmation) AlertDialog(
+        onDismissRequest = { endConfirmation = false },
+        title = { Text("End turn with Light remaining?") },
+        text = { Text("Unspent Light does not carry over.") },
+        confirmButton = {
+            TextButton(onClick = { endConfirmation = false; current?.endTurn() }) { Text("END TURN") }
+        },
+        dismissButton = { TextButton(onClick = { endConfirmation = false }) { Text("KEEP PLAYING") } }
+    )
+    if (snapshot?.finished == true) AlertDialog(
+        onDismissRequest = {},
+        title = { Text(engine?.result() ?: "DUEL COMPLETE") },
+        text = { Text("FINAL POWER\nYOU " + snapshot.playerPower + " • CPU " + snapshot.cpuPower +
+            "\nUnresolved effects: " + snapshot.unresolvedEffects +
+            "\nResults are provisional where card effects are incomplete.") },
+        confirmButton = {
+            TextButton(onClick = {
+                coordinator = null
+                deckDialog = true
+                selectedIndex = -1
+            }) { Text("NEW MATCH") }
+        },
+        dismissButton = { TextButton(onClick = onExit) { Text("HOME") } }
+    )
+    if (showLog && engine != null) AlertDialog(
+        onDismissRequest = { showLog = false },
+        title = { Text("BATTLE LOG") },
+        text = {
+            Column(Modifier.height(250.dp).verticalScroll(rememberScrollState())) {
+                engine.journal.forEach { Text(it, fontSize = 11.sp, color = BattleCream) }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                clipboard.setPrimaryClip(ClipData.newPlainText(
+                    "Shadowshaper match report", engine.diagnosticReport()))
+                showLog = false
+            }) { Text("COPY REPORT") }
+        },
+        dismissButton = { TextButton(onClick = { showLog = false }) { Text("CLOSE") } }
+    )
+    if (inspectedUnit != null || inspectedCard != null) {
+        val unit = inspectedUnit
+        val card = inspectedCard ?: unit?.card
+        if (card != null) AlertDialog(
+            onDismissRequest = { inspectedUnit = null; inspectedCard = null },
+            title = { Text(card.name) },
+            text = {
+                Column {
+                    BattleFace(card, Modifier.fillMaxWidth().height(145.dp))
+                    Text(card.rarity + " • " + card.faction, color = BattleGold)
+                    Text("POWER " + (unit?.let { engine?.power(it) } ?: card.power) +
+                        " • LIGHT " + card.cost, color = BattleBlue)
+                    Text(card.effect, color = BattleCream)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { inspectedUnit = null; inspectedCard = null }) { Text("CLOSE") }
+            }
+        )
+    }
+}
+
+@Composable
+private fun BattleFace(card: ShadowData.Card, modifier: Modifier = Modifier) {
+    val activity = LocalContext.current as? android.app.Activity
+    AndroidView(
+        modifier = modifier,
+        factory = { context ->
+            ImageView(context).apply {
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                if (activity != null) CardArt.bind(activity, card, this)
+            }
+        },
+        update = { view ->
+            if (activity != null && view.contentDescription != card.name + " card art")
+                CardArt.bind(activity, card, view)
+        }
+    )
+}
