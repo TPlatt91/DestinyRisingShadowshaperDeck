@@ -83,7 +83,7 @@ class ShadowDeckViewModel(application: Application) : AndroidViewModel(applicati
     fun legality(): String = ShadowDeckRules.validate(state.value.cards, catalog)
 
     fun exportText(): String = buildString {
-        append("# Shadowshaper Duels - ").append(state.value.selected).append('\n')
+        append("# Shadow Shaper Duels - ").append(state.value.selected).append('\n')
         state.value.cards.toSortedMap(String.CASE_INSENSITIVE_ORDER)
             .forEach { (name, count) -> append(count).append("x ").append(name).append('\n') }
     }
