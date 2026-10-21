@@ -85,6 +85,39 @@ internal fun DuelTableBackground(modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * Low-contrast decorative board engraving rendered BEHIND the legal slots.
+ * This supplies depth, not a new game zone or a claimed original game asset.
+ */
+@Composable
+internal fun DuelTableEtching(modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        val copper = Color(0xFFB28A56).copy(alpha = 0.12f)
+        val pale = Color(0xFFE8C89C).copy(alpha = 0.07f)
+        val midX = size.width / 2f
+        val midY = size.height / 2f
+        val thickness = 0.8.dp.toPx()
+        // Symmetric filigree lines follow the existing background only.
+        for (fraction in listOf(0.14f, 0.27f, 0.73f, 0.86f)) {
+            drawLine(copper,
+                Offset(size.width * fraction, 0f),
+                Offset(size.width * fraction, size.height),
+                strokeWidth = thickness)
+        }
+        drawCircle(
+            color = pale, radius = minOf(size.width, size.height) * 0.31f,
+            center = Offset(midX, midY),
+            style = Stroke(width = thickness * 2f)
+        )
+        drawCircle(
+            color = copper, radius = minOf(size.width, size.height) * 0.22f,
+            center = Offset(midX, midY),
+            style = Stroke(width = thickness)
+        )
+        drawLine(pale, Offset(0f, midY), Offset(size.width, midY), thickness)
+    }
+}
+
 @Composable
 internal fun DuelRoundMarkers(round: Int) {
     Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
