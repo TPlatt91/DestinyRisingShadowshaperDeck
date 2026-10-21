@@ -71,6 +71,20 @@ Implemented directly in the Kotlin/Compose repository:
 
 The revised screens are still **reference-inspired**, not verified pixel-identical: original high-resolution game battle textures, proprietary UI assets, and client-recorded animations are not present in the repository. The board dimensions/draw timing remain provisional. All updated files passed static bracket/string checks; no Android build or device execution was performed.
 
+## Responsive battlefield and authentic card-back pass — October 20, 2026
+
+Changes now implemented in Kotlin/Compose:
+
+- **Correct portrait card fitting:** `DuelLayoutMetrics.kt` computes the largest 0.72 width-to-height card that fits into each actual board-slot constraint (with a small inset). `ShadowBattleActivity.kt` uses `BoxWithConstraints` to avoid spilling card faces into neighboring columns or rows when the landscape viewport is short.
+- **Compact device layout:** On narrower landscape configurations the left and right HUD panels shrink; the bottom hand dock reduces height on shorter screens so the four battlefield rows remain visible. The number and identity of game slots never change.
+- **Original Shadowshaper cover art:** Opponent card backs now use the public TodayInDestiny default-cover image, replacing the hand-drawn diamond placeholder. The app checks `assets/card_cover/<cover-id>.webp` first, then the app-private disk cache, then a verified HTTPS resource; an unobtrusive placeholder remains when none is available.
+- **Per-deck card-back selection:** `DuelCoverCatalog.kt` lists nine original Shadowshaper covers seen in [TodayInDestiny Covers](https://www.todayindestiny.com/rising/shadowshaper_duels/covers): Default, Denzin, Elite Vandal, Marauder, Morgran, Sniper Vandal, Tracer Shank, Wolf and Zhong Wenbin. Deck Construction displays a cover picker; its selection is stored in `cover_<deck name>` separately from the existing `deck_<deck name>` JSON card quantities. Renaming/deleting the deck carries/removes the cover preference.
+- **Player deck visualization:** The chosen original cover is shown on the player's face-down draw pile in battle, while the opponent uses the default cover.
+- **Image loading stability:** Cover fetches share a loading lock to avoid repeated simultaneous downloads corrupting the same cache path.
+- **Local checks:** Five added size-fitting tests plus two original-cover catalog tests (seven authored in this pass). All updated Kotlin source files passed a lexical bracket/string-balance audit.
+
+**Important limitations:** The official covers are fetched at runtime unless their WebP files are bundled into `assets/card_cover/`; the app currently includes the loader but not downloaded binary cover assets. On first install without internet, the placeholder is shown. Display proportions, textures, drawing animations, and zone spacing still require real-device screenshots to confirm parity with the Destiny: Rising minigame. The game still has provisional rules and incomplete abilities. Android Studio compilation, the new tests, and hardware layout inspection have not been run in this environment. No GitHub Actions work was started.
+
 ## Still not confirmed identical
 
 - **Precise board zone count and spacing:** the simulator uses 6 columns and 2 rows per side pending frame comparison.
