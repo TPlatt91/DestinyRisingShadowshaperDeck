@@ -28,7 +28,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     private val knownSustained = setOf(
         "Legionary", "Shinka Legionary", "Decurion", "Colossus",
         "Shinka Centurion", "Centurion", "Shinka Phalanx", "Phalanx",
-        "Juggernaut", "Servitor", "Shinka Decurion",
+        "Juggernaut", "Servitor", "Grenade Dreg", "Shinka Decurion",
         "Paradoxical Neophyte's Shade", "The Disfavored", "Ogre",
         "Tenacious Ogre", "Shrieker", "Saladin", "Tan-2",
         "Elite Sniper Vandal", "Ayuela", "Resilient Grenade Dreg",
@@ -275,6 +275,25 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 spawnAt(own, unit.row, unit.column - 1, "Dreg")
             if (unit === target && name == "Xur")
                 incomplete(unit.card, "Rock summon destination/token Power missing.")
+        }
+    }
+
+    /**
+     * Grenade Dreg: "Every unit deployed in this row grants this unit +1 Power."
+     * Applies to direct plays and token deployments on the owner's field.
+     * The card does not exclude itself, so its own initial deployment counts.
+     * Repeated placements grant separate +1 buffs and suppressed Grenade Dregs
+     * cannot apply their sustained ability.
+     */
+    fun fireAllyPlacement(newUnit: ShadowEngine.Unit) = with(e) {
+        val own = newUnit.owner
+        if (own.board[newUnit.row][newUnit.column] !== newUnit) return@with
+        for (watcher in all(own)) {
+            if (watcher.card.name != "Grenade Dreg" || watcher.suppressed ||
+                watcher.row != newUnit.row || own.board[watcher.row][watcher.column] !== watcher)
+                continue
+            buff(watcher, 1)
+            log("Grenade Dreg +1 Power: " + newUnit.card.name + " deployed in its row.")
         }
     }
 
