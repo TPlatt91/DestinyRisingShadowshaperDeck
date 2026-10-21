@@ -14,7 +14,7 @@ import kotlin.math.min
  */
 internal class ShadowCardEffects(private val e: ShadowEngine) {
     private val allyTargets = setOf(
-        "Morgran", "Hyssop", "Knight", "Wizard", "Guarding Servitor",
+        "Morgran", "Hyssop", "Umbliks Prime", "Knight", "Wizard", "Guarding Servitor",
         "Finnala", "Chinnawat", "Attal", "Estela", "Vigile",
         "Sabikis", "Gladiator", "Shinka Gladiator"
     )
@@ -104,11 +104,18 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         when (name) {
             "Sparrow", "Resilient Captain" -> buff(actor, 3)
             "Elite Vandal" -> if (!rowEmpty(foe, 1)) buff(actor, 3)
+            "Umbliks Prime" -> {
+                val recipient = picked ?: actor
+                if (rng.nextBoolean()) {
+                    buff(recipient, 6)
+                    log("Umbliks Prime: heads, +6 Power to " + recipient.card.name)
+                } else log("Umbliks Prime: tails, no Power bonus.")
+            }
             "Hexguard" -> {
                 actor.inspired = true
                 log("Inspired: " + name)
             }
-            "Tenacious Shielded Knight" ->
+            "Tenacious Shielded Knight", "Tenacious Hexguard" ->
                 all(me).filter {
                     adjacent(actor, it) && it.card.faction.equals("Hive", true)
                 }.forEach(::inspire)
@@ -274,7 +281,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             if (unit === target && name == "Unrelenting Captain")
                 spawnAt(own, unit.row, unit.column - 1, "Dreg")
             if (unit === target && name == "Xur")
-                incomplete(unit.card, "Rock summon destination/token Power missing.")
+                spawnRandom(foe, ShadowRules.FRONT_ROW, "Rock", unit.card)
         }
     }
 
@@ -331,6 +338,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 unit.scorchTurns--
                 dealDirect(unit, unit, unit.scorched)
             }
+            if (unit.card.name == "Elite Sniper Vandal" && unit.sniperTurnsRemaining > 0)
+                unit.sniperTurnsRemaining--
             for (i in unit.timedBonuses.indices.reversed()) {
                 val active = unit.timedBonuses[i]
                 active.turns--

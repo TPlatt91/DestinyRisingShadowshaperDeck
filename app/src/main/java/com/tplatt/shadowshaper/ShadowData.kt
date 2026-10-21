@@ -82,12 +82,25 @@ object ShadowData {
                 reader.forEachLine { line ->
                     val fields = line.split('|', limit = if (expanded) 6 else 2)
                     if (fields.size != if (expanded) 6 else 2) return@forEachLine
-                    if (fields[0] in result) return@forEachLine
+                    // A recorded card-detail view overrides earlier community/wiki text.
+                    // This retains each card's identity in saved decks and collection filters.
+                    if (fields[0] in result) {
+                        if (file == "verified_video_cards.tsv") {
+                            val existing = result.getValue(fields[0])
+                            existing.rarity = fields[1]
+                            existing.faction = fields[2]
+                            existing.cost = fields[3]
+                            existing.power = fields[4]
+                            existing.effect = fields[5]
+                            existing.source = "User-supplied Shadowshaper card-detail video"
+                        }
+                        return@forEachLine
+                    }
                     val card = Card()
                     card.name = fields[0]
                     card.onlineArt = !expanded
                     card.source = when (file) {
-                        "verified_video_cards.tsv" -> "User-supplied in-game video 38646.mp4"
+                        "verified_video_cards.tsv" -> "User-supplied Shadowshaper card-detail video"
                         "cards.tsv" -> "https://www.todayindestiny.com/rising/shadowshaper_duels/cards"
                         else -> "https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/"
                     }
