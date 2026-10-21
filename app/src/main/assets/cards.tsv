@@ -11,8 +11,8 @@ Grenade Dreg|No special effects.
 Guerrilla|No special effects.
 Hyssop|Grants +3 Power to a unit with a bonus.
 Marauder|No special effects.
-Mishra|Grants +2 Power to units on the left and right.
-Morgran|Grants +1 Power to a unit.
+Mishra|When Played: Grants +3 Power to units on the left and right.
+Morgran|When Played (Back Row): Grants +1 Power to a unit.
 Mu Ying|Summons 1 Guerrilla on the left and 1 on the right.
 Ning Fei|Randomly places a Clone in the opponent's front row.
 Novice Marauder|No special effects.
@@ -21,14 +21,14 @@ Resilient Dreg|No special effects.
 Rock|No special effects.
 Rock Pile|No special effects.
 Shank|No special effects.
-Sparrow|Gains +3 Power.
+Sparrow|When Played (Front Row): Gains +3 Power.
 Tan-2|Doubles your next Power bonus.
-Tracer Shank|Deals 3 damage to an opposing unit.
+Tracer Shank|When Played (Back Row): Deals 3 damage to an opposing unit.
 Tracker|No special effects.
 Unrelenting Captain|When acquiring a Power bonus, summons a Fallen Dreg on the left.
 Vandal|Deals 2 damage to an opposing unit in the front row.
-Wolf|Defeats a unit when Power greater than 8.
+Wolf|When Played: If you have more than 5 units on the field, destroys a unit with 5 Power or more.
 Wu Ming|Suppresses a unit.
 Xur|When acquiring a bonus, randomly places a rock in the opponent's front row.
 Zhiyao|When the opponent places a unit in the front row, gains +1 Power for 3 turns.
-Zhong Wenbin|Grants +2 Power to the unit on the right.
+Zhong Wenbin|When Played (Front Row): Grants +2 Power to the unit on the right.

@@ -1,5 +1,12 @@
 # Destiny Rising — Shadowshaper Deck Companion
 
+## Batch 02 card metadata and Wolf animation (recording 38645.mp4)
+
+All eight Batch 02 cards are already present in the catalog with matching printed cost, Power, faction and rarity. Video-confirmed abilities are now reflected in `cards.tsv`, including **Mishra +3 adjacent Power** and Wolf's **more than five allied units / target 5+ Power** conditional destruction. Both are wired into the gameplay engine, with local Wolf threshold tests authored but not run through Android Studio. See [Batch 02 metadata audit](docs/BATCH_02_METADATA_AUDIT.md).
+
+Seven of the eight Batch 02 still-image assets are already bundled. Wolf's corrected, card-only 500×754 animated GIF and matching MP4 are available in the separate extraction package. **Place `wolf.gif` at `app/src/main/assets/card_art/wolf.gif` to have the app actually display the animation.** The app's artwork loader supports GIF playback on Android 9 and newer; MP4 is kept as a reference export and is not played by the app. Precise Wolf target selection needs device/game-client confirmation.
+
+
 ## Card artwork recovery (21 October 2026)
 
 The initial source-to-repository audit found **110 distinct named catalog cards** and no bundled card-face images. **Batch 01 is now committed: five static WebP card faces and three animated GIF card faces (eight total). Seven are present in the current card catalog; Rossi-11 needs a separate catalog/gameplay onboarding pass.** The TodayInDestiny reference gallery lists original card images for **34** names; the other **76** require additional sourcing or carefully verified full-card YouTube frame extraction. The manifest does not falsely label links or unidentified screenshots as completed images.

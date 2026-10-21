@@ -118,7 +118,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             "Tenacious Knight" -> if (actor.row == 1) buffRandom(inspired(me, "Hive"), 2, 3)
             "Morgran" -> buff(picked, 1)
             "Hyssop" -> buff(picked, 3)
-            "Mishra" -> all(me).filter { adjacent(actor, it) }.forEach { buff(it, 2) }
+            "Mishra" -> all(me).filter { adjacent(actor, it) }.forEach { buff(it, 3) }
             "Zhong Wenbin" ->
                 if (actor.row == 1) buff(at(me, actor.row, actor.column + 1), 2)
             "Finnala" -> {
@@ -184,8 +184,9 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             "Goliath Tank" -> if (picked != null && line(actor, 5)) {
                 for (unit in all(foe)) if (unit.row == picked.row) damage(actor, unit, 3)
             }
-            "Wolf" -> if (picked != null && power(picked) > 8)
-                damage(actor, picked, power(picked))
+            "Wolf" -> if (picked != null &&
+                ShadowSpecialCardRules.wolfCanDestroy(all(me).size, power(picked)))
+                destroyUnit(picked)
             "Wu Ming" -> if (actor.row == 0) suppress(picked)
             "Gwynn" -> if (actor.row == 1 && picked != null) {
                 for (unit in all(foe))

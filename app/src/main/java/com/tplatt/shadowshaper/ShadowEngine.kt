@@ -196,6 +196,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     fun targetOptions(me: Player, card: ShadowData.Card, row: Int, column: Int): List<Target> {
         if (!effects.isTargeted(card.name) || !activeInRow(card, row) || !empty(me, row, column))
             return emptyList()
+        // Wolf counts itself after the play; with fewer than five prior allies
+        // its conditional When Played effect cannot select a target.
+        if (card.name == "Wolf" &&
+            !ShadowSpecialCardRules.wolfHasEnoughUnits(all(me).size + 1)) return emptyList()
         val needed = effects.requiredFactionLine(card.name)
         if (needed > 0 && projectedFactionLine(me, card, row, column) < needed)
             return emptyList()
@@ -208,7 +212,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (card.name == "Knight" && (!unit.card.faction.equals("Hive", true) || !unit.inspired))
                 continue
             if (card.name == "Hyssop" && unit.bonus <= 0) continue
-            if (card.name == "Wolf" && power(unit) <= 8) continue
+            if (card.name == "Wolf" &&
+                !ShadowSpecialCardRules.wolfTargetEligible(power(unit))) continue
             if (card.name == "Vigile" && !line(unit, 2)) continue
             if (card.name in setOf("Gladiator", "Shinka Gladiator") && r != 1) continue
             if (card.name == "Sabikis" &&
@@ -455,6 +460,18 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             for (ally in all(target.owner))
                 if (!ally.suppressed && ally.card.name == "Saladin") buff(target, 3)
         }
+    }
+
+    /** An outright "destroy" effect is not damage: no damage-reduction or
+     * on-damage response changes the result. The normal sweep still runs
+     * card death/splash effects so the destruction enters the same pipeline.
+     */
+    internal fun destroyUnit(target: Unit?) {
+        if (target == null || target.owner.board[target.row][target.column] !== target) return
+        val current = power(target)
+        target.power -= current + 1
+        log("DESTROY EFFECT ▶ " + target.card.name)
+        sweep()
     }
 
     internal fun sweep() {
