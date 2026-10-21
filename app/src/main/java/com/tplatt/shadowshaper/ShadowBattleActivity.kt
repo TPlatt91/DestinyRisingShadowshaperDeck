@@ -419,10 +419,15 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                             unit = unit,
                                             currentPower = engine.power(unit),
                                             placementRevision = engine.placementRevision,
-                                            isNewestPlacement =
-                                                engine.lastPlacedSide == (if (owner === engine.human) 0 else 1) &&
-                                                engine.lastPlacedRow == row &&
-                                                engine.lastPlacedColumn == col,
+                                            isNewestPlacement = DuelPlacementCue.isNewlyPlaced(
+                                                placementRevision = engine.placementRevision,
+                                                lastSide = engine.lastPlacedSide,
+                                                lastRow = engine.lastPlacedRow,
+                                                lastColumn = engine.lastPlacedColumn,
+                                                side = if (owner === engine.human) 0 else 1,
+                                                row = row,
+                                                column = col
+                                            ),
                                             modifier = Modifier.width(fit.width.dp).height(fit.height.dp)
                                         )
                                     }
