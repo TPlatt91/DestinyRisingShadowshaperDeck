@@ -1,5 +1,16 @@
 # Destiny Rising — Shadowshaper Deck Companion
 
+## App name and launcher icon
+
+- **Installed application name:** `Shadow Shaper Duels` (from `app/src/main/res/values/strings.xml`).
+- **Launcher artwork:** `app/src/main/res/drawable-nodpi/shadow_shaper_duels_icon.webp`, a full-bleed square image, with no white canvas, padding, or decorative white border.
+- **Adaptive launcher icons:** `mipmap-anydpi-v26/ic_launcher.xml` and `ic_launcher_round.xml` display the artwork against itself with a transparent foreground, so launcher masks do not introduce a white backdrop.
+- **Manifest:** references `@string/app_name`, `@mipmap/ic_launcher`, and `@mipmap/ic_launcher_round`.
+- **In-app headers and exported deck titles:** use the same `Shadow Shaper Duels` branding.
+
+These are resource and source updates. Android compilation and installed-device icon appearance have **not** been tested in this environment.
+
+
 > **Kotlin/Compose source conversion completed (October 20, 2026):** The home menu, battle screen, deck builder, collection, and rules screens use Jetpack Compose. Match rules, card effects, AI, saved decks, and artwork loading are Kotlin. All obsolete Java production files were removed. This is **not** an APK build confirmation or a guarantee that every card effect is accurate. [Conversion details](docs/KOTLIN_MIGRATION.md).
 
 
