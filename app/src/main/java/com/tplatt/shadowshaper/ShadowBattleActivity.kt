@@ -336,15 +336,17 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     Text("YOUR FIELD", color = DuelPalette.cream,
                         fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                 }
-                Column(
+                Box(
                     Modifier.weight(1f).fillMaxHeight()
                         .background(Brush.verticalGradient(listOf(
                             Color(0xFF37271F), Color(0xFF28221F), Color(0xFF3B2A21)
                         )), RoundedCornerShape(10.dp))
                         .border(2.dp, DuelPalette.rim, RoundedCornerShape(10.dp))
-                        .padding(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(3.dp)
+                        .padding(6.dp)
                 ) {
+                    DuelTableEtching(Modifier.fillMaxSize())
+                    Column(Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     val targets = if (pendingPosition != null && selectedIndex in engine.human.hand.indices)
                         engine.targetOptions(engine.human, engine.human.hand[selectedIndex],
                             pendingPosition!!.first, pendingPosition!!.second)
@@ -413,18 +415,22 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                     )
                                     if (unit != null) {
                                         val fit = DuelLayoutMetrics.fittingCard(maxWidth.value, maxHeight.value)
-                                        DuelCardFrame(
-                                            card = unit.card, power = engine.power(unit),
-                                            modifier = Modifier.width(fit.width.dp).height(fit.height.dp),
-                                            inspired = unit.inspired,
-                                            suppressed = unit.suppressed,
-                                            scorched = unit.scorchTurns > 0
+                                        DuelAnimatedUnit(
+                                            unit = unit,
+                                            currentPower = engine.power(unit),
+                                            placementRevision = engine.placementRevision,
+                                            isNewestPlacement =
+                                                engine.lastPlacedSide == (if (owner === engine.human) 0 else 1) &&
+                                                engine.lastPlacedRow == row &&
+                                                engine.lastPlacedColumn == col,
+                                            modifier = Modifier.width(fit.width.dp).height(fit.height.dp)
                                         )
                                     }
                                 }
                             }
                         }
                     }
+                }
                 }
                 Column(
                     Modifier.width(DuelLayoutMetrics.rightHudWidth(screenConfig.screenWidthDp).dp).fillMaxHeight().background(BattleBrown).padding(if (compactLayout) 2.dp else 5.dp),
