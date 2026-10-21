@@ -1,0 +1,175 @@
+package com.tplatt.shadowshaper
+
+import android.content.Context
+import java.io.BufferedReader
+import java.io.InputStreamReader
+import java.nio.charset.StandardCharsets
+import java.util.ArrayList
+import java.util.LinkedHashMap
+
+/**
+ * Single Kotlin data bridge used by Compose, battle engine and original unit tests.
+ * The three on-device catalog TSV files and original saved-deck JSON remain intact.
+ */
+object ShadowData {
+    const val DECK_SIZE = ShadowRules.DECK_SIZE
+    const val COPIES_LIMIT = ShadowRules.COPY_LIMIT
+    const val EXOTIC_LIMIT = ShadowRules.EXOTIC_LIMIT
+    const val MYTHIC_LIMIT = ShadowRules.MYTHIC_LIMIT
+
+    class Card {
+        @JvmField var name = ""
+        @JvmField var rarity = ""
+        @JvmField var faction = ""
+        @JvmField var cost = ""
+        @JvmField var power = ""
+        @JvmField var effect = ""
+        @JvmField var classification = ""
+        @JvmField var trigger = ""
+        @JvmField var cardNumber = ""
+        @JvmField var acquisition = ""
+        @JvmField var notes = ""
+        @JvmField var source = ""
+        @JvmField var onlineArt = false
+
+        fun numericCost(): Int = cost.toIntOrNull() ?: -1
+        fun numericPower(): Int = power.toIntOrNull() ?: -1
+        val isPlayable: Boolean get() =
+            numericCost() > 0 && numericPower() >= 0 &&
+                !classification.equals("Summoned unit", ignoreCase = true) &&
+                !cost.equals("Token", ignoreCase = true)
+    }
+
+    @JvmStatic
+    fun load(context: Context): LinkedHashMap<String, Card> {
+        val result = linkedMapOf<String, Card>()
+        readCatalog(context, result, "cards.tsv", expanded = false)
+        readCatalog(context, result, "community_cards.tsv", expanded = true)
+        readCatalog(context, result, "expanded_cards.tsv", expanded = true)
+        try {
+            context.assets.open("card_details.tsv").bufferedReader(StandardCharsets.UTF_8).use { reader ->
+                reader.forEachLine { line ->
+                    val fields = line.split('|', limit = 11)
+                    if (fields.size != 10) return@forEachLine
+                    val card = result[fields[0]] ?: return@forEachLine
+                    card.faction = fields[1]
+                    card.rarity = fields[2]
+                    card.cost = fields[3]
+                    card.power = fields[4]
+                    card.classification = fields[5]
+                    card.trigger = fields[6]
+                    card.acquisition = fields[7]
+                    card.notes = fields[8]
+                    card.cardNumber = fields[9]
+                }
+            }
+        } catch (_: Exception) {
+            // Missing optional metadata never removes the base card catalog.
+        }
+        return LinkedHashMap(result)
+    }
+
+    private fun readCatalog(
+        context: Context,
+        result: MutableMap<String, Card>,
+        file: String,
+        expanded: Boolean
+    ) {
+        try {
+            context.assets.open(file).bufferedReader(StandardCharsets.UTF_8).use { reader ->
+                reader.forEachLine { line ->
+                    val fields = line.split('|', limit = if (expanded) 6 else 2)
+                    if (fields.size != if (expanded) 6 else 2) return@forEachLine
+                    if (fields[0] in result) return@forEachLine
+                    val card = Card()
+                    card.name = fields[0]
+                    card.onlineArt = !expanded
+                    card.source = if (expanded)
+                        "https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/"
+                    else "https://www.todayindestiny.com/rising/shadowshaper_duels/cards"
+                    if (expanded) {
+                        card.rarity = fields[1]
+                        card.faction = fields[2]
+                        card.cost = fields[3]
+                        card.power = fields[4]
+                        card.effect = fields[5]
+                        if (card.cost.equals("Token", ignoreCase = true))
+                            card.classification = "Summoned unit"
+                    } else {
+                        card.effect = fields[1]
+                    }
+                    result[card.name] = card
+                }
+            }
+        } catch (_: Exception) {
+            // The other catalog files still load when a supplemental list is absent.
+        }
+    }
+
+    @JvmStatic
+    fun readDeck(context: Context, name: String): LinkedHashMap<String, Int> =
+        LinkedHashMap(ShadowDeckRepository(context).read(name))
+
+    @JvmStatic
+    fun deckNames(context: Context): ArrayList<String> =
+        ArrayList(ShadowDeckRepository(context).deckNames())
+
+    @JvmStatic
+    fun selectedDeck(context: Context): String = ShadowDeckRepository(context).selectedDeck()
+
+    @JvmStatic
+    fun validate(deck: Map<String, Int>, catalog: Map<String, Card>): String =
+        ShadowDeckRules.validate(deck, catalog)
+
+    @JvmStatic
+    fun expanded(deck: Map<String, Int>, catalog: Map<String, Card>): ArrayList<Card> {
+        val output = ArrayList<Card>()
+        deck.forEach { (name, count) ->
+            catalog[name]?.let { card ->
+                repeat(count.coerceIn(0, 15)) { output.add(card) }
+            }
+        }
+        return output
+    }
+
+    @JvmStatic
+    fun opponentDeck(catalog: Map<String, Card>, faction: String?): LinkedHashMap<String, Int> {
+        if (faction.isNullOrBlank() || faction.equals("Mixed", ignoreCase = true))
+            return opponentDeck(catalog)
+        val choices = catalog.values
+            .filter { it.isPlayable && it.faction.equals(faction, ignoreCase = true) }
+            .sortedWith(compareBy<Card> { it.numericCost() }.thenBy { it.name })
+        val result = linkedMapOf<String, Int>()
+        var exotic = 0
+        var mythic = 0
+        for (card in choices) {
+            if (card.rarity.equals("Exotic", true) && exotic >= EXOTIC_LIMIT) continue
+            if (card.rarity.equals("Mythic", true) && mythic >= MYTHIC_LIMIT) continue
+            result[card.name] = 1
+            if (card.rarity.equals("Exotic", true)) exotic++
+            if (card.rarity.equals("Mythic", true)) mythic++
+            if (result.size == DECK_SIZE) break
+        }
+        return if (result.size == DECK_SIZE) LinkedHashMap(result) else opponentDeck(catalog)
+    }
+
+    @JvmStatic
+    fun opponentDeck(catalog: Map<String, Card>): LinkedHashMap<String, Int> {
+        val presets = listOf(
+            "Dreg", "Resilient Dreg", "Novice Marauder", "Acolyte", "Thrall",
+            "Legionary", "War Beast", "Vandal", "Rock Pile", "Shank",
+            "Marauder", "Guerrilla", "Zhiyao", "Shinka Legionary",
+            "Donovan-17", "Mu Ying", "Sparrow", "Resilient Captain",
+            "Scorpius", "Knight", "Carrier"
+        )
+        val result = linkedMapOf<String, Int>()
+        for (name in presets) {
+            val card = catalog[name] ?: continue
+            if (!card.isPlayable) continue
+            if (card.rarity.equals("Exotic", true) || card.rarity.equals("Mythic", true)) continue
+            result[name] = 1
+            if (result.size == DECK_SIZE) break
+        }
+        return LinkedHashMap(if (result.size == DECK_SIZE) result else emptyMap())
+    }
+}
