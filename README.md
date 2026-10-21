@@ -1,5 +1,11 @@
 # Destiny Rising — Shadowshaper Deck Companion
 
+## Batch 05 — nine video-verified cards (recording screen-20261021-171136-1792617031112.mp4)
+
+Nine existing catalog cards — **Hexguard, Cursed Thrall, Acolyte, Thrall, Legionary, War Beast, Tan-2, Ning Fei, Clone** — now have their original printed abilities, Power, Light costs, and shown acquisition sources in the app's catalog/detail records. The game-engine handlers for the six special effects were already present; six local regression tests have been authored (not run). **Clone remains a summoned unit and is excluded from Deck Construction.** See [Batch 05 integration audit](docs/BATCH_05_CARD_VIDEO_AUDIT.md).
+
+The separate 500×754 asset package has nine full-card WebP images plus **Tan-2, Ning Fei, and Clone** animation exports in GIF and MP4. Artwork files are **awaiting user upload** into `app/src/main/assets/card_art`; metadata was pushed directly. No GitHub Actions were used.
+
 ## Batch 03 video-confirmed metadata (recording 38646.mp4)
 
 All eight Batch 03 card records now carry the original video's printed Power, Light cost, faction, rarity, effect text, trigger and acquisition source. **Rossi-11** and **Mind Disruptor** are newly added through `app/src/main/assets/verified_video_cards.tsv`; existing records were corrected in the original catalogs and their `card_details.tsv` overlays. The catalog now contains **112 distinct names**. The data changes have been audited for uniqueness and field counts; **gameplay handlers for several special effects remain incomplete or incorrect** and need a separate mechanics pass. See [Batch 03 metadata audit](docs/BATCH_03_METADATA_AUDIT.md).
