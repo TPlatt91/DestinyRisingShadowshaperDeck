@@ -109,3 +109,5 @@ Colossus	colossus	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay
 Drop Pod	drop_pod	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/drop_pod.webp
 Shinka Vigile	shinka_vigile	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_vigile.webp
 Shinka Scorpius	shinka_scorpius	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_scorpius.webp
+Rossi-11	rossi_11	Humans	verified_video_cards.tsv	BUNDLED_LOCAL_GIF		batch03_38646	card_art/rossi_11.gif
+Mind Disruptor	mind_disruptor	Fallen	verified_video_cards.tsv	VIDEO_REVIEW_REQUIRED		batch03_38646	card_art/mind_disruptor.gif
