@@ -281,7 +281,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         log((if (me.human) "YOU" else "CPU") + " ▶ " + card.name + " • " +
             (if (row == 0) "BACK" else "FRONT") + " " + (col + 1))
         effects.onPlayed(unit, target)
-        if (me.board[unit.row][unit.column] === unit) effects.fireEnemyPlacement(unit)
+        if (me.board[unit.row][unit.column] === unit) {
+            effects.fireAllyPlacement(unit)
+            effects.fireEnemyPlacement(unit)
+        }
         sweep()
         if (me === cpu) resolveCpuMove()
         return true
@@ -359,6 +362,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         val summoned = Unit(side, card, row, col)
         side.board[row][col] = summoned
         log("SUMMON ▶ " + name + " at " + (if (row == 0) "back " else "front ") + (col + 1))
+        effects.fireAllyPlacement(summoned)
         effects.fireEnemyPlacement(summoned)
     }
 

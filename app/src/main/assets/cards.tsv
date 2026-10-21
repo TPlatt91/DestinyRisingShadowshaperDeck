@@ -7,7 +7,7 @@ Dreg|No special effects.
 Elite Sniper Vandal|Deals 1 damage to opposing units in the front row that acquire bonuses.
 Elite Vandal|If there are units in the opponent's front row, gains +3 Power.
 Exploder Shank|When Played: Randomly moves to the opponent's front row, then dies at the beginning of your next turn, dealing 2 damage each to the units on the left and right.
-Grenade Dreg|No special effects.
+Grenade Dreg|Sustained: Every unit deployed in this row grants this unit +1 Power.
 Guerrilla|No special effects.
 Hyssop|Grants +3 Power to a unit with a bonus.
 Marauder|No special effects.
@@ -26,7 +26,7 @@ Tan-2|Doubles your next Power bonus.
 Tracer Shank|When Played (Back Row): Deals 3 damage to an opposing unit.
 Tracker|No special effects.
 Unrelenting Captain|Sustained: Each Dreg deployed gains 1 additional Power.
-Vandal|Deals 2 damage to an opposing unit in the front row.
+Vandal|When Played: Deals 2 damage to an opposing unit in the front row.
 Wolf|When Played: If you have more than 5 units on the field, destroys a unit with 5 Power or more.
 Wu Ming|Suppresses a unit.
 Xur|When acquiring a bonus, randomly places a rock in the opponent's front row.
