@@ -28,11 +28,27 @@
 | Deck construction | Base Power total, 15-card count, rarity limits and cost curve |
 | Rules | Expanded in-app touch, target, round and keyword instructions |
 
+## Kotlin battle UI fidelity pass — October 20, 2026
+
+The active battle UI is now the Kotlin Compose `ShadowBattleActivity.kt`. Its new reusable presentation components are in `ShadowBattleVisuals.kt`. The original Java battle UI is **not** used.
+
+- Bronze rim and dark tabletop gradients distinguish the battlefield from controls without introducing any additional play zones.
+- Each unit on the battlefield renders as a vertically proportioned original card face, inside its existing six-column front/back-row slot. No in-game art was recreated.
+- Every card displays its current Power near the upper-left, blue Light cost at upper-right, and name along the bottom. Rarity determines its outer frame color.
+- Inspiration and Scorched appear as small status emblems; Suppressed units receive a distinct overlay.
+- Six numbered/colored round milestones, Light crystals, two-sided Power scores, and facedown opponent-hand silhouettes are separate elements.
+- The hand is slightly fanned. Selecting a card lifts it; pressing and dragging displays a portrait card following the finger. Only eligible placements glow.
+- Target choice and Xuan Wei's relocation still use the actual underlying engine's legal target/empty-position checks.
+- Accessibility descriptions identify side, row, column, unit and legal target/placement state.
+- The design keeps the game as **single-player against an AI opponent**.
+
+**Source grounding:** The [Game8 mechanics guide](https://game8.co/games/Destiny-Rising/archives/546603) identifies the two rows, six rounds, card Power/cost positions, scoring to the right and End Turn to the right. The [Shacknews deck screenshot](https://www.shacknews.com/article/146121/otk-triumph-destiny-rising) illustrates the game's physical card faces and bronze/gold palette. These sources support the directions above, but **do not provide an exact full-resolution battle-field skin or asset set**.
+
 ## Still not confirmed identical
 
 - **Precise board zone count and spacing:** the simulator uses 6 columns and 2 rows per side pending frame comparison.
 - **The art assets:** original card faces are not yet verified for most of the 110 catalog entries; the simulator does not substitute unrelated Destiny art.
-- **Rendering:** card frames, table textures, animations, audio, custom game fonts, and transitions are *similarity-oriented recreations*, not copied from the game resources.
+- **Rendering:** card frames, card-back silhouettes, table textures, animations, audio, custom game fonts, and transitions remain *similarity-oriented recreations*, not original imported game resources.
 - **Rules:** draw schedule, exact Line adjacency behavior, triggers on card movement, and advanced status resolution require in-client verification. Card effect code remains incomplete.
 - **Build and device verification:** these source changes were pushed, but no Android device test or Gradle compilation has been performed in this environment.
 
