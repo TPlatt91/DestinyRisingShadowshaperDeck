@@ -2,7 +2,7 @@
 
 ## Card artwork recovery (21 October 2026)
 
-A source-to-repository audit found **110 distinct named cards** but **zero bundled card-face image binaries**. The TodayInDestiny reference gallery lists original card images for **34** names; the other **76** require additional sourcing or carefully verified full-card YouTube frame extraction. The manifest does not falsely label links or unidentified screenshots as completed images.
+The initial source-to-repository audit found **110 distinct named catalog cards** and no bundled card-face images. **Batch 01 is now committed: five static WebP card faces and three animated GIF card faces (eight total). Seven are present in the current card catalog; Rossi-11 needs a separate catalog/gameplay onboarding pass.** The TodayInDestiny reference gallery lists original card images for **34** names; the other **76** require additional sourcing or carefully verified full-card YouTube frame extraction. The manifest does not falsely label links or unidentified screenshots as completed images.
 
 - [110-card image inventory](app/src/main/assets/card_image_inventory.tsv)
 - [Sourced gallery/video recovery guide](docs/CARD_IMAGE_RECOVERY.md)
@@ -11,7 +11,7 @@ A source-to-repository audit found **110 distinct named cards** but **zero bundl
 
 Video review sources are organized by faction: all-card Hive and Fallen showcases, Cabal gameplay, and a mixed/OTK demonstration. The repository tool can stage timestamped frames and crop verified cards into the exact filenames the Kotlin artwork loader expects.
 
-**Source assets were not transferred this turn.** Direct binary downloads from the original card server and YouTube were blocked in the current execution environment; consequently the count of bundled original cards remains **0**, and 34 image URLs remain reference links rather than repository images. No GitHub Actions or CI credits were consumed.
+**Current Batch 01 status:** 8 full-card assets are bundled from the user's recordings. Clean TodayInDestiny originals remain a separate sourcing task. [Batch 01 audit](docs/BATCH_01_ART_AUDIT.md). No GitHub Actions or CI credits were used.
 
 
 ## App name and launcher icon
@@ -91,7 +91,7 @@ For reference sources, what is implemented, and remaining exact-match limitation
 - `app/src/main/assets/community_cards.tsv` — 46 other community catalog entries with name, rarity, faction, cost, power, ability text.
 - `app/src/main/assets/expanded_cards.tsv` — 30 additional community entries in the same schema.
 - `app/src/main/assets/card_details.tsv` — overlays structured rarity, faction, cost, power, class, trigger, acquisition, notes, and printed number on the original 34 records. TSV fields: `name|faction|rarity|cost|power|class|trigger|acquisition|notes|number`. Empty values mean **not documented**, not 0.
-- `app/src/main/assets/card_art/` — drop in original card art named by lower-case underscore slug such as `hexguard.webp`, `tenacious_wizard.png` or `shinka_vigile.jpg`. Bundled artwork overrides network images; supports WebP, PNG, JPG and JPEG. No extra code changes needed for each new image.
+- `app/src/main/assets/card_art/` — drop in original card art named by lower-case underscore slug such as `hexguard.webp`, `tenacious_wizard.png` or `shinka_vigile.jpg`. Bundled artwork overrides network images; supports animated GIF on Android 9+ (static first-frame fallback on Android 8), plus WebP, PNG, JPG and JPEG. No extra code changes needed for each new image.
 
 The original 34 image paths follow TodayInDestiny's card-face URL convention: `https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/<slug>.webp`. URL accessibility has not been validated on Android devices for all 34 cards.
 
