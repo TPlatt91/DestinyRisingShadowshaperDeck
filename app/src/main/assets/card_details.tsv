@@ -7,7 +7,7 @@ Dreg|Fallen|Rare|1|1|Common||Default||
 Elite Sniper Vandal|Fallen|Legendary|2|4|Common|Sustained|Duelist Level 3||
 Elite Vandal|Fallen|Legendary|2|3|Common|When Played; Back Row|Challenge Wu Ming||
 Exploder Shank|Fallen|Legendary|1|1|Common|When Played|Gauntlet: Blitz|Recorded in-game video 38646.mp4; transfers to opponent front row and explodes at beginning of next turn, dealing 2 to both adjacent units.|
-Grenade Dreg|Fallen|Rare|2|1|Common||Default||
+Grenade Dreg|Fallen|Rare|2|1|Common|Sustained|Default|Recording screen-20261021-134608-1792604739278.mp4~2.mp4: Each unit deployed in this unit's row grants it +1 Power while its sustained ability is active. Power 1; Light cost 2.|
 Guerrilla|Humans|Rare|1|2|Summoned unit||Not documented|Power/Light cost confirmed from original TodayInDestiny card-face image.|
 Hyssop|Humans|Legendary|2|2|Common|When Played|Not documented||
 Marauder|Fallen|Legendary|1|3|Common||Reach Duelist Lv.2|Recorded in-game video 38646.mp4; no special effects.|
@@ -26,7 +26,7 @@ Tan-2|Humans|Exotic|2|2|Hero|Sustained|Triumph: collect 50 cards||
 Tracer Shank|Fallen|Legendary|3|4|Common|When Played; Back Row|Default||
 Tracker|Fallen|Mythic|2|7|Common||Duelist Level 7||
 Unrelenting Captain|Fallen|Mythic|1|1|Common|Sustained|Card Vendor|Recorded in-game video 38646.mp4; each deployed Dreg gains 1 Power.|
-Vandal|Fallen|Rare|2|2|Common|When Played|Default||
+Vandal|Fallen|Rare|2|2|Common|When Played|Default|Recording screen-20261021-134608-1792604739278.mp4~2.mp4: When Played deals 2 damage to an opposing unit in the front row. Power 2; Light cost 2.|
 Wolf|Humans|Exotic|3|3|Hero|When Played|Exchange Sigils of Iron|Card video 38645.mp4 confirms no row restriction, six allied units including Wolf, target Power 5 or more.|
 Wu Ming|Humans|Mythic|2|3|Common|When Played; Back Row|Duelist Level 8||
 Xur|Humans|Mythic|2|7|Common|Sustained|Challenge Ata||
@@ -35,3 +35,4 @@ Zhong Wenbin|Humans|Rare|4|6|Common|When Played; Front Row|Default||
 Rossi-11|Humans|Exotic|1|3||When Played|Card Vendor|Recorded in-game video 38646.mp4; grants an overshield to one allied unit. Overshield blocks one damage, instant kill or suppression.|
 Mind Disruptor|Fallen|Mythic|1|2||Sustained|Reach Duelist Lv.35|Recorded in-game video 38646.mp4; unit on the left cannot be Suppressed while active.|
 Shinka Decurion|Cabal|Mythic|1|1||Sustained; 3-Unit Line|Reach Duelist Lv.22|Recorded in-game video 38646.mp4; Cabal units deal 2 additional damage while 3-unit line is active.|
+Servitor|Fallen|Legendary|2|2||Sustained||Recording screen-20261021-134608-1792604739278.mp4~2.mp4: Your units deal 1 additional damage while Servitor's sustained effect is active. Power 2; Light cost 2.|
