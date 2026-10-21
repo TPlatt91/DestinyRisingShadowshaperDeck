@@ -417,11 +417,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         try {
             effects.onBuff(target)
             val foe = other(target.owner)
-            if (target.row == 1) {
-                // Legacy front-row-only behavior is superseded by the card-detail
-                // recording: it says "an opposing unit", without a row limit.
-                // The complete sniper rule is applied below for both rows.
-            }
+            // Video confirms opposing units in either row; limit each sniper
+            // to one hit per target per turn while the two-turn effect is active.
             for (sniper in all(foe)) {
                 if (sniper.card.name != "Elite Sniper Vandal" || sniper.suppressed ||
                     sniper.row != ShadowRules.BACK_ROW || sniper.sniperTurnsRemaining <= 0) continue

@@ -2,7 +2,6 @@ package com.tplatt.shadowshaper
 
 /** Conservative feature audit label; a scripted case is never proof of correctness. */
 object ShadowEffectCoverage {
-    private val blocked = setOf("Tomb Ship", "Drop Pod")
     @JvmStatic
     fun status(name: String, effect: String?, cost: String?, power: String?): String {
         if (power.isNullOrBlank() || cost.isNullOrBlank())
@@ -15,7 +14,7 @@ object ShadowEffectCoverage {
             "Resilient Captain" -> "INCOMPLETE: Sustained Fallen-damage Dreg summoning with six-token limit needs implementation; existing handler is inaccurate."
             "Unrelenting Captain" -> "INCOMPLETE: Sustained +1 Power to deployed Dregs needs implementation; existing handler is inaccurate."
             "Exploder Shank" -> "INCOMPLETE: Transfer to the enemy Front Row and delayed adjacent 2-damage explosion need implementation."
-                "Tomb Ship" -> "INCOMPLETE: Random Hive summon pool needs verification."
+            "Tomb Ship" -> "INCOMPLETE: Random Hive summon pool needs verification."
             "Drop Pod" -> "INCOMPLETE: Random Cabal Line summon pool needs verification."
             "Xuan Wei" -> "PARTIAL: Damage and relocation scripted; destination rules need verification."
             else -> "SCRIPTED / QA PENDING: Engine behavior has not passed full in-game verification."
