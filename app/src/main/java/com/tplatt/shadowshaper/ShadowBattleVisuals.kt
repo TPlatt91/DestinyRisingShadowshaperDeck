@@ -4,6 +4,8 @@ import android.app.Activity
 import android.widget.ImageView
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -209,15 +211,23 @@ internal fun DuelCardBacks(count: Int, coverId: String = "default") {
 
 @Composable
 internal fun DuelScore(player: Int, cpu: Int, playerTurn: Boolean) {
+    // Only the displayed number interpolates. Engine Power remains exact and
+    // is used for all rules and victory checks.
+    val displayedPlayer by animateIntAsState(
+        targetValue = player, animationSpec = tween(320), label = "player power display"
+    )
+    val displayedCpu by animateIntAsState(
+        targetValue = cpu, animationSpec = tween(320), label = "cpu power display"
+    )
     Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("TOTAL POWER", color = DuelPalette.dullGold, fontSize = 10.sp,
             letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
         Row(verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(player.toString(), fontSize = 28.sp, fontWeight = FontWeight.Black,
+            Text(displayedPlayer.toString(), fontSize = 28.sp, fontWeight = FontWeight.Black,
                 color = if (playerTurn) DuelPalette.cream else DuelPalette.blue)
             Text(":", color = DuelPalette.dullGold, fontSize = 18.sp)
-            Text(cpu.toString(), fontSize = 28.sp, fontWeight = FontWeight.Black,
+            Text(displayedCpu.toString(), fontSize = 28.sp, fontWeight = FontWeight.Black,
                 color = if (playerTurn) DuelPalette.red else DuelPalette.cream)
         }
         Text("YOU                 CPU", color = DuelPalette.dullGold, fontSize = 9.sp)
