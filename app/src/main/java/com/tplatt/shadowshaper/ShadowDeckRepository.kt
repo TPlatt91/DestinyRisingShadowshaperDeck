@@ -38,6 +38,18 @@ class ShadowDeckRepository(context: Context) {
         }.getOrDefault(emptyMap())
     }
 
+    /** Additional visual preference only; does not modify card quantities. */
+    fun cover(name: String): String {
+        val id = preferences.getString("cover_$name", "default") ?: "default"
+        return if (DuelCoverCatalog.isKnown(id)) id else "default"
+    }
+
+    fun setCover(name: String, coverId: String) {
+        require(name in deckNames()) { "Deck does not exist." }
+        require(DuelCoverCatalog.isKnown(coverId)) { "Unknown Shadowshaper card back." }
+        preferences.edit().putString("cover_$name", coverId).apply()
+    }
+
     fun save(name: String, cards: Map<String, Int>) {
         val json = JSONObject()
         cards.forEach { (card, count) -> if (count > 0) json.put(card, count) }
@@ -67,9 +79,12 @@ class ShadowDeckRepository(context: Context) {
         if (old == new) return
         val names = deckNames().map { if (it == old) new else it }
         val original = preferences.getString("deck_$old", "{}") ?: "{}"
+        val originalCover = cover(old)
         preferences.edit()
             .putString("deck_$new", original)
+            .putString("cover_$new", originalCover)
             .remove("deck_$old")
+            .remove("cover_$old")
             .putString("deck_names", JSONArray(names).toString())
             .putString("selected_deck", new)
             .apply()
@@ -78,7 +93,7 @@ class ShadowDeckRepository(context: Context) {
     fun delete(name: String) {
         require(name in deckNames()) { "Deck does not exist." }
         val remaining = deckNames().filterNot { it == name }.ifEmpty { listOf("My Deck") }
-        val edit = preferences.edit().remove("deck_$name")
+        val edit = preferences.edit().remove("deck_$name").remove("cover_$name")
             .putString("deck_names", JSONArray(remaining).toString())
             .putString("selected_deck", remaining.first())
         if (remaining.size == 1 && remaining.first() == "My Deck" && name == "My Deck")
