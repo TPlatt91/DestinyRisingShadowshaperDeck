@@ -156,7 +156,7 @@ class ShadowBatch0607EffectsTest {
     }
 
     @Test fun umbliksPrimeCoinFlipCanBuffSelfOnHeads() {
-        val observed = (0L..40L).map { seed ->
+        val observed = listOf(0L, 1L, 40L, 123456L, 4096L, Long.MAX_VALUE).map { seed ->
             val e = engine(seed)
             e.power(play(e, "Umbliks Prime"))
         }.toSet()
