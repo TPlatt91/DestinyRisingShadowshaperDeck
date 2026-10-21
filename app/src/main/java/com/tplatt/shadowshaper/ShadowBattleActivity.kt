@@ -70,6 +70,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -137,6 +138,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var message by remember { mutableStateOf("Tap a card, then choose an empty position.") }
     var draggedIndex by remember { mutableIntStateOf(-1) }
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
+    var rootTopLeftInWindow by remember { mutableStateOf(Offset.Zero) }
     val cardBounds = remember { mutableStateMapOf<Int, Rect>() }
     val slotBounds = remember { mutableStateMapOf<String, Rect>() }
     val validDecks = remember(catalog, deckDialog) {
@@ -238,7 +240,10 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().onGloballyPositioned {
+        val position = it.boundsInWindow().topLeft
+        if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
+    }) {
     Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF17110E),Color(0xFF302018),Color(0xFF19151A))))) {
         Row(Modifier.fillMaxWidth().height(44.dp)
             .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
@@ -436,13 +441,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                         },
                                         onDragEnd = {
                                             if (draggedIndex == index) {
-                                                val drop = slotBounds.entries.firstOrNull {
-                                                    it.value.contains(dragPosition)
-                                                }?.key
+                                                val drop = DuelHitTesting.playerSlotAt(dragPosition, slotBounds)
                                                 draggedIndex = -1
-                                                val parts = drop?.split("-")
-                                                if (parts?.size == 3 && parts[0] == "0")
-                                                    playAt(parts[1].toInt(), parts[2].toInt())
+                                                if (drop != null) playAt(drop.row, drop.column)
                                                 else message = "Drag onto a glowing empty slot in your field."
                                             }
                                         },
@@ -501,9 +502,15 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     // Floating card stays under the finger while the user drags across the field.
     if (engine != null && draggedIndex in engine.human.hand.indices) {
         val held = engine.human.hand[draggedIndex]
+        val density = LocalDensity.current
+        val ghostWidth = with(density) { 96.dp.toPx() }
+        val ghostHeight = with(density) { 130.dp.toPx() }
         Box(
             Modifier.offset {
-                IntOffset(dragPosition.x.roundToInt() - 48, dragPosition.y.roundToInt() - 88)
+                val position = DuelHitTesting.floatingCardTopLeft(
+                    dragPosition, rootTopLeftInWindow, ghostWidth, ghostHeight
+                )
+                IntOffset(position.x.roundToInt(), position.y.roundToInt())
             }.size(width = 96.dp, height = 130.dp).zIndex(40f)
         ) {
             DuelCardFrame(
