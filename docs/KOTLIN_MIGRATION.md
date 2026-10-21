@@ -1,69 +1,60 @@
-# Kotlin + Jetpack Compose migration
+# Kotlin / Jetpack Compose conversion
 
-**Status:** Stage 1 implemented on October 20, 2026. The installed launcher and all companion screens are Kotlin/Compose. The original Java landscape battle renderer and individual complex card effect resolvers are deliberately retained during the migration.
+**Production source migrated: October 20, 2026.**
 
-## Kotlin toolchain
+All Android app production sources are Kotlin. Home, Deck Construction, Card Collection, Rules and the landscape Sim Battle use Jetpack Compose. Match state, AI, card effects, rules, deck storage and image loading are Kotlin modules.
 
-- Android Gradle Plugin: **8.9.2** (unchanged)
-- Gradle Wrapper: **8.11.1** (unchanged)
-- JDK target: **17** (unchanged)
-- Kotlin Android and Compose Compiler Gradle plugins: **2.1.20**
-- Compose BOM: **2025.04.01**
-- Activity Compose: **1.10.1**; Lifecycle ViewModel Compose/ktx: **2.8.7**
-- `compileSdk=35` / `targetSdk=35`; these are retained to avoid requiring an AGP 9 migration.
+## Kotlin modules
 
-## Completed now
+| Feature | Source |
+|---|---|
+| Home / Collection / Deck / Rules | ShadowComposeActivity.kt |
+| Landscape battle UI, hand drag and target selection | ShadowBattleActivity.kt |
+| Complete match state, action legality, AI, scoring and turns | ShadowEngine.kt |
+| Card-specific effects and triggered ability families | ShadowCardEffects.kt |
+| Observable StateFlow match controller | ShadowBattleCoordinator.kt |
+| Saved deck CRUD and import/export | ShadowDeckRepository.kt, ShadowDeckViewModel.kt |
+| Match rules, deck limits, position geometry and damage math | ShadowRules.kt, ShadowDeckRules.kt, ShadowPositionRules.kt, ShadowDamageRules.kt |
+| Card metadata / effects categorization | ShadowData.kt, ShadowEffectRegistry.kt, ShadowEffectCoverage.kt |
+| Card-face loading and image caching | CardArt.kt |
 
-| System | Kotlin class / implementation | Migration status |
-|---|---|---|
-| Home screen | `ShadowComposeActivity.kt` | Kotlin/Compose launcher |
-| Deck Construction | `DeckScreen` in `ShadowComposeActivity.kt` | Kotlin/Compose with legality, selected decks, deck curve and export/import |
-| Card Collection | `CollectionScreen` in `ShadowComposeActivity.kt` | Kotlin/Compose with rarity/faction/search filters and original card-image integration |
-| Card viewer | `CardDetailsDialog` in `ShadowComposeActivity.kt` | Kotlin/Compose, effect text/statistics/provenance/coverage and add/remove copy |
-| Rules | `RulesScreen` in `ShadowComposeActivity.kt` | Kotlin/Compose |
-| Deck storage | `ShadowDeckRepository.kt` | Kotlin, reuses current SharedPreferences format |
-| Deck state | `ShadowDeckViewModel.kt` | Kotlin, StateFlow, single saved-deck source of truth |
-| Deck legality | `ShadowDeckRules.kt` | Kotlin; used by both old Java and Compose UI |
-| Position geometry / faction lines | `ShadowPositionRules.kt` | Kotlin; Java engine delegates to these rules |
-| Damage arithmetic | `ShadowDamageRules.kt` | Kotlin; Java engine uses it |
-| Effect classification | `ShadowEffectRegistry.kt` | Kotlin registry; engine uses for unresolved effect reporting |
-| Battle controller | `ShadowBattleCoordinator.kt` | Kotlin StateFlow boundary; **Java BattleActivity routes all game mutations through it** |
-| Landscape battlefield | `BattleActivity.java` | Retained unchanged visually, game mutations switched to Kotlin coordinator |
-| Complex card effect resolution | `ShadowEngine.java` | Preserved while porting families one at a time with regression tests |
+**No Java production source files remain.** All earlier Java UI screens and the Java match engine were removed after Kotlin replacements were committed.
 
-## Save format compatibility (critical)
+## Saved decks
 
-The original `MainActivity.java` stored data in activity-private `getPreferences(0)`, equivalent to SharedPreferences named **MainActivity**, using:
+All original decks continue to use the same Android SharedPreferences name, MainActivity, and the same keys:
 
-- `deck_names`: JSON array of deck names
-- `selected_deck`: current deck name
-- `deck_<name>`: JSON object mapping card names to integer quantities
+- deck_names: JSON array of names
+- selected_deck: active deck name
+- deck_<name>: JSON object of card name to quantity
 
-`ShadowDeckRepository.kt` reads and writes the **same filename and keys**. It never clears a save during initialization, and the old Java screens remain available for rollback/debugging.
+The new Kotlin deck repository reads these directly; no new account setup or delete/recreate is needed.
 
-Imports validate the entire list before replacing the stored deck. Invalid names, duplicate counts, rarity-limit or 15-card-limit violations cause an error without overwriting a saved deck. Incomplete legal-by-card decks can be saved; only fully legal 15-card decks can launch Sim Battle.
+## Gameplay status versus migration status
 
-## Verification
+The code conversion does not mean all card rules were verified. The Kotlin effect module retains previous scripted abilities, missing-data warnings, and incomplete effect handling.
 
-Local Kotlin unit tests (`ShadowKotlinRulesTest.kt`) cover canonical deck legality, position geometry, damage, StateFlow updates, and effect-family classification. Existing Java engine tests remain intact: **36 test methods authored in total**.
+- 110 distinct documented card records in current catalog; official full-game total not verified
+- Rock token Power/cost still unresolved
+- Xur, Tomb Ship, Drop Pod require verification of summon data
+- Xuan Wei movement is scripted but precise in-game destination requirements need confirmation
+- Exact battlefield slot layout, Line geometry and later-round draw timing remain provisional
+- The AI remains single-player only; no multiplayer/PvP
 
-On the user's PC, after pulling:
+## Verification status
 
-```bat
-gradlew.bat :app:assembleDebug
-gradlew.bat :app:testDebugUnitTest
-```
+Existing 31 Java regression tests continue to exercise the now-Kotlin engine through Java interoperability. Five Kotlin tests cover deck rules, geometry, damage, StateFlow and ability categorization: **36 authored tests total**.
 
-These are local commands; they do **not** start GitHub Actions or consume GitHub Actions minutes.
+- Structural Kotlin source checks passed (bracket/literal balancing and engine/effect handler references)
+- Android Studio / APK compilation: **not executed**
+- On-device battle match and image-cache verification: **not executed**
+- No GitHub Actions workflows, Actions tests or credit-consuming CI builds were run
 
-**NOT VERIFIED YET:** this environment did not compile an Android APK, run the local unit suite, exercise external document pickers, or confirm on-device touch interactions. Report actual Gradle or Android runtime logs if a problem appears; do not mistake static source checks for a successful build.
+The environment does not contain an Android SDK and Gradle build setup suitable for a real Android compilation. Do not treat source structural checks as a successful APK build.
 
-## Next Kotlin migration phase
+For eventual *local* validation without GitHub Actions credits:
 
-1. Validate the Compose screens and saved-deck compatibility on an Android device.
-2. Port the battle rendering and touch/targeting system to Kotlin, retaining the existing position/hand behavior until parity is demonstrated.
-3. Migrate `ShadowEngine.java` effect families into Kotlin resolvers incrementally (rather than translating 1,000 lines at once and risking silent card-rule regressions).
-4. Continue verifying the 110 recorded card entries individually. The previous engine audit did **not** establish full gameplay fidelity.
-5. Once Kotlin battle and resolvers pass local tests, remove the unused Java UI fallback files in a separate commit.
+    gradlew.bat :app:assembleDebug
+    gradlew.bat :app:testDebugUnitTest
 
-The game remains **single-player against AI**. No PvP, paid services, GitHub workflows or Actions CI were added.
+No user-side action is needed to complete the source conversion itself.
