@@ -11,6 +11,8 @@
         <!-- Original Java screens retained during Kotlin migration for rollback/debugging. -->
         <activity android:name=".HomeActivity" android:exported="false"/>
         <activity android:name=".MainActivity" android:exported="false"/>
+        <activity android:name=".ShadowBattleActivity" android:exported="false" android:screenOrientation="landscape"/>
+        <!-- Java BattleActivity retained unexported only until parity review. -->
         <activity android:name=".BattleActivity" android:exported="false" android:screenOrientation="landscape"/>
         <activity android:name=".RulesActivity" android:exported="false"/>
     </application>
