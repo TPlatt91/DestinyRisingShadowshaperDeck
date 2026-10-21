@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
@@ -65,6 +66,9 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -325,6 +329,15 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 Box(
                                     Modifier.weight(1f).fillMaxHeight()
                                         .onGloballyPositioned { slotBounds[id] = it.boundsInWindow() }
+                                        .semantics {
+                                            contentDescription = heading + " position " + (col + 1) +
+                                                if (unit != null) ", " + unit.card.name +
+                                                    ", Power " + engine.power(unit)
+                                                else ", empty"
+                                            if (targeting) stateDescription = "Select as ability target"
+                                            else if (relocating) stateDescription = "Available relocation slot"
+                                            else if (legal) stateDescription = "Available card placement"
+                                        }
                                         .then(
                                             if (targeting || relocating || (owner === engine.human && unit == null))
                                                 Modifier.clickable {
@@ -347,7 +360,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                     if (unit != null) {
                                         DuelCardFrame(
                                             card = unit.card, power = engine.power(unit),
-                                            modifier = Modifier.fillMaxSize().padding(2.dp),
+                                            modifier = Modifier.fillMaxHeight().aspectRatio(0.72f).padding(1.dp),
                                             inspired = unit.inspired,
                                             suppressed = unit.suppressed,
                                             scorched = unit.scorchTurns > 0
