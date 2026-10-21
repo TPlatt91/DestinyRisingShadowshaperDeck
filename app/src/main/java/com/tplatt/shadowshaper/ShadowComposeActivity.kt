@@ -1,6 +1,7 @@
 package com.tplatt.shadowshaper
 
 import android.app.Activity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -121,7 +122,7 @@ private fun ShadowTheme(content: @Composable () -> Unit) {
 
 @Composable
 private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
-    var page by rememberSaveable { mutableStateOf("home") }
+    var page by rememberSaveable { mutableStateOf(activity.intent.getStringExtra("start_page") ?: "home") }
     var detail by remember { mutableStateOf<ShadowData.Card?>(null) }
     val state by vm.state.collectAsState()
     BackHandler(page != "home") { page = "home" }
@@ -129,7 +130,7 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             when (page) {
                 "home" -> HomeScreen(
-                    onBattle = { activity.startActivity(Intent(activity, BattleActivity::class.java)) },
+                    onBattle = { activity.startActivity(Intent(activity, ShadowBattleActivity::class.java)) },
                     onOpen = { page = it },
                     catalogCount = vm.catalog.size
                 )
@@ -138,7 +139,7 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
                     onBack = { page = "home" },
                     onCard = { detail = it },
                     onBattle = {
-                        val intent = Intent(activity, BattleActivity::class.java)
+                        val intent = Intent(activity, ShadowBattleActivity::class.java)
                             .putExtra("selected_deck", state.selected)
                         activity.startActivity(intent)
                     }
