@@ -27,6 +27,9 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -354,6 +357,7 @@ private fun DeckScreen(
     var importText by remember { mutableStateOf("") }
     var pasteDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var coverDialog by remember { mutableStateOf(false) }
     var addSearch by rememberSaveable { mutableStateOf("") }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) runCatching {
@@ -441,6 +445,18 @@ private fun DeckScreen(
             }
         }
         Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            DuelCardCover(state.cover, Modifier.width(26.dp).height(37.dp))
+            Text("CARD BACK  •  " + DuelCoverCatalog.title(state.cover),
+                color = Gold, fontSize = 12.sp, modifier = Modifier.weight(1f))
+            TextButton(onClick = { coverDialog = true }) {
+                Text("CHANGE")
+            }
+        }
+        Row(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
@@ -491,6 +507,43 @@ private fun DeckScreen(
         }
     }
 
+    if (coverDialog) {
+        AlertDialog(
+            onDismissRequest = { coverDialog = false },
+            title = { Text("SHADOWSHAPER CARD BACK") },
+            text = {
+                Column(
+                    Modifier.heightIn(max = 380.dp)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    Text("Choose one of the nine original covers. Your selection is saved with this deck.",
+                        color = Secondary, fontSize = 12.sp)
+                    DuelCoverCatalog.choices.forEach { option ->
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clickable {
+                                    vm.selectCover(option.id)
+                                    coverDialog = false
+                                }
+                                .padding(vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            DuelCardCover(option.id, Modifier.width(42.dp).height(61.dp))
+                            Text(option.title, color = if (state.cover == option.id) Gold else Cream,
+                                fontWeight = if (state.cover == option.id)
+                                    FontWeight.Bold else FontWeight.Normal,
+                                modifier = Modifier.weight(1f))
+                            if (state.cover == option.id) Text("✓", color = Gold)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { coverDialog = false }) { Text("CLOSE") }
+            }
+        )
+    }
     if (deckDialog.isNotBlank()) {
         AlertDialog(
             onDismissRequest = { deckDialog = "" },
