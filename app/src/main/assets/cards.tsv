@@ -1,6 +1,6 @@
 Ayuela|Sustained (Back Row): When the opponent places a unit in the front row, deals 2 damage to it for 2 turns.
 Carrier|Summons 2 Fallen Dregs on the left and right.
-Clone|When Power reaches 0, deals 3 damage to the units on the left and right.
+Clone|Sustained: When Power reaches 0, deals 3 damage to the units on the left and right.
 Denzin|When acquiring a Power bonus, summons a Guerrilla on the left.
 Donovan-17|No special effects.
 Dreg|No special effects.
@@ -14,7 +14,7 @@ Marauder|No special effects.
 Mishra|When Played: Grants +3 Power to units on the left and right.
 Morgran|When Played (Back Row): Grants +1 Power to a unit.
 Mu Ying|Summons 1 Guerrilla on the left and 1 on the right.
-Ning Fei|Randomly places a Clone in the opponent's front row.
+Ning Fei|When Played: Randomly places a Clone in the opponent's front row.
 Novice Marauder|No special effects.
 Resilient Captain|Sustained: When your Fallen units deal damage, summons a Dreg on the right. (Up to 6 Dregs can be summoned.)
 Resilient Dreg|No special effects.
@@ -22,7 +22,7 @@ Rock|No special effects.
 Rock Pile|No special effects.
 Shank|No special effects.
 Sparrow|When Played (Front Row): Gains +3 Power.
-Tan-2|Doubles your next Power bonus.
+Tan-2|Sustained: Doubles your next Power bonus.
 Tracer Shank|When Played (Back Row): Deals 3 damage to an opposing unit.
 Tracker|No special effects.
 Unrelenting Captain|Sustained: Each Dreg deployed gains 1 additional Power.
