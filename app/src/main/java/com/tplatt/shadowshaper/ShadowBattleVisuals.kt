@@ -130,35 +130,46 @@ internal fun DuelLightMeter(light: Int, round: Int) {
 }
 
 @Composable
-internal fun DuelCardBacks(count: Int) {
+internal fun DuelCardCover(
+    coverId: String,
+    modifier: Modifier = Modifier
+) {
     val activity = LocalContext.current as? Activity
+    val chosen = if (DuelCoverCatalog.isKnown(coverId)) coverId else "default"
+    Box(
+        modifier
+            .clip(RoundedCornerShape(3.dp))
+            .background(Color(0xFF322529))
+            .border(1.dp, Color(0xFFAD8D6C), RoundedCornerShape(3.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        // Retain this neutral card-back silhouette if assets are unavailable.
+        Text("♢", color = Color(0xFFBFA68F), fontSize = 15.sp)
+        if (activity != null) {
+            key(chosen) {
+                AndroidView(
+                    factory = { ctx ->
+                        ImageView(ctx).apply {
+                            scaleType = ImageView.ScaleType.FIT_XY
+                            CardArt.bindCover(activity, this, chosen)
+                        }
+                    },
+                    update = { image ->
+                        if (image.tag != "cover_$chosen")
+                            CardArt.bindCover(activity, image, chosen)
+                    },
+                    modifier = Modifier.fillMaxSize().padding(1.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun DuelCardBacks(count: Int, coverId: String = "default") {
     Row(horizontalArrangement = Arrangement.spacedBy((-6).dp)) {
         repeat(count.coerceIn(0, 5)) {
-            Box(
-                Modifier.width(20.dp).height(29.dp)
-                    .clip(RoundedCornerShape(3.dp))
-                    .background(Color(0xFF322529))
-                    .border(1.dp, Color(0xFFAD8D6C), RoundedCornerShape(3.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                // Shown if the bundled image and cached image are both missing.
-                Text("♢", color = Color(0xFFBFA68F), fontSize = 15.sp)
-                if (activity != null) {
-                    AndroidView(
-                        factory = { ctx ->
-                            ImageView(ctx).apply {
-                                scaleType = ImageView.ScaleType.FIT_XY
-                                CardArt.bindCover(activity, this, "default")
-                            }
-                        },
-                        update = { image ->
-                            if (image.tag != "cover_default")
-                                CardArt.bindCover(activity, image, "default")
-                        },
-                        modifier = Modifier.fillMaxSize().padding(1.dp)
-                    )
-                }
-            }
+            DuelCardCover(coverId, Modifier.width(20.dp).height(29.dp))
         }
     }
 }
