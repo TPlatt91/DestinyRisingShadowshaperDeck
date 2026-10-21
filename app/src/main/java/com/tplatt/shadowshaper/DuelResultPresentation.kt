@@ -83,7 +83,7 @@ internal fun DuelMatchResult(
                     Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 18.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text("SHADOWSHAPER DUELS", fontSize = 11.sp, letterSpacing = 2.sp,
+                    Text("SHADOW SHAPER DUELS", fontSize = 11.sp, letterSpacing = 2.sp,
                         color = DuelPalette.dullGold)
                     Text(result, fontSize = 29.sp, letterSpacing = 3.sp,
                         fontWeight = FontWeight.Black, color = accent)
