@@ -85,6 +85,19 @@ Changes now implemented in Kotlin/Compose:
 
 **Important limitations:** The official covers are fetched at runtime unless their WebP files are bundled into `assets/card_cover/`; the app currently includes the loader but not downloaded binary cover assets. On first install without internet, the placeholder is shown. Display proportions, textures, drawing animations, and zone spacing still require real-device screenshots to confirm parity with the Destiny: Rising minigame. The game still has provisional rules and incomplete abilities. Android Studio compilation, the new tests, and hardware layout inspection have not been run in this environment. No GitHub Actions work was started.
 
+## Animated placement and match-result pass — October 20, 2026
+
+This pass implements the next Kotlin/Compose battle presentation milestones:
+
+- `DuelBoardAnimations.kt`: entry scales a newly played card from 79% to 100% and fades it into view over roughly 0.3 seconds. The effect is keyed to the engine's placement revision and recorded side/row/column; other battlefield cards remain static.
+- `DuelPlacementCue.kt`: a pure predicate determines which exact card slot may animate. Four local JUnit test methods cover an empty match, latest player card, same-column enemy card and invalid placement state. Five predicate assertions additionally passed a local command-line Kotlin/JVM check (not an Android build or the JUnit suite).
+- `DuelTableEtching`: unobtrusive low-contrast copper lines and circles are painted **behind** the existing rows. This is decorative and does not create zones or imitate unavailable original assets.
+- `DuelScore`: current totals interpolate visually when Power changes; the engine's exact integer totals are still used for targeting, effects, victory and draw decisions.
+- `DuelResultPresentation.kt`: animated finish screen shows the true winner, player and CPU Power, a warning where unresolved effects exist, and Home/New Match actions. The previous plain AlertDialog was removed.
+- All of these additions are presentation-only. The Kotlin card-effect rules, 15-card deck legality, the six-round match sequence and the AI were not modified.
+
+**Authenticity limitation:** These timings, textures and transitions are close visual recreations rather than claimed direct resource extractions or pixel-identical recordings. The public [Game8 Shadowshaper rules guide](https://game8.co/games/Destiny-Rising/archives/546603) confirms the six rounds, the right-side scores, Power positions and end-of-match criteria, but does not specify original animation easing or millisecond timings.
+
 ## Still not confirmed identical
 
 - **Precise board zone count and spacing:** the simulator uses 6 columns and 2 rows per side pending frame comparison.
