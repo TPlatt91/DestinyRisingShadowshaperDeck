@@ -352,7 +352,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun spawnRandom(side: Player, row: Int, token: String, source: ShadowData.Card) {
         val choices = (0 until COLUMNS).filter { empty(side, row, it) }
         if (choices.isEmpty()) {
-            incomplete(source, "No empty slot for " + token + "; full-row behavior not verified.")
+            log("SUMMON: No open slot for " + token + "; effect cannot place token.")
             return
         }
         spawnAt(side, row, choices[rng.nextInt(choices.size)], token)

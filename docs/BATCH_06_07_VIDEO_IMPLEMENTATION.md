@@ -28,3 +28,5 @@ Validation: `ShadowBatch0607EffectsTest.kt` contains focused JVM regression test
 gradlew.bat :app:testDebugUnitTest
 gradlew.bat :app:assembleDebug
 ```
+
+An occupied enemy Front Row makes Xur's Rock summon fizzle normally; it does not increment the unresolved-effect counter. Xur is registered as a Sustained card so playing it alone does not report an unimplemented When Played effect.

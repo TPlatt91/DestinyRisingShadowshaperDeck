@@ -33,7 +33,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         "Tenacious Ogre", "Shrieker", "Saladin", "Tan-2",
         "Elite Sniper Vandal", "Ayuela", "Resilient Grenade Dreg",
         "Zhiyao", "Denzin", "Unrelenting Captain", "The Speaker",
-        "Guerrilla Captain", "Umeko", "Jolder"
+        "Guerrilla Captain", "Umeko", "Jolder", "Xur"
     )
 
     fun isTargeted(name: String): Boolean = name in allyTargets || name in enemyTargets

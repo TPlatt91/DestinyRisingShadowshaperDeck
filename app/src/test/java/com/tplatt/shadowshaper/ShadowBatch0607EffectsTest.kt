@@ -94,7 +94,8 @@ class ShadowBatch0607EffectsTest {
 
     @Test fun xurSummonsVerifiedRockInEnemyFrontRow() {
         val e = engine()
-        val xur = put(e, "Xur", 0, 2)
+        val xur = play(e, "Xur", 0, 2)
+        assertEquals(0, e.unresolvedEffects)
         e.buff(xur, 1)
         assertEquals(1, e.cpu.board[1].filterNotNull().count { it.card.name == "Rock" })
         assertEquals(0, e.unresolvedEffects)
