@@ -23,6 +23,76 @@ object CardArt {
         name.lowercase(Locale.ROOT).replace(Regex("[^a-z0-9]+"), "_")
             .trim('_')
 
+    /**
+     * Reference card back from the Shadowshaper Covers gallery on TodayInDestiny.
+     * A bundled card_cover/default.webp overrides online access. Remote art is
+     * cached to app-private storage and never fetched on the main thread.
+     * The Compose cover component supplies its own offline placeholder frame.
+     */
+    @JvmStatic
+    fun bindCover(activity: Activity, view: ImageView, name: String = "default") {
+        val id = slug(name)
+        if (id !in setOf("default", "denzin", "elite_vandal", "marauder",
+                "morgran", "sniper_vandal", "tracer_shank", "wolf", "zhong_wenbin")) {
+            return
+        }
+        val memoryId = "cover_$id"
+        view.tag = memoryId
+        view.contentDescription = "$name Shadowshaper card back"
+        view.setImageResource(android.R.color.transparent)
+        memory[memoryId]?.let { cached ->
+            view.setImageBitmap(cached)
+            return
+        }
+        val context = activity.applicationContext
+        workers.execute {
+            var image: Bitmap? = null
+            // The user can bundle artwork for fully offline use later.
+            image = try {
+                context.assets.open("card_cover/$id.webp").use(BitmapFactory::decodeStream)
+            } catch (_: Exception) { null }
+            if (image == null) {
+                val folder = File(context.cacheDir, "shadowshaper_covers")
+                folder.mkdirs()
+                val cache = File(folder, "$id.webp")
+                try {
+                    if (cache.isFile) image = BitmapFactory.decodeFile(cache.absolutePath)
+                    if (image == null) {
+                        val url = URL(
+                            "https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/cover/$id.webp"
+                        )
+                        val connection = url.openConnection() as HttpURLConnection
+                        connection.connectTimeout = 6000
+                        connection.readTimeout = 9000
+                        try {
+                            if (connection.responseCode == HttpURLConnection.HTTP_OK &&
+                                connection.contentType?.startsWith("image/") == true
+                            ) {
+                                connection.inputStream.use { input ->
+                                    cache.outputStream().use { output -> input.copyTo(output) }
+                                }
+                                image = BitmapFactory.decodeFile(cache.absolutePath)
+                            }
+                        } finally {
+                            connection.disconnect()
+                        }
+                        if (image == null) cache.delete()
+                    }
+                } catch (_: Exception) {
+                    // Keep the Compose fallback rather than substituting unrelated art.
+                }
+            }
+            if (image != null) {
+                val bitmap = image
+                memory[memoryId] = bitmap
+                activity.runOnUiThread {
+                    if (view.tag == memoryId && !activity.isFinishing)
+                        view.setImageBitmap(bitmap)
+                }
+            }
+        }
+    }
+
     @JvmStatic
     fun bind(activity: Activity, card: ShadowData.Card, view: ImageView) {
         val id = slug(card.name)
