@@ -13,6 +13,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -55,6 +56,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -227,12 +229,16 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
-    Column(Modifier.fillMaxSize().background(BattleInk)) {
-        Row(Modifier.fillMaxWidth().height(42.dp).background(BattleBrown).padding(horizontal = 8.dp),
+    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF17110E),Color(0xFF302018),Color(0xFF19151A))))) {
+        Row(Modifier.fillMaxWidth().height(44.dp)
+            .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
+            .border(width = 1.dp, color = Color(0xFF8D6748))
+            .padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { settingsDialog = true }) { Text("☰ MENU", color = BattleGold) }
-            Text("SHADOWSHAPER DUELS", color = BattleCream, fontWeight = FontWeight.Bold)
+            Text("SHADOWSHAPER  •  DUELS", color = DuelPalette.cream,
+                letterSpacing = 2.sp, fontSize = 14.sp, fontWeight = FontWeight.Black)
             Text(
                 when {
                     snapshot?.finished == true -> "DUEL COMPLETE"
@@ -246,21 +252,34 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             Row(Modifier.weight(1f).fillMaxWidth().padding(5.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Column(
-                    Modifier.width(90.dp).fillMaxHeight().background(BattleBrown, RoundedCornerShape(7.dp)),
+                    Modifier.width(110.dp).fillMaxHeight()
+                        .background(DuelPalette.tableLow, RoundedCornerShape(8.dp))
+                        .border(1.dp, DuelPalette.rim, RoundedCornerShape(8.dp))
+                        .padding(4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Text("CPU HAND " + snapshot.cpuHand, color = BattleDanger, fontSize = 11.sp)
-                    Text("ROUND\n" + snapshot.round + " / 6", color = BattleGold,
-                        fontWeight = FontWeight.Bold, fontSize = 18.sp,
-                        textAlign = TextAlign.Center)
+                    Text("OPPONENT", color = DuelPalette.red,
+                        fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    DuelCardBacks(snapshot.cpuHand)
+                    Text("HAND " + snapshot.cpuHand + "   •   DECK " + engine.cpu.drawPile.size,
+                        color = BattleFaded, fontSize = 9.sp)
+                    Text("ROUND " + snapshot.round + " / " + ShadowRules.ROUNDS,
+                        color = DuelPalette.gold, fontWeight = FontWeight.Black, fontSize = 13.sp)
+                    DuelRoundMarkers(snapshot.round)
                     Text(if (engine.humanFirst) "OFFENSIVE" else "DEFENSIVE",
-                        color = BattleBlue, fontSize = 10.sp)
-                    Text("YOU", color = BattleCream, fontWeight = FontWeight.Bold)
+                        color = DuelPalette.blue, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text("YOUR FIELD", color = DuelPalette.cream,
+                        fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
                 }
                 Column(
-                    Modifier.weight(1f).fillMaxHeight().background(BattleBrown).padding(3.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                    Modifier.weight(1f).fillMaxHeight()
+                        .background(Brush.verticalGradient(listOf(
+                            Color(0xFF37271F), Color(0xFF28221F), Color(0xFF3B2A21)
+                        )), RoundedCornerShape(10.dp))
+                        .border(2.dp, DuelPalette.rim, RoundedCornerShape(10.dp))
+                        .padding(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     val targets = if (pendingPosition != null && selectedIndex in engine.human.hand.indices)
                         engine.targetOptions(engine.human, engine.human.hand[selectedIndex],
@@ -274,10 +293,17 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         Triple("YOUR FRONT", engine.human, 1),
                         Triple("YOUR BACK", engine.human, 0)
                     ).forEach { (heading, owner, row) ->
-                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        if (heading == "YOUR FRONT") {
+                            Box(Modifier.fillMaxWidth().height(2.dp)
+                                .background(Brush.horizontalGradient(
+                                    listOf(Color.Transparent, DuelPalette.gold, Color.Transparent)
+                                )))
+                        }
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(heading.replace(" ", "\n"), fontSize = 9.sp,
-                                color = if (owner === engine.human) BattleBlue else BattleDanger,
-                                modifier = Modifier.width(39.dp).align(Alignment.CenterVertically),
+                                fontWeight = FontWeight.Bold,
+                                color = if (owner === engine.human) DuelPalette.blue else DuelPalette.red,
+                                modifier = Modifier.width(45.dp).align(Alignment.CenterVertically),
                                 lineHeight = 10.sp, textAlign = TextAlign.Center)
                             for (col in 0 until ShadowRules.COLUMNS) {
                                 val unit = owner.board[row][col]
@@ -293,9 +319,6 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 Box(
                                     Modifier.weight(1f).fillMaxHeight()
                                         .onGloballyPositioned { slotBounds[id] = it.boundsInWindow() }
-                                        .background(if (targeting || relocating) Color(0xFF567353)
-                                            else if (legal) Color(0xFF3F5D55)
-                                            else Color(0xFF271E1A), RoundedCornerShape(4.dp))
                                         .then(
                                             if (targeting || relocating || (owner === engine.human && unit == null))
                                                 Modifier.clickable {
@@ -308,22 +331,21 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    if (unit == null) {
-                                        Text(if (legal || relocating) "+" else "·",
-                                            color = if (legal || relocating) BattleGold else BattleFaded)
-                                    } else {
-                                        BattleFace(unit.card, Modifier.fillMaxSize().padding(bottom = 12.dp))
-                                        Text(engine.power(unit).toString(), fontSize = 10.sp,
-                                            color = BattleCream,
-                                            modifier = Modifier.align(Alignment.TopStart)
-                                                .background(Color(0xDD315B7E)).padding(horizontal = 2.dp))
-                                        Text(unit.card.name, color = BattleCream, fontSize = 8.sp,
-                                            maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                            modifier = Modifier.align(Alignment.BottomCenter)
-                                                .fillMaxWidth().background(Color(0xDA201713)),
-                                            textAlign = TextAlign.Center)
-                                        if (unit.inspired && !unit.suppressed)
-                                            Text("✦", color = BattleGold, modifier = Modifier.align(Alignment.TopEnd))
+                                    DuelSlotBackground(
+                                        selected = legal || relocating || targeting,
+                                        friendly = owner === engine.human,
+                                        occupied = unit != null,
+                                        modifier = Modifier.fillMaxSize(),
+                                        label = if (legal || relocating || targeting) "+" else "·"
+                                    )
+                                    if (unit != null) {
+                                        DuelCardFrame(
+                                            card = unit.card, power = engine.power(unit),
+                                            modifier = Modifier.fillMaxSize().padding(2.dp),
+                                            inspired = unit.inspired,
+                                            suppressed = unit.suppressed,
+                                            scorched = unit.scorchTurns > 0
+                                        )
                                     }
                                 }
                             }
@@ -334,9 +356,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     Modifier.width(132.dp).fillMaxHeight().background(BattleBrown).padding(5.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(snapshot.playerPower.toString() + " : " + snapshot.cpuPower,
-                        color = BattleGold, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text("YOU : CPU POWER", fontSize = 10.sp, color = BattleFaded)
+                    DuelScore(snapshot.playerPower, snapshot.cpuPower, snapshot.playerTurn)
                     Spacer(Modifier.height(6.dp))
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
                         engine.journal.takeLast(8).forEach {
@@ -350,11 +370,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             }
             Row(Modifier.fillMaxWidth().height(128.dp).background(BattleBrown).padding(5.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(96.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(snapshot.playerLight.toString() + "/" + snapshot.round, color = BattleGold,
-                        fontSize = 22.sp, fontWeight = FontWeight.Bold)
-                    Text("LIGHT", color = BattleGold, fontSize = 11.sp)
-                    Text("DECK " + engine.human.drawPile.size, color = BattleFaded, fontSize = 10.sp)
+                Column(Modifier.width(108.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    DuelLightMeter(snapshot.playerLight, snapshot.round)
+                    Text("DECK " + engine.human.drawPile.size + "   •   HAND " + snapshot.playerHand,
+                        color = BattleFaded, fontSize = 9.sp)
                 }
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -400,18 +420,13 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             colors = CardDefaults.cardColors(containerColor =
                                 if (selectedIndex == index) Color(0xFF624934) else BattlePanel)
                         ) {
-                            Box(Modifier.fillMaxSize()) {
-                                BattleFace(card, Modifier.fillMaxSize().padding(3.dp))
-                                Text(card.power + "  ◈ " + card.cost, color = BattleCream,
-                                    fontSize = 10.sp, textAlign = TextAlign.Center,
-                                    modifier = Modifier.align(Alignment.TopCenter)
-                                        .fillMaxWidth().background(Color(0xD02A2023)))
-                                Text(card.name, color = BattleCream, fontSize = 9.sp,
-                                    maxLines = 2, overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.align(Alignment.BottomCenter)
-                                        .fillMaxWidth().background(Color(0xDE211814)),
-                                    textAlign = TextAlign.Center)
-                            }
+                            DuelCardFrame(
+                                card = card, power = card.numericPower(),
+                                modifier = Modifier.fillMaxSize().padding(2.dp),
+                                selected = selectedIndex == index,
+                                playable = snapshot.playerTurn && engine.affordable(engine.human, index),
+                                compact = false
+                            )
                         }
                     }
                 }
@@ -429,7 +444,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         },
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Text(if (pendingPosition != null) "CANCEL" else "END TURN", fontSize = 11.sp)
+                        Text(if (pendingPosition != null) "CANCEL" else "END TURN  ›", fontSize = 11.sp,
+                            fontWeight = FontWeight.Black)
                     }
                     Text(message, color = BattleFaded, fontSize = 9.sp,
                         lineHeight = 11.sp, maxLines = 3, textAlign = TextAlign.Center)
