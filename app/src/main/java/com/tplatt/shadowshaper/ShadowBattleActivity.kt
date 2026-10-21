@@ -138,6 +138,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var exitConfirmation by remember { mutableStateOf(false) }
     var showLog by remember { mutableStateOf(false) }
     var chosenDeck by remember { mutableStateOf<Map<String, Int>>(emptyMap()) }
+    var chosenCover by remember { mutableStateOf("default") }
     var selectedIndex by remember { mutableIntStateOf(-1) }
     var pendingPosition by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var inspectedUnit by remember { mutableStateOf<ShadowEngine.Unit?>(null) }
@@ -168,6 +169,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             val saved = validDecks.firstOrNull { it.first == requestedDeck }
             if (saved != null) {
                 chosenDeck = saved.second
+                chosenCover = if (requestedDeck == "Starter Practice Deck") "default" else saves.cover(requestedDeck)
                 deckDialog = false
                 factionDialog = true
             }
@@ -445,8 +447,13 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 Column(Modifier.width(if (compactLayout) 86.dp else 108.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     DuelLightMeter(snapshot.playerLight, snapshot.round)
-                    Text("DECK " + engine.human.drawPile.size + "   •   HAND " + snapshot.playerHand,
-                        color = BattleFaded, fontSize = 9.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        DuelCardCover(chosenCover, Modifier.width(19.dp).height(28.dp))
+                        Text("DECK " + engine.human.drawPile.size +
+                            "\nHAND " + snapshot.playerHand,
+                            color = BattleFaded, fontSize = 9.sp, lineHeight = 10.sp)
+                    }
                 }
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
@@ -625,6 +632,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 validDecks.forEach { (name, deck) ->
                     TextButton(onClick = {
                         chosenDeck = deck
+                        chosenCover = if (name == "Starter Practice Deck") "default" else saves.cover(name)
                         deckDialog = false
                         factionDialog = true
                     }) { Text(name) }
