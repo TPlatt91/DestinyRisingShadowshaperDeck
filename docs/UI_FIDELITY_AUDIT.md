@@ -58,6 +58,19 @@ This pass updates the live Kotlin landscape simulator, without touching the game
 
 These updates preserve the six-row-wide prototype board and simulated card effects, which still require game-client verification. The drag bug fix is source-reviewed but has not been validated on Android hardware.
 
+## Next UI implementation pass — October 20, 2026
+
+Implemented directly in the Kotlin/Compose repository:
+
+- **Drag hit testing:** `DuelHitTesting.kt` makes it explicit that both card pointer and placement cells use the same window coordinate system. The card-preview location is converted to coordinates relative to the root Compose overlay, preventing offset problems from device insets.
+- **5 new local hit-testing tests:** valid player slots, enemy-slot rejection, out-of-board rejection, malformed slot IDs, and coordinate transforms.
+- **Contextual match feedback:** fades in turn announcements and recent card events. Pending on-play targets and Xuan Wei-style relocation show prominent instructions above the hand.
+- **Hand interaction:** compact overlapping cards with selected card drawn above its neighbors, extra vertical clearance for the lifted card, and constrained dragging while another decision is unresolved.
+- **Deck-to-match flow:** a named legal deck passed by the Compose deck editor is selected automatically on entry to Battle, reducing duplicate deck selection.
+- **Enlarged landscape card inspector:** `DuelCardInspection.kt` replaces the small popup. Players can inspect enemy/friendly cards or hand cards; current Power, Light, rarity, detailed effect, slot, Inspired/Suppressed/Scorched state, and coverage caveats are shown without altering engine state.
+
+The revised screens are still **reference-inspired**, not verified pixel-identical: original high-resolution game battle textures, proprietary UI assets, and client-recorded animations are not present in the repository. The board dimensions/draw timing remain provisional. All updated files passed static bracket/string checks; no Android build or device execution was performed.
+
 ## Still not confirmed identical
 
 - **Precise board zone count and spacing:** the simulator uses 6 columns and 2 rows per side pending frame comparison.
