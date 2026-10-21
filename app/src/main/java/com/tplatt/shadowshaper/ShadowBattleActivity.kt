@@ -21,6 +21,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -73,6 +74,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -117,6 +119,8 @@ private val BattleDanger = Color(0xFFDDA89A)
 @Composable
 private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRules: () -> Unit) {
     val context = LocalContext.current
+    val screenConfig = LocalConfiguration.current
+    val compactLayout = screenConfig.screenWidthDp < 790
     val catalog = remember { ShadowData.load(context) }
     val saves = remember { ShadowDeckRepository(context) }
     val practice = remember(catalog) { ShadowData.opponentDeck(catalog) }
@@ -310,7 +314,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             Row(Modifier.weight(1f).fillMaxWidth().padding(5.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Column(
-                    Modifier.width(110.dp).fillMaxHeight()
+                    Modifier.width(DuelLayoutMetrics.leftHudWidth(screenConfig.screenWidthDp).dp).fillMaxHeight()
                         .background(DuelPalette.tableLow, RoundedCornerShape(8.dp))
                         .border(1.dp, DuelPalette.rim, RoundedCornerShape(8.dp))
                         .padding(4.dp),
@@ -374,7 +378,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                     pendingPosition == null && selectedIndex >= 0 &&
                                     engine.isPlayablePlacement(engine.human, selectedIndex, row, col)
                                 val id = (if (owner === engine.human) "0" else "1") + "-$row-$col"
-                                Box(
+                                BoxWithConstraints(
                                     Modifier.weight(1f).fillMaxHeight()
                                         .onGloballyPositioned { slotBounds[id] = it.boundsInWindow() }
                                         .semantics {
@@ -406,9 +410,10 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                         label = if (legal || relocating || targeting) "+" else "·"
                                     )
                                     if (unit != null) {
+                                        val fit = DuelLayoutMetrics.fittingCard(maxWidth.value, maxHeight.value)
                                         DuelCardFrame(
                                             card = unit.card, power = engine.power(unit),
-                                            modifier = Modifier.fillMaxHeight().aspectRatio(0.72f).padding(1.dp),
+                                            modifier = Modifier.width(fit.width.dp).height(fit.height.dp),
                                             inspired = unit.inspired,
                                             suppressed = unit.suppressed,
                                             scorched = unit.scorchTurns > 0
@@ -420,7 +425,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     }
                 }
                 Column(
-                    Modifier.width(132.dp).fillMaxHeight().background(BattleBrown).padding(5.dp),
+                    Modifier.width(DuelLayoutMetrics.rightHudWidth(screenConfig.screenWidthDp).dp).fillMaxHeight().background(BattleBrown).padding(if (compactLayout) 2.dp else 5.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     DuelScore(snapshot.playerPower, snapshot.cpuPower, snapshot.playerTurn)
@@ -435,9 +440,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth().height(128.dp).background(BattleBrown).padding(5.dp),
+            Row(Modifier.fillMaxWidth().height(DuelLayoutMetrics.handHeight(screenConfig.screenHeightDp).dp).background(BattleBrown).padding(5.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(108.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                Column(Modifier.width(if (compactLayout) 86.dp else 108.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     DuelLightMeter(snapshot.playerLight, snapshot.round)
                     Text("DECK " + engine.human.drawPile.size + "   •   HAND " + snapshot.playerHand,
@@ -514,7 +519,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         }
                     }
                 }
-                Column(Modifier.width(120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(Modifier.width(if (compactLayout) 106.dp else 120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     Button(
                         enabled = snapshot.playerTurn && !snapshot.finished,
                         onClick = {
