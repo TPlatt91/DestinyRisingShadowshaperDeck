@@ -8,7 +8,7 @@ Dreg	dreg	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.
 Elite Sniper Vandal	elite_sniper_vandal	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/elite_sniper_vandal.webp		card_art/elite_sniper_vandal.webp
 Elite Vandal	elite_vandal	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/elite_vandal.webp		card_art/elite_vandal.webp
 Exploder Shank	exploder_shank	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/exploder_shank.webp		card_art/exploder_shank.webp
-Grenade Dreg	grenade_dreg	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/grenade_dreg.webp		card_art/grenade_dreg.webp
+Grenade Dreg	grenade_dreg	Fallen	cards.tsv	EXTRACTED_AWAITING_UPLOAD	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/grenade_dreg.webp	user_recording_20261021_134608	card_art/grenade_dreg.webp
 Guerrilla	guerrilla	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/guerrilla.webp		card_art/guerrilla.webp
 Hyssop	hyssop	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/hyssop.webp		card_art/hyssop.webp
 Marauder	marauder	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/marauder.webp		card_art/marauder.webp
@@ -27,7 +27,7 @@ Tan-2	tan_2	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.t
 Tracer Shank	tracer_shank	UNKNOWN	cards.tsv	BUNDLED_LOCAL_WEBP	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/tracer_shank.webp		card_art/tracer_shank.webp
 Tracker	tracker	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/tracker.webp		card_art/tracker.webp
 Unrelenting Captain	unrelenting_captain	UNKNOWN	cards.tsv	BUNDLED_LOCAL_GIF	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/unrelenting_captain.webp		card_art/unrelenting_captain.gif
-Vandal	vandal	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/vandal.webp		card_art/vandal.webp
+Vandal	vandal	Fallen	cards.tsv	EXTRACTED_AWAITING_UPLOAD	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/vandal.webp	user_recording_20261021_134608	card_art/vandal.webp
 Wolf	wolf	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/wolf.webp		card_art/wolf.webp
 Wu Ming	wu_ming	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/wu_ming.webp		card_art/wu_ming.webp
 Xur	xur	UNKNOWN	cards.tsv	PUBLISHED_ON_REFERENCE_GALLERY	https://www.media.todayindestiny.com/images/rising/shadowshaper_duels/card/xur.webp		card_art/xur.webp
@@ -92,7 +92,7 @@ Thinktank	thinktank	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gamep
 Attal	attal	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/attal.webp
 Kabr	kabr	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/kabr.webp
 Ketch	ketch	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/ketch.webp
-Servitor	servitor	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/servitor.webp
+Servitor	servitor	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		user_recording_20261021_134608	card_art/servitor.webp
 Guarding Servitor	guarding_servitor	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/guarding_servitor.webp
 Resilient Grenade Dreg	resilient_grenade_dreg	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/resilient_grenade_dreg.webp
 Wretch	wretch	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/wretch.webp
