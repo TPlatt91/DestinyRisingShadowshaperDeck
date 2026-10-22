@@ -420,6 +420,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             if (newUnit.row == 1 && watcher.card.name == "Ayuela" && watcher.row == 0) {
                 newUnit.scorched = 2
                 newUnit.scorchTurns = 2
+                newUnit.scorchSource = watcher
                 log("SCORCHED ▶ " + newUnit.card.name + " for 2 turns.")
             }
             if (newUnit.row == 1 && watcher.card.name == "Zhiyao") {
@@ -432,6 +433,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 watcher.card.name == "Resilient Grenade Dreg" && watcher.row == 0) {
                 newUnit.scorched = 2
                 newUnit.scorchTurns = 2
+                newUnit.scorchSource = watcher
                 log("SCORCHED ▶ " + newUnit.card.name +
                     " for 2 turns (Resilient Grenade Dreg).")
             }
@@ -444,7 +446,14 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             if (unit.inspired && !unit.suppressed) buff(unit, 1)
             if (unit.scorchTurns > 0) {
                 unit.scorchTurns--
-                dealDirect(unit, unit, unit.scorched)
+                // Scorched is enemy-origin damage. Using the victim as the
+                // source wrongly fires that victim's "Fallen deals damage"
+                // effects and credits an opponent's ongoing effect to them.
+                dealDirect(unit.scorchSource ?: unit, unit, unit.scorched)
+                if (unit.scorchTurns == 0) {
+                    unit.scorched = 0
+                    unit.scorchSource = null
+                }
             }
             if (unit.card.name == "Elite Sniper Vandal" && unit.sniperTurnsRemaining > 0)
                 unit.sniperTurnsRemaining--

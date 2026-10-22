@@ -645,11 +645,12 @@ private fun RulesScreen(onBack: () -> Unit) {
         "DECK LEGALITY" to "Construct exactly 15 cards. No more than 2 of a name, 3 Exotic, or 5 Mythic. Generated tokens cannot be placed directly into a constructed deck.",
         "ROUNDS & LIGHT" to "Both players act once during each of six rounds. Round N grants N Light points. Costs are paid as cards are played; Light does not carry between rounds.",
         "OFFENSIVE / DEFENSIVE" to "The randomly selected Offensive player acts first. The Defensive player takes the last action in round 6. Opening hands are provisionally modeled as five/four cards.",
-        "BOARD POSITIONS" to "Units are placed on your front or back row. Many abilities have requirements involving a row, adjacent cards, columns, or same-faction lines.",
+        "BOARD POSITIONS" to "Units are placed in vacant Front Row or Back Row slots. Left and right mean immediate neighbors in the same row; a Column is a vertical pair.",
+        "LINE & COLUMN" to "For a numbered Line ability, count a continuous horizontal group of units with the printed Line affix. Ordinary neighboring Cabal cards do not count and interrupt the Line. A Column requires a unit directly above or below in the same column.",
         "TARGETING" to "Tap or drag a card into a vacant slot. If its ability chooses a target, tap a highlighted eligible unit. The game rejects illegal targets without spending Light.",
-        "STATUS EFFECTS" to "Inspired grants +1 Power at turn end. Sustained effects persist while active. Suppression disables qualifying effects and removes bonuses. Scorched deals delayed damage.",
+        "STATUS EFFECTS" to "Inspired gives the unit +1 Power at the end of its owner's turn. Sustained effects stay active while their source is on the board and unsuppressed. Suppression removes existing Power bonuses, Inspired and Scorched, and disables sustained effects. Scorched deals delayed damage while active.",
         "WIN CONDITION" to "Total surviving Power determines victory. This is a Power-scoring game, not an attack-and-block game.",
-        "SIMULATOR ACCURACY" to "The engine is under verification. Board dimensions, exact Line geometry, later-round draw timing and some complex card effects remain provisional. A scripted ability is not automatically a fully tested ability."
+        "SIMULATOR ACCURACY" to "The engine uses printed Line affixes and a shared keyword resolver. Original-game exactness for draw timing, simultaneous triggered effects, some summon pools, and select card edge cases is still undergoing verification. A scripted effect is not automatically a tested effect."
     )
     Column(Modifier.fillMaxSize()) {
         PageHeading("RULES", "Shadow Shaper Duels • six-round gameplay", onBack)

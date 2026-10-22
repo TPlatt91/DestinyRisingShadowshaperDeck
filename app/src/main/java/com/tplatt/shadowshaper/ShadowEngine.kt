@@ -29,6 +29,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         @JvmField var bonus: Int = 0
         @JvmField var scorched: Int = 0
         @JvmField var scorchTurns: Int = 0
+        /** The unit that inflicted Scorched, so damage triggers credit the caster. */
+        @JvmField var scorchSource: Unit? = null
         @JvmField val timedBonuses: ArrayList<TimedBonus> = ArrayList()
         @JvmField var inspired = false
         @JvmField var suppressed = false
@@ -475,6 +477,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.damageBonus = 0
         target.scorched = 0
         target.scorchTurns = 0
+        target.scorchSource = null
         target.timedBonuses.clear()
         log("SUPPRESSED ▶ " + target.card.name)
     }
