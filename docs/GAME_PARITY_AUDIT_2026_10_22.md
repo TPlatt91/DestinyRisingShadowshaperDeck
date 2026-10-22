@@ -66,3 +66,14 @@ This pass changes runtime code and **adds tests for the actual Android card cata
 **Critical qualification:** This is *not* a completed pass report. The new tests have been pushed to GitHub but **not run**. A successful invocation of an individual card in a basic state is not proof that its keyword interactions and edge cases are correct; match-level runtime verification and comparison against original Destiny: Rising footage are still required.
 
 Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It saves `shadow_engine_test_log.txt` and uses **no GitHub Actions minutes**. If tests fail, use the fixture's named card, seed and diagnostic log to correct the actual effect handler before certifying a mechanic.
+
+## CPU target-choice and full-match validation pass
+
+**Changes pushed to `main` on 22 October 2026:**
+- `ShadowEngine.chooseAI` scores legal targets according to the intended ability family. Targeted 1–5 damage abilities prefer achievable eliminations and unshielded targets; row/adjacent splash effects value clusters. Wu Ming now favors removing meaningful Power bonuses while avoiding Mind Disruptor-protected or Overshield-blocked attempts. Wizard / Guarding Servitor prioritize allies not already Inspired; Rossi-11 avoids wasting another Overshield on a protected ally and chooses itself if every existing ally is shielded. Gladiator variants prefer allied target clusters so more units receive an outgoing-damage bonus. These are **CPU decision heuristics**, not a claim about the exact proprietary original-game opponent AI.
+- Added **nine** new cases in `ShadowCpuTargetEvaluationTest.kt` covering lethal damage selection, protection, row splash targeting, meaningful Suppression, Mind Disruptor immunity, Inspired status, self-Overshield, Gladiator adjacency, and an actual `cpuPlayOne` hit.
+- Fixed `ShadowCpuLegalPlacementTest.kt`, where the existing "legal target" scenario incorrectly put Gladiator's target on the opposing board. The test now verifies that an allied unit actually gains `damageBonus`.
+- Enhanced the pre-existing `ShadowFullMatchSmokeTest.kt` (all four CPU factions plus mixed across four seeds, **20** match scenarios), adding detection of rejected CPU moves during turns, a final twelve-turn check, no pending relocation, and both final scores matching battlefield totals.
+- Updated outdated UI audit labels for Helhest (damage-based bonus after prevention/overkill) and Tomb Ship (summon-only Shade permitted in its pool). Updated an outdated Kotlin migration comment.
+
+**Testing limitation:** The new and strengthened Kotlin tests have been committed and source reviewed, but **not executed** using Gradle, an Android emulator, or a device during this GitHub-only pass. Run `run_local_engine_checks.bat` on the user's PC when available; do not run GitHub Actions or workflows that consume usage credits. Observed failures should be fixed before certifying gameplay parity.
