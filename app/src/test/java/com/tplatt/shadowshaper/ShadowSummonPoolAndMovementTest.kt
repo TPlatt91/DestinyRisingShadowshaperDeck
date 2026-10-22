@@ -165,13 +165,22 @@ class ShadowSummonPoolAndMovementTest {
         e.cpu.points = 4
         e.cpu.hand.add(e.catalog.getValue("Tomb Ship"))
         assertTrue(e.cpuPlayOne())
-        // Randomly summoned Tomb Ships are valid pool members, so identify
-        // the played source by the engine's last hand-play coordinates.
-        val ship = e.cpu.board[e.lastPlacedRow][e.lastPlacedColumn]!!
+        // The placement cue tracks the MOST RECENT arrival. Tomb Ship
+        // summons twice after its hand play, so lastPlacedRow/Column now
+        // correctly identify the right-hand summon, not the original card.
+        val playEvent = e.journal.single { it.startsWith("CPU ▶ Tomb Ship • ") }
+        val playRow = if (playEvent.contains("• BACK ")) 0 else 1
+        val playCol = playEvent.substringAfterLast(' ').toInt() - 1
+        val ship = e.cpu.board[playRow][playCol]!!
         assertEquals("Tomb Ship", ship.card.name)
         assertTrue(ship.column in 1 until ShadowRules.COLUMNS - 1)
         assertNotNull(e.cpu.board[ship.row][ship.column - 1])
         assertNotNull(e.cpu.board[ship.row][ship.column + 1])
+        assertEquals(3, e.placementRevision) // play + two summons
+        assertEquals(1, e.lastPlacedSide)
+        assertEquals(playRow, e.lastPlacedRow)
+        assertEquals(playCol + 1, e.lastPlacedColumn)
+        assertEquals(0, e.unresolvedEffects)
     }
 
     @Test fun cpuDropPodUsesAnEligibleLeftSlotInsteadOfWastingSummon() {
