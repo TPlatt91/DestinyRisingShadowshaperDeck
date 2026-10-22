@@ -34,6 +34,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         @JvmField var suppressed = false
         @JvmField var overshield = false
         @JvmField var resilientCaptainDregs = 0
+        /** Extra outgoing damage granted by effects such as Gladiator. */
+        @JvmField var damageBonus = 0
         @JvmField var bonusDoublerConsumed = false
         @JvmField var damageDoublerConsumed = false
         // Video Batch 07: sniper retaliation lasts two owner turns and can hit
@@ -219,10 +221,12 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (card.name in setOf("Shinka Incendior", "Shinka Vigile") && r != 0) continue
             if (card.name == "Knight" && (!unit.card.faction.equals("Hive", true) || !unit.inspired))
                 continue
+            if (card.name == "Wizard" && !unit.card.faction.equals("Hive", true)) continue
             if (card.name == "Hyssop" && unit.bonus <= 0) continue
             if (card.name == "Wolf" &&
                 !ShadowSpecialCardRules.wolfTargetEligible(power(unit))) continue
-            if (card.name == "Vigile" && !line(unit, 2)) continue
+            if (card.name == "Vigile" &&
+                !unit.card.effect.contains(Regex("""\bLine\b"""))) continue
             if (card.name in setOf("Gladiator", "Shinka Gladiator") && r != 1) continue
             if (card.name == "Sabikis" &&
                 (col == 0 || side.board[r][col - 1] == null)) continue
@@ -453,6 +457,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.bonus = 0
         target.suppressed = true
         target.inspired = false
+        target.damageBonus = 0
         target.scorched = 0
         target.scorchTurns = 0
         target.timedBonuses.clear()

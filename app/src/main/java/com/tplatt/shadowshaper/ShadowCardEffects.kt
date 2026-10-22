@@ -20,7 +20,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     )
     private val enemyTargets = setOf(
         "Shinka Psion", "Inquisitor", "Psion", "Tracer Shank",
-        "Vandal", "Wretch", "Incendior", "Resilient Marauder",
+        "Vandal", "Wretch", "Incendior", "Devil Sentry", "Resilient Marauder",
         "Augmented Shank", "High Servitor", "Thinktank", "Amu-Atu",
         "Shinka Incendior", "Shinka Vigile", "Thagrius",
         "Wolf", "Wu Ming", "Gwynn", "Xuan Wei", "Ikora", "Goliath Tank"
@@ -56,7 +56,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             if (other === target || other.suppressed) continue
             when (other.card.name) {
                 "Decurion" -> if (sameColumn(other, target)) bonus += 2
-                "Colossus" -> if (sameColumn(other, target)) bonus++
+                "Colossus" -> if (sameColumn(other, target) &&
+                    target.card.faction.equals("Cabal", true)) bonus++
                 "Shinka Centurion" -> if (adjacent(other, target)) bonus += 3
                 "Centurion" -> if (line(other, 4) && adjacent(other, target)) bonus += 2
             }
@@ -80,7 +81,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     }
 
     fun extraDamage(source: ShadowEngine.Unit): Int = with(e) {
-        var bonus = 0
+        var bonus = source.damageBonus
         for (other in all(source.owner)) {
             if (other.suppressed) continue
             if (other.card.name == "Servitor") bonus++
@@ -105,6 +106,24 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         when (name) {
             "Sparrow" -> buff(actor, 3)
             "Elite Vandal" -> if (!rowEmpty(foe, 1)) buff(actor, 3)
+            "Jaren" -> if (actor.row == ShadowRules.FRONT_ROW) {
+                // Six individually allocated random damage points; destroyed units
+                // leave the random target pool before the next point is assigned.
+                repeat(6) {
+                    val victim = randomUnit(foe)
+                    if (victim != null) {
+                        damage(actor, victim, 1)
+                        sweep()
+                    }
+                }
+            }
+            "Devil Sentry" -> if (rng.nextBoolean()) {
+                log("Devil Sentry: heads.")
+                damage(actor, picked, 5)
+            } else log("Devil Sentry: tails; no damage.")
+            "Common Cover" -> if (actor.row == ShadowRules.FRONT_ROW) {
+                repeat(2) { spawnRandom(foe, ShadowRules.FRONT_ROW, "Rock", actor.card) }
+            }
             "Rossi-11" -> {
                 val protectedUnit = picked ?: actor
                 protectedUnit.overshield = true
@@ -166,13 +185,17 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 all(me).filter { it.column == actor.column }.forEach { buff(it, 3) }
             }
             "Vigile" -> if (actor.row == 1) buff(picked, 2)
-            "Gladiator", "Shinka Gladiator" -> if (picked != null) {
-                val minimum = if (name == "Shinka Gladiator") 5 else 0
-                if (minimum == 0 || line(actor, minimum)) {
-                    val amount = if (name == "Shinka Gladiator") 2 else 1
-                    for (unit in all(me))
-                        if (unit === picked || adjacent(unit, picked)) buff(unit, amount)
+            "Gladiator" -> if (actor.row == ShadowRules.FRONT_ROW && picked != null) {
+                for (unit in all(me)) {
+                    if (unit === picked || adjacent(unit, picked)) {
+                        unit.damageBonus++
+                        log("Gladiator: +1 damage to " + unit.card.name)
+                    }
                 }
+            }
+            "Shinka Gladiator" -> if (picked != null && line(actor, 5)) {
+                for (unit in all(me))
+                    if (unit === picked || adjacent(unit, picked)) buff(unit, 2)
             }
 
             "Inquisitor" -> if (actor.row == 0) damage(actor, picked, 4)
@@ -207,7 +230,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     if (unit === picked || adjacent(unit, picked)) damage(actor, unit, 3)
                 dealDirect(actor, actor, 2)
             }
-            "Xuan Wei" -> if (actor.row == 0 && picked != null) {
+            "Xuan Wei" -> if (actor.row == ShadowRules.FRONT_ROW && picked != null) {
                 damage(actor, picked, 5)
                 if (power(picked) > 0 &&
                     picked.owner.board[picked.row][picked.column] === picked) {
@@ -244,8 +267,20 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 spawnAt(me, actor.row, actor.column - 1, "Guerrilla")
                 spawnAt(me, actor.row, actor.column + 1, "Guerrilla")
             }
-            "Tomb Ship", "Drop Pod" ->
-                incomplete(actor.card, "Random faction summoning pool not confirmed.")
+            "Tomb Ship" -> incomplete(actor.card, "Random Hive summon pool unverified.")
+            "Drop Pod" -> if (line(actor, 2)) {
+                // The original video says a random 'Line' unit, not a random
+                // Cabal unit. Build the pool from cards with the printed Line affix.
+                val candidates = catalog.values.filter {
+                    it.isPlayable && it.name != "Drop Pod" &&
+                        it.effect.contains(Regex("""\bLine\b"""))
+                }.sortedBy { it.name }
+                if (candidates.isNotEmpty()) {
+                    val randomCard = candidates[rng.nextInt(candidates.size)]
+                    spawnAt(me, actor.row, actor.column - 1, randomCard.name)
+                    log("Drop Pod summons Line unit: " + randomCard.name)
+                } else incomplete(actor.card, "No Line-affix summon candidates in catalog.")
+            }
             "Ning Fei" -> spawnRandom(foe, 1, "Clone", actor.card)
             "Cursed Thrall", "Exploder Shank" -> transferCursedThrall(actor)
             "Shinka Scorpius", "Scorpius", "Elite Walker", "Pandora-7" -> { }
@@ -261,17 +296,17 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         for (unit in all(own)) {
             if (unit.suppressed) continue
             val name = unit.card.name
-            if (name in setOf("Ogre", "Tenacious Ogre", "Shrieker") &&
-                unit === target) {
-                val hits = when (name) {
-                    "Tenacious Ogre" -> 4
-                    "Ogre" -> 2
-                    else -> 1
-                }
-                val points = if (name == "Shrieker") 2 else 1
-                repeat(hits) {
-                    val victim = randomUnit(foe)
-                    if (victim != null) damage(unit, victim, points)
+            if (unit === target && name in setOf("Ogre", "Tenacious Ogre", "Shrieker")) {
+                if (name != "Shrieker" || unit.row == ShadowRules.BACK_ROW) {
+                    val targets = all(foe)
+                    Collections.shuffle(targets, rng)
+                    val count = when (name) {
+                        "Tenacious Ogre" -> 4
+                        "Ogre" -> 2
+                        else -> 1
+                    }
+                    val amount = if (name == "Shrieker") 2 else 1
+                    for (victim in targets.take(count)) damage(unit, victim, amount)
                 }
             }
             if (unit === target && name == "The Disfavored" && unit.row == 1) {
@@ -382,14 +417,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         for (unit in all(side)) {
             if (side.board[unit.row][unit.column] !== unit || unit.suppressed) continue
             when (unit.card.name) {
-                "Scorpius" -> {
-                    if (unit.row != ShadowRules.BACK_ROW) continue
-                    val targets = all(other(side))
-                    Collections.shuffle(targets, rng)
-                    for (victim in targets.take(2))
-                        if (victim.owner.board[victim.row][victim.column] === victim)
-                            damage(unit, victim, 1)
-                }
+                "Scorpius" -> randomUnit(other(side))?.let { damage(unit, it, 1) }
                 "Shinka Scorpius" -> if (line(unit, 3))
                     randomUnit(other(side))?.let { damage(unit, it, 2) }
                 "Elite Walker" -> {

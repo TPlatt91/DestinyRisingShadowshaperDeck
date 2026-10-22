@@ -13,8 +13,8 @@ object ShadowEffectCoverage {
             // coded. They remain SCRIPTED / QA PENDING until local and device
             // regression tests actually pass.
             "Tomb Ship" -> "INCOMPLETE: Random Hive summon pool needs verification."
-            "Drop Pod" -> "INCOMPLETE: Random Cabal Line summon pool needs verification."
-            "Xuan Wei" -> "PARTIAL: Damage and relocation scripted; destination rules need verification."
+            "Drop Pod" -> "SCRIPTED / QA PENDING: Summons from printed Line-affix card pool; confirm exact random pool against game."
+            "Xuan Wei" -> "SCRIPTED / QA PENDING: Front Row 5-damage and relocation; confirm full-board behavior."
             else -> "SCRIPTED / QA PENDING: Engine behavior has not passed full in-game verification."
         }
     }
