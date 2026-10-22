@@ -31,6 +31,8 @@ class ShadowBatch12VideoRulesTest {
                  "Sustained (Back Row): When your turn ends, deal 1 damage to 1 random opposing unit and the units to its left and right, while also gaining Power based on the damage dealt."),
             card("Thrall", "Hive", "Rare", 10, 1, "No special effects."),
             card("Legionary", "Cabal", "Rare", 10, 1, "No special effects."),
+            card("Line Ally", "Cabal", "Rare", 10, 1,
+                 "Sustained (2-Unit Line): Counts as a printed Line card."),
             card("Dreg", "Fallen", "Rare", 10, 1, "No special effects."),
             card("Tracker", "Fallen", "Rare", 10, 1, "No special effects.")
         ).associateBy { it.name }
@@ -90,8 +92,8 @@ class ShadowBatch12VideoRulesTest {
 
     @Test fun shinkaVigileRequiresThreeUnitLineAndBackRowTarget() {
         val e = engine()
-        place(e, "Legionary", 0, 1)
-        place(e, "Legionary", 0, 3)
+        place(e, "Line Ally", 0, 1)
+        place(e, "Line Ally", 0, 3)
         val target = place(e, "Dreg", 0, 0, e.cpu)
         val front = place(e, "Dreg", 1, 0, e.cpu)
         assertEquals(1, e.targetOptions(e.human, e.catalog.getValue("Shinka Vigile"), 0, 2).size)
@@ -102,9 +104,9 @@ class ShadowBatch12VideoRulesTest {
 
     @Test fun shinkaScorpiusDamagesOnlyWithThreeUnitLineAtEndTurn() {
         val e = engine()
-        place(e, "Legionary", 0, 1)
+        place(e, "Line Ally", 0, 1)
         place(e, "Shinka Scorpius", 0, 2)
-        place(e, "Legionary", 0, 3)
+        place(e, "Line Ally", 0, 3)
         val victim = place(e, "Dreg", 0, 0, e.cpu)
         e.effects.endSide(e.human)
         assertEquals(8, victim.power)

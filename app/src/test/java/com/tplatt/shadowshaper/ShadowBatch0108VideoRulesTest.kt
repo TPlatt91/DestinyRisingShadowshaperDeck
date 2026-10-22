@@ -182,10 +182,10 @@ class ShadowBatch0108VideoRulesTest {
         assertEquals(4, target.power)
     }
 
-    @Test fun batch08ShinkaPsionRequiresTwoCabalInLine() {
+    @Test fun batch08ShinkaPsionRequiresTwoPrintedLineUnits() {
         val e = engine()
         val target = set(e, "Tracker", 1, 0, e.cpu)
-        set(e, "Legionary", 0, 1)
+        set(e, "Shinka Psion", 0, 1)
         play(e, "Shinka Psion", 0, 2, ShadowEngine.Target(e.cpu, 1, 0))
         assertEquals(4, target.power)
     }

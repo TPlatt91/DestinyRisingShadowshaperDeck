@@ -177,8 +177,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun line(unit: Unit, count: Int): Boolean = lineLength(unit) >= count
 
     internal fun lineLength(unit: Unit): Int =
-        ShadowPositionRules.contiguousFactionLine(
-            unit.owner, unit.card.faction, unit.row, unit.column, false
+        ShadowPositionRules.contiguousLineUnits(
+            unit.owner, unit.row, unit.column
         )
 
     internal fun partnerInColumn(unit: Unit): Boolean =
@@ -189,7 +189,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     fun powerBonus(unit: Unit): Int = max(0, power(unit) - original(unit))
 
     fun projectedFactionLine(side: Player, card: ShadowData.Card, row: Int, column: Int): Int =
-        ShadowPositionRules.contiguousFactionLine(side, card.faction, row, column, true)
+        ShadowPositionRules.contiguousLineUnits(side, row, column, card)
 
     fun isTargeted(card: ShadowData.Card): Boolean = effects.isTargeted(card.name)
 

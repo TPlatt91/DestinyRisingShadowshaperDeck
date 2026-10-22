@@ -261,9 +261,9 @@ class ShadowBatch0910VideoRulesTest {
 
     @Test fun phalanxReducesCabalDamageAfterThreeInLine() {
         val e = engine()
-        set(e, "Legionary", 1, 0)
+        set(e, "Shinka Psion", 1, 0)
         set(e, "Phalanx", 1, 1)
-        val cabal = set(e, "Legionary", 1, 2)
+        val cabal = set(e, "Shinka Psion", 1, 2)
         assertEquals(1, e.effects.reduction(cabal))
         assertEquals(0, e.effects.reduction(set(e, "Dreg", 0, 4)))
     }
@@ -279,7 +279,7 @@ class ShadowBatch0910VideoRulesTest {
 
     @Test fun shinkaIncendiorRequiresThreeLineAndEnemyBackRow() {
         val e = engine()
-        set(e, "Legionary", 1, 1)
+        set(e, "Shinka Psion", 1, 1)
         set(e, "Phalanx", 1, 3)
         val victim = set(e, "Dreg", 0, 0, e.cpu)
         val options=e.targetOptions(e.human, e.catalog.getValue("Shinka Incendior"), 1, 2)

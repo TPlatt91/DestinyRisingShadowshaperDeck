@@ -41,6 +41,8 @@ class ShadowBatch1314VideoRulesTest {
             card("Thagrius", "Cabal", "Exotic", 10, 6, "When Played (6-Unit Line): Deals damage to a unit equal to double the number of Line units."),
             card("Sabikis", "Fallen", "Mythic", 8, 6, "When Played (Back Row): Grants a unit the Power of the unit to its left."),
             card("Legionary", "Cabal", "Rare", 10, 1, "No special effects."),
+            card("Line Ally", "Cabal", "Rare", 10, 1,
+                "Sustained (2-Unit Line): Printed Line affix for formation tests."),
             card("Guerrilla", "Humans", "Rare", 10, 1, "No special effects."),
             card("Dreg", "Fallen", "Rare", 10, 1, "No special effects."),
             card("Thrall", "Hive", "Rare", 10, 1, "No special effects."),
@@ -118,7 +120,7 @@ class ShadowBatch1314VideoRulesTest {
 
     @Test fun shinkaGladiatorAddsOutgoingDamageWithoutChangingPower() {
         val e = engine()
-        for (c in listOf(0,1,3,4)) put(e, "Legionary", 0, c)
+        for (c in listOf(0,1,3,4)) put(e, "Line Ally", 0, c)
         val left = put(e, "Legionary", 1, 0)
         val selected = put(e, "Legionary", 1, 1)
         val right = put(e, "Legionary", 1, 2)
@@ -167,7 +169,7 @@ class ShadowBatch1314VideoRulesTest {
 
     @Test fun thagriusDealsTwiceLineLengthToOneEnemy() {
         val e = engine()
-        for (c in listOf(0,1,2,4,5)) put(e, "Legionary", 0, c)
+        for (c in listOf(0,1,2,4,5)) put(e, "Line Ally", 0, c)
         val foe = put(e, "Tracker", 0, 2, e.cpu)
         play(e, "Thagrius", 0, 3, ShadowEngine.Target(e.cpu, 0, 2))
         assertEquals(18, foe.power)

@@ -309,17 +309,22 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 }
             }
             "Drop Pod" -> if (line(actor, 2)) {
-                // The original video says a random 'Line' unit, not a random
-                // Cabal unit. Build the pool from cards with the printed Line affix.
-                val candidates = catalog.values.filter {
-                    it.isPlayable && it.name != "Drop Pod" &&
-                        ShadowPositionRules.hasLineAffix(it.effect)
-                }.sortedBy { it.name }
-                if (candidates.isNotEmpty()) {
-                    val randomCard = candidates[rng.nextInt(candidates.size)]
-                    spawnAt(me, actor.row, actor.column - 1, randomCard.name)
-                    log("Drop Pod summons Line unit: " + randomCard.name)
-                } else incomplete(actor.card, "No Line-affix summon candidates in catalog.")
+                // The effect requires a free LEFT slot. Do not falsely report
+                // a summon if the Line was formed on the actor's right.
+                val destination = actor.column - 1
+                if (!empty(me, actor.row, destination)) {
+                    log("Drop Pod: left slot unavailable; no unit summoned.")
+                } else {
+                    val candidates = catalog.values.filter {
+                        it.isPlayable && it.name != "Drop Pod" &&
+                            ShadowPositionRules.hasLineAffix(it.effect)
+                    }.sortedBy { it.name }
+                    if (candidates.isNotEmpty()) {
+                        val randomCard = candidates[rng.nextInt(candidates.size)]
+                        spawnAt(me, actor.row, destination, randomCard.name)
+                        log("Drop Pod summons Line unit: " + randomCard.name)
+                    } else incomplete(actor.card, "No Line-affix summon candidates in catalog.")
+                }
             }
             "Ning Fei" -> spawnRandom(foe, 1, "Clone", actor.card)
             "Cursed Thrall", "Exploder Shank" -> transferCursedThrall(actor)

@@ -36,7 +36,9 @@ class ShadowBatch0607EffectsTest {
             card("Guerrilla", "Humans", "Rare", 1, 2),
             card("Dreg", "Fallen", "Rare", 1, 1),
             card("Thrall", "Hive", "Rare", 1, 2),
-            card("Legionary", "Cabal", "Rare", 1, 2)
+            card("Legionary", "Cabal", "Rare", 1, 2),
+            card("Line Ally", "Cabal", "Rare", 1, 2,
+                "Sustained (2-Unit Line): Test printed Line affix.")
         )
         cards.first { it.name == "Rock" }.classification = "Summoned unit"
         cards.first { it.name == "Guerrilla" }.classification = "Summoned unit"
@@ -160,13 +162,13 @@ class ShadowBatch0607EffectsTest {
         assertEquals(4, ally.power)
     }
 
-    @Test fun centurionRequiresFourInLineBeforeBoostingAdjacent() {
+    @Test fun centurionRequiresFourPrintedLineUnitsBeforeBoostingAdjacent() {
         val e = engine()
-        val left = put(e, "Legionary", 1, 0)
+        val left = put(e, "Line Ally", 1, 0)
         val centurion = put(e, "Centurion", 1, 1)
-        val right = put(e, "Legionary", 1, 2)
+        val right = put(e, "Line Ally", 1, 2)
         assertEquals(2, e.power(left))
-        put(e, "Legionary", 1, 3)
+        put(e, "Line Ally", 1, 3)
         assertEquals(4, e.power(left))
         assertEquals(4, e.power(right))
         assertEquals(5, e.power(centurion))

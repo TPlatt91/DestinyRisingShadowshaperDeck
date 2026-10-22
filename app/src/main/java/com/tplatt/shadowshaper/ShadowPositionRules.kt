@@ -9,6 +9,35 @@ object ShadowPositionRules {
     fun hasLineAffix(effect: String): Boolean =
         Regex("""\b\d+[- ]Unit Line\b""", RegexOption.IGNORE_CASE).containsMatchIn(effect)
 
+    /**
+     * A Line consists of contiguous units bearing the PRINTED Line affix.
+     * Other Cabal cards, even when adjacent, interrupt it. A hypothetical
+     * placement supplies its printed card at an empty cell.
+     *
+     * Source: original Line keyword tooltip and player-reported Centurion
+     * combinations. Does not infer Line eligibility merely from faction.
+     */
+    @JvmStatic
+    fun contiguousLineUnits(
+        side: ShadowEngine.Player, row: Int, column: Int,
+        hypothetical: ShadowData.Card? = null
+    ): Int {
+        if (!ShadowRules.isOnBoard(row, column)) return 0
+        if (hypothetical != null && side.board[row][column] != null) return 0
+        val center = hypothetical ?: side.board[row][column]?.card ?: return 0
+        if (!hasLineAffix(center.effect)) return 0
+        var length = 1
+        for (c in column - 1 downTo 0) {
+            if (!hasLineAffix(side.board[row][c]?.card?.effect ?: "")) break
+            length++
+        }
+        for (c in column + 1 until ShadowRules.COLUMNS) {
+            if (!hasLineAffix(side.board[row][c]?.card?.effect ?: "")) break
+            length++
+        }
+        return length
+    }
+
     @JvmStatic
     fun isAdjacent(rowA: Int, columnA: Int, rowB: Int, columnB: Int): Boolean =
         rowA == rowB && kotlin.math.abs(columnA - columnB) == 1

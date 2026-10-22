@@ -52,6 +52,33 @@ class ShadowKotlinRulesTest {
         assertTrue(ShadowPositionRules.isSameColumn(0, 1, 1, 1))
     }
 
+    @Test fun printedLineAffixIsRequiredAndMixedFactionBreaksNoValidLine() {
+        val side = ShadowEngine.Player(true)
+        val cabal = card("Legionary", "Cabal").apply {
+            effect = "Sustained (Column): Gains +1 Power."
+        }
+        val hiveLine = card("Line Hive", "Hive").apply {
+            effect = "When Played (2-Unit Line): Test Line affix."
+        }
+        val cabalLine = card("Line Cabal", "Cabal").apply {
+            effect = "Sustained (3-Unit Line): Test Line affix."
+        }
+        fun put(c: ShadowData.Card, col: Int) {
+            side.board[0][col] = ShadowEngine.Unit(side, c, 0, col)
+        }
+        put(hiveLine, 0)
+        put(cabalLine, 1)
+        assertEquals(2, ShadowPositionRules.contiguousLineUnits(side, 0, 1))
+        assertEquals(3, ShadowPositionRules.contiguousLineUnits(side, 0, 2, cabalLine))
+        put(cabal, 2)
+        assertEquals(0, ShadowPositionRules.contiguousLineUnits(side, 0, 2))
+        assertEquals(2, ShadowPositionRules.contiguousLineUnits(side, 0, 1))
+        assertEquals(0, ShadowPositionRules.contiguousLineUnits(side, 0, 3, cabalLine))
+        assertFalse(ShadowPositionRules.hasLineAffix("Grants +2 Power to a Line unit."))
+        assertTrue(ShadowPositionRules.hasLineAffix("When Played (2 Unit Line): Summons a unit."))
+        assertTrue(ShadowPositionRules.hasLineAffix("Sustained (4-Unit Line): Gives +2 Power."))
+    }
+
     @Test fun kotlinDamageNeverBecomesNegative() {
         assertEquals(0, ShadowDamageRules.afterAuras(2, 0, 5))
         assertEquals(4, ShadowDamageRules.afterAuras(2, 3, 1))
