@@ -64,3 +64,16 @@ The following source changes were made on `main`:
 - **Local regression suite:** Added six scenarios in `ShadowRelocationAndAiTest.kt` for full-board relocation cancellation, destroyed movement targets, invalid destinations, automatic CPU movement, AI Back Row targeting and target-free CPU deployment.
 
 These are **source-code changes only**, not an asserted match to the original Destiny: Rising NPC AI. Exact NPC behavior, movement constraints on a filled battlefield and battle runtime remain pending original-game verification. No GitHub Actions or workflow credits were used. Run `run_local_engine_checks.bat` from the repository root to compile and run the local Android/JVM verification suite.
+
+## Simultaneous-effects and placement-event pass — 21 October 2026
+
+**Engine corrections pushed on `main`:**
+- **Two-phase destruction:** `ShadowEngine.sweep()` now removes *all* units defeated in the current death wave before evaluating their on-death abilities. A dead Clone is not eligible to absorb a different Clone's damage splash from the same defeat wave. Secondary deaths resolve on subsequent waves.
+- **Summon arrival timing:** Summoned units now run enemy placement watchers only if they survived their own ally placement buffs/counters, followed by a destruction sweep. Destroyed or transferred summons cannot cause false arrivals.
+- **Normal play timing:** The same survival gate now applies to normally played cards between ally placement and enemy placement resolution.
+- **Ongoing opposing placement watchers:** `fireEnemyPlacement` stops dispatching watchers once the originally placed unit no longer occupies its battlefield cell. This prevents late reactions to a stale target.
+- **Original target-centered splash audit:** Gwynn and Augmented Shank already used `adjacent(unit, picked)`, not caster adjacency, in the latest source. Their behavior is preserved and covered by new tests rather than altered unnecessarily.
+
+**Regression coverage:** `ShadowSimultaneousEffectsTest.kt` contains **five** local JVM tests: simultaneous Clone death waves; destroyed summoned Dreg; destroyed normally played Dreg; Augmented Shank target-centered splash; and Gwynn target-centered splash plus self-penalty.
+
+**Verification:** All five tests are committed but **not executed**. Run the repository's `run_local_engine_checks.bat` locally for JVM tests and Android debug build. No GitHub Actions minutes were consumed. Actual parity with the original client still requires match footage and full-round QA.
