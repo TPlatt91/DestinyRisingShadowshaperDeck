@@ -488,7 +488,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal fun suppress(target: Unit?) {
         if (target == null || !isPresent(target)) return
-        if (shieldAbsorbs(target, "Suppression")) return
+        // A printed "cannot be Suppressed" protection takes precedence over
+        // consuming an Overshield. No suppression attempt reaches the shield
+        // if Mind Disruptor already makes this target immune.
         val leftProtected = all(target.owner).any {
             it.card.name == "Mind Disruptor" && !it.suppressed &&
                 it !== target && it.row == target.row && it.column == target.column + 1
@@ -497,6 +499,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             log("MIND DISRUPTOR protects " + target.card.name + " from Suppression.")
             return
         }
+        if (shieldAbsorbs(target, "Suppression")) return
         target.power -= target.bonus
         target.bonus = 0
         target.suppressed = true
@@ -511,9 +514,22 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal fun damage(source: Unit, target: Unit?, amount: Int) {
         if (target == null || amount <= 0 || !isPresent(target)) return
+        // All outgoing bonuses, including the random Umeko addition, are
+        // part of the same damage event. Apply defender reductions AFTER
+        // collecting bonuses so protective auras cannot be bypassed.
+        var outgoing = effects.extraDamage(source)
+        if (all(source.owner).any {
+                !it.suppressed && it.card.name == "Umeko" && it.row == ShadowRules.BACK_ROW
+            }) outgoing += 1 + rng.nextInt(3)
         var actual = ShadowDamageRules.afterAuras(
-            amount, effects.extraDamage(source), effects.reduction(target)
+            amount, outgoing, effects.reduction(target)
         )
+        if (actual <= 0) {
+            log("DAMAGE PREVENTED ▶ " + target.card.name)
+            return
+        }
+        // An entirely prevented hit is not "damage dealt"; do not consume
+        // Jolder's next successful damage doubling in that case.
         val doubler = all(source.owner).firstOrNull {
             !it.suppressed && it.card.name == "Jolder" && !it.damageDoublerConsumed
         }
@@ -522,9 +538,6 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             doubler.damageDoublerConsumed = true
             log("Jolder doubles the next damage event without becoming Suppressed.")
         }
-        if (all(source.owner).any {
-                !it.suppressed && it.card.name == "Umeko" && it.row == ShadowRules.BACK_ROW
-            }) actual += 1 + rng.nextInt(3)
         dealDirect(source, target, actual)
     }
 
