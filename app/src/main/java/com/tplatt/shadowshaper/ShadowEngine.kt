@@ -528,8 +528,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             log("DAMAGE PREVENTED ▶ " + target.card.name)
             return
         }
-        // An entirely prevented hit is not "damage dealt"; do not consume
-        // Jolder's next successful damage doubling in that case.
+        // Overshield prevents the whole incoming damage event. Its hit
+        // is never "damage dealt" and must not use up Jolder's next
+        // successful-damage doubler.
+        if (shieldAbsorbs(target, "damage")) return
         val doubler = all(source.owner).firstOrNull {
             !it.suppressed && it.card.name == "Jolder" && !it.damageDoublerConsumed
         }
