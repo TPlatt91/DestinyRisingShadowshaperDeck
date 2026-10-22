@@ -800,8 +800,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         lastPlacedSide = if (destination.human) 0 else 1
         lastPlacedRow = 1
         lastPlacedColumn = column
+        // An actual second battlefield arrival follows the original
+        // hand-play placement. The UI must observe the new destination,
+        // not leave its placement marker attached to the vacated slot.
+        placementRevision++
         log(unit.card.name + " ▶ opponent Front Row " + (column + 1) + "; detonates on next original turn.")
         effects.fireEnemyPlacement(bomb)
+        sweep()
     }
 
     private fun startSide(side: Player) {
