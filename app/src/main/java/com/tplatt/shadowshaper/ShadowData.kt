@@ -152,6 +152,42 @@ object ShadowData {
         return output
     }
 
+    /**
+     * Build a legal CPU deck using actual card identities. A faction with
+     * fewer than 15 distinct playable cards may still form a legal 15-card
+     * deck with up to two copies of its available cards.
+     *
+     * Older code counted *names*, not *copies*, and silently fell back to a
+     * mixed deck (or an empty deck) even when a legal faction deck existed.
+     */
+    private fun completeCpuDeck(
+        catalog: Map<String, Card>, preferredNames: List<String>, candidates: List<Card>
+    ): LinkedHashMap<String, Int> {
+        val result = linkedMapOf<String, Int>()
+        val eligible = candidates.filter { it.isPlayable }.distinctBy { it.name }
+        val priority = (preferredNames.mapNotNull { catalog[it] }.filter { it in eligible } +
+            eligible).distinctBy { it.name }
+        var exotic = 0
+        var mythic = 0
+        var total = 0
+        // First take one copy of each preferred card, then fill using the
+        // permitted second copy. Both passes respect deck rarity caps.
+        for (pass in 1..2) {
+            for (card in priority) {
+                if (total >= DECK_SIZE) break
+                if ((result[card.name] ?: 0) >= pass) continue
+                if (card.rarity.equals("Exotic", true) && exotic >= EXOTIC_LIMIT) continue
+                if (card.rarity.equals("Mythic", true) && mythic >= MYTHIC_LIMIT) continue
+                result[card.name] = (result[card.name] ?: 0) + 1
+                if (card.rarity.equals("Exotic", true)) exotic++
+                if (card.rarity.equals("Mythic", true)) mythic++
+                total++
+            }
+        }
+        return if (total == DECK_SIZE && ShadowDeckRules.validate(result, catalog).isEmpty())
+            LinkedHashMap(result) else linkedMapOf()
+    }
+
     @JvmStatic
     fun opponentDeck(catalog: Map<String, Card>, faction: String?): LinkedHashMap<String, Int> {
         if (faction.isNullOrBlank() || faction.equals("Mixed", ignoreCase = true))
@@ -159,18 +195,8 @@ object ShadowData {
         val choices = catalog.values
             .filter { it.isPlayable && it.faction.equals(faction, ignoreCase = true) }
             .sortedWith(compareBy<Card> { it.numericCost() }.thenBy { it.name })
-        val result = linkedMapOf<String, Int>()
-        var exotic = 0
-        var mythic = 0
-        for (card in choices) {
-            if (card.rarity.equals("Exotic", true) && exotic >= EXOTIC_LIMIT) continue
-            if (card.rarity.equals("Mythic", true) && mythic >= MYTHIC_LIMIT) continue
-            result[card.name] = 1
-            if (card.rarity.equals("Exotic", true)) exotic++
-            if (card.rarity.equals("Mythic", true)) mythic++
-            if (result.size == DECK_SIZE) break
-        }
-        return if (result.size == DECK_SIZE) LinkedHashMap(result) else opponentDeck(catalog)
+        val factionDeck = completeCpuDeck(catalog, emptyList(), choices)
+        return if (factionDeck.isNotEmpty()) factionDeck else opponentDeck(catalog)
     }
 
     @JvmStatic
@@ -182,14 +208,8 @@ object ShadowData {
             "Donovan-17", "Mu Ying", "Sparrow", "Resilient Captain",
             "Scorpius", "Knight", "Carrier"
         )
-        val result = linkedMapOf<String, Int>()
-        for (name in presets) {
-            val card = catalog[name] ?: continue
-            if (!card.isPlayable) continue
-            if (card.rarity.equals("Exotic", true) || card.rarity.equals("Mythic", true)) continue
-            result[name] = 1
-            if (result.size == DECK_SIZE) break
-        }
-        return LinkedHashMap(if (result.size == DECK_SIZE) result else emptyMap())
+        val alternatives = catalog.values.filter { it.isPlayable }
+            .sortedWith(compareBy<Card> { it.numericCost() }.thenBy { it.name })
+        return completeCpuDeck(catalog, presets, alternatives)
     }
 }
