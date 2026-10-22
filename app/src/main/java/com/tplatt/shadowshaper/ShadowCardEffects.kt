@@ -14,7 +14,7 @@ import kotlin.math.min
  */
 internal class ShadowCardEffects(private val e: ShadowEngine) {
     private val allyTargets = setOf(
-        "Morgran", "Hyssop", "Umbliks Prime", "Knight", "Wizard", "Guarding Servitor",
+        "Morgran", "Hyssop", "Umbliks Prime", "Rossi-11", "Knight", "Wizard", "Guarding Servitor",
         "Finnala", "Chinnawat", "Attal", "Estela", "Vigile",
         "Sabikis", "Gladiator", "Shinka Gladiator"
     )
@@ -33,7 +33,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         "Tenacious Ogre", "Shrieker", "Saladin", "Tan-2",
         "Elite Sniper Vandal", "Ayuela", "Resilient Grenade Dreg",
         "Zhiyao", "Denzin", "Unrelenting Captain", "The Speaker",
-        "Guerrilla Captain", "Umeko", "Jolder", "Xur"
+        "Guerrilla Captain", "Umeko", "Jolder", "Xur",
+        "Mind Disruptor", "Resilient Captain"
     )
 
     fun isTargeted(name: String): Boolean = name in allyTargets || name in enemyTargets
@@ -102,8 +103,13 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         }
 
         when (name) {
-            "Sparrow", "Resilient Captain" -> buff(actor, 3)
+            "Sparrow" -> buff(actor, 3)
             "Elite Vandal" -> if (!rowEmpty(foe, 1)) buff(actor, 3)
+            "Rossi-11" -> {
+                val protectedUnit = picked ?: actor
+                protectedUnit.overshield = true
+                log("OVERSHIELD granted ▶ " + protectedUnit.card.name)
+            }
             "Umbliks Prime" -> {
                 val recipient = picked ?: actor
                 if (rng.nextBoolean()) {
@@ -241,7 +247,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             "Tomb Ship", "Drop Pod" ->
                 incomplete(actor.card, "Random faction summoning pool not confirmed.")
             "Ning Fei" -> spawnRandom(foe, 1, "Clone", actor.card)
-            "Cursed Thrall" -> transferCursedThrall(actor)
+            "Cursed Thrall", "Exploder Shank" -> transferCursedThrall(actor)
             "Shinka Scorpius", "Scorpius", "Elite Walker", "Pandora-7" -> { }
             else -> if (!noEffect(actor.card) && name !in knownSustained)
                 incomplete(actor.card, "No verified " +
@@ -279,8 +285,6 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 randomUnit(foe)?.let { damage(unit, it, 2) }
             if (unit === target && name == "Denzin")
                 spawnAt(own, unit.row, unit.column - 1, "Guerrilla")
-            if (unit === target && name == "Unrelenting Captain")
-                spawnAt(own, unit.row, unit.column - 1, "Dreg")
             if (unit === target && name == "Xur")
                 spawnRandom(foe, ShadowRules.FRONT_ROW, "Rock", unit.card)
         }
@@ -296,12 +300,35 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     fun fireAllyPlacement(newUnit: ShadowEngine.Unit) = with(e) {
         val own = newUnit.owner
         if (own.board[newUnit.row][newUnit.column] !== newUnit) return@with
+        if (newUnit.card.name == "Dreg") {
+            val unrelenting = all(own).count {
+                it.card.name == "Unrelenting Captain" && !it.suppressed
+            }
+            if (unrelenting > 0) buff(newUnit, unrelenting)
+        }
         for (watcher in all(own)) {
             if (watcher.card.name != "Grenade Dreg" || watcher.suppressed ||
                 watcher.row != newUnit.row || own.board[watcher.row][watcher.column] !== watcher)
                 continue
             buff(watcher, 1)
             log("Grenade Dreg +1 Power: " + newUnit.card.name + " deployed in its row.")
+        }
+    }
+
+    /** Resilient Captain: allied Fallen deal damage, summon at most six Dregs. */
+    fun fireFallenDamage(source: ShadowEngine.Unit) = with(e) {
+        if (!source.card.faction.equals("Fallen", true)) return@with
+        if (source.owner.board[source.row][source.column] !== source) return@with
+        for (captain in all(source.owner)) {
+            if (captain.card.name != "Resilient Captain" || captain.suppressed ||
+                captain.resilientCaptainDregs >= 6) continue
+            val col = captain.column + 1
+            if (!empty(source.owner, captain.row, col)) continue
+            spawnAt(source.owner, captain.row, col, "Dreg")
+            if (at(source.owner, captain.row, col)?.card?.name == "Dreg") {
+                captain.resilientCaptainDregs++
+                log("Resilient Captain summons Dreg " + captain.resilientCaptainDregs + "/6.")
+            }
         }
     }
 
