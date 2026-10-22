@@ -94,6 +94,24 @@ class ShadowSimultaneousEffectsTest {
         assertTrue(e.journal.any { it.contains("DESTROYED ▶ Dreg") })
     }
 
+    @Test fun deadPlayedCardCannotTriggerEnemyPlacementWatcher() {
+        val e = engine()
+        put(e, "Unrelenting Captain", e.human, 0, 0)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 0)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 1)
+        val zhiyao = put(e, "Zhiyao", e.cpu, 0, 2)
+        // Two sniper responses defeat a 1+1 Power Dreg during ally placement.
+        e.catalog.getValue("Dreg").power = "1"
+        e.human.hand.add(e.catalog.getValue("Dreg"))
+
+        assertTrue(e.lastActionError,
+            e.play(e.human, e.human.hand.lastIndex, ShadowRules.FRONT_ROW, 2, null))
+        assertNull(e.human.board[ShadowRules.FRONT_ROW][2])
+        assertEquals(10, zhiyao.power)
+        assertEquals(0, zhiyao.bonus)
+        assertTrue(e.journal.any { it.contains("DESTROYED ▶ Dreg") })
+    }
+
     @Test fun augmentedShankSplashStaysOnSelectedEnemyRow() {
         val e = engine()
         val left = put(e, "Dreg", e.cpu, 1, 1)
