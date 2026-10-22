@@ -473,9 +473,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         }
         try {
             effects.onBuff(target)
+            // A triggered ability may destroy or move the buff recipient
+            // before counter-effects get a chance to fire.
+            sweep()
             val foe = other(target.owner)
-            // Check live battlefield membership after each nested trigger:
-            // the buff itself may have killed its target or retaliating sniper.
             for (sniper in all(foe)) {
                 if (!isPresent(target)) break
                 if (!isPresent(sniper) || sniper.card.name != "Elite Sniper Vandal" ||
@@ -484,8 +485,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
                 if (sniper.sniperLastHitTurn[target] == actionTurnId()) continue
                 sniper.sniperLastHitTurn[target] = actionTurnId()
                 damage(sniper, target, 1)
+                // Each retaliatory damage event fully resolves before the
+                // next sniper's once-per-turn response can be considered.
+                sweep()
             }
-            sweep()
         } finally {
             resolutionDepth--
         }
