@@ -141,3 +141,16 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 - **Eight regression cases** in `ShadowSaladinRetaliationChainTest.kt` cover two-Saladin rescue from a lethal-looking hit, insufficient single-Saladin rescue, Tan-2's one-bonus consumption, two nested snipers, Suppression of one responder, Overshield and full mitigation, independent later hits, and Saladin's response when it is itself the damaged Human.
 
 **Caveat:** Both printed Saladin (+3 whenever your Human unit takes damage) and Elite Sniper Vandal (one hit per enemy unit per turn) are grounded in the user's original in-game recorded card text, but whether all simultaneously triggered Saladins respond ahead of sniper/defeat resolution needs direct original-client replay verification. This engine uses event-batched Power gains to prevent partial resolution and premature unit removal. No Gradle/JVM tests or Android build were executed during this remote source update and no GitHub Actions were invoked.
+
+## Stacked Scorched effects and independent source damage — 22 October 2026
+
+**Existing engine bug:** Both Ayuela and Resilient Grenade Dreg give a newly arrived opposing unit a two-turn damage effect. The previous model stored only `scorched`, `scorchTurns` and `scorchSource` on the victim, so when two identical watchers reacted to the same arrival, the second watcher **overwrote** the first instead of creating its own damage event. This also lost the original caster's attribution and prevented independent expiry.
+
+**Changes pushed:**
+- Introduced `ShadowEngine.ScorchEffect(source, damage, turns)` and a per-unit `scorchEffects` collection. `addScorch()` retains each separate original source and lifetime; `syncScorchView()` continues exposing aggregate `scorched` and `scorchTurns` and the single caster where unambiguous, preserving the legacy UI and preexisting tests.
+- Both `fireEnemyPlacement` sources now append separate two-turn 2-damage effects instead of replacing a single pending status.
+- Owner end-turn processing applies each hit and settles death effects before attempting the next status hit. A destroyed unit is not damaged again from a second expired/pending source. Each tick keeps the originating card as its damage source (important for Fallen damage reactions and Saladin).
+- Suppression removes *all* active Scorched instances; it does **not** confer permanent immunity to being Scorched by a later separate status application. Direct assignments of the previous three status fields are still accepted for compatibility.
+- `ShadowStackedScorchTest.kt` adds **seven** JUnit scenarios: two Ayuelas, two Resilient Grenade Dregs, independent source persistence after watcher removal, suppression cleanup, staggered expirations, lethal first tick, and distinct Saladin / Elite Sniper Vandal responses during a stacked tick.
+
+**Original-client caveat:** The user-recorded text confirms each caster deals damage over two turns but does not explicitly reveal exact interactions between duplicate casters; treating them as separate instances is a reasoned implementation based on their independent printed ability activations. Recheck against real-game footage when available. The new Kotlin/JUnit tests have been committed, **not run**, and no GitHub Actions were triggered.
