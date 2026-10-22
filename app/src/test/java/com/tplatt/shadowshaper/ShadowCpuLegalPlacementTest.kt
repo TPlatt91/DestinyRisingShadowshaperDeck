@@ -15,9 +15,9 @@ class ShadowCpuLegalPlacementTest {
             this.effect = effect
         }
 
-    @Test fun cpuDoesNotWasteTurnAttemptingAnIllegalTargetedPlacement() {
+    @Test fun cpuPrefersBasicUnitWhenGladiatorHasNoAllyToBuff() {
         val cards = listOf(
-            card("Gladiator", "When Played: Deals damage to a front-row opposing unit."),
+            card("Gladiator", "When Played (Front Row): Allied selected Front Row unit and neighbors gain +1 damage."),
             card("Dreg")
         ).associateBy { it.name }
         val e = ShadowEngine(cards, 9L)
@@ -34,19 +34,23 @@ class ShadowCpuLegalPlacementTest {
         assertEquals("Gladiator", e.cpu.hand.single().name)
     }
 
-    @Test fun cpuUsesLegalTargetWhenAvailable() {
+    @Test fun cpuUsesLegalAllyTargetAndAppliesGladiatorDamageBonus() {
         val cards = listOf(
-            card("Gladiator", "When Played: Deals damage to a front-row opposing unit."),
+            card("Gladiator", "When Played (Front Row): Allied selected Front Row unit and neighbors gain +1 damage."),
             card("Dreg")
         ).associateBy { it.name }
         val e = ShadowEngine(cards, 11L)
         e.humanTurn = false
         e.cpu.points = 1
         e.cpu.hand.add(cards.getValue("Gladiator"))
-        val human = ShadowEngine.Unit(e.human, cards.getValue("Dreg"), 1, 0)
-        e.human.board[1][0] = human
+        // Gladiator grants outgoing damage to an allied Front Row unit,
+        // never to an enemy unit; old test had the recipient on wrong side.
+        val ally = ShadowEngine.Unit(e.cpu, cards.getValue("Dreg"), 1, 0)
+        e.cpu.board[1][0] = ally
         assertTrue(e.cpuPlayOne())
-        assertTrue(e.cpu.board.flatMap { it.toList() }.filterNotNull().any { it.card.name == "Gladiator" })
+        assertTrue(e.cpu.board[ShadowRules.FRONT_ROW].filterNotNull()
+            .any { it.card.name == "Gladiator" })
+        assertEquals(1, ally.damageBonus)
         assertTrue(e.cpu.hand.isEmpty())
     }
 }

@@ -7,7 +7,8 @@ import kotlinx.coroutines.flow.asStateFlow
 /** Kotlin state boundary for the game engine during incremental Java -> Kotlin migration.
  *
  * All mutations go through this coordinator; current complex effect resolution
- * remains in ShadowEngine.java until each mechanic is ported with regression tests.
+ * remains in the shared Kotlin ShadowEngine/ShadowCardEffects implementations,
+ * with regression tests for each audited mechanic.
  */
 data class ShadowBattleSnapshot(
     val round: Int,
