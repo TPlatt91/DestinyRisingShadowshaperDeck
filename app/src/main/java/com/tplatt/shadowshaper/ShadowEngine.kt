@@ -27,10 +27,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     ) {
         @JvmField var power: Int = max(0, card.numericPower())
         @JvmField var bonus: Int = 0
+        // Compatibility-facing aggregate values for a unit's Scorched state.
         @JvmField var scorched: Int = 0
         @JvmField var scorchTurns: Int = 0
-        /** The unit that inflicted Scorched, so damage triggers credit the caster. */
+        /** One source when unambiguous; null when multiple scorch sources stack. */
         @JvmField var scorchSource: Unit? = null
+        /** Individual incoming Scorched attacks retain source and expiry. */
+        @JvmField val scorchEffects: ArrayList<ScorchEffect> = ArrayList()
         @JvmField val timedBonuses: ArrayList<TimedBonus> = ArrayList()
         @JvmField var inspired = false
         @JvmField var suppressed = false
@@ -49,6 +52,11 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     class TimedBonus(@JvmField val value: Int, @JvmField var turns: Int)
+    class ScorchEffect(
+        @JvmField val source: Unit?,
+        @JvmField val damage: Int,
+        @JvmField var turns: Int
+    )
 
     class Player(@JvmField val human: Boolean) {
         @JvmField val drawPile = ArrayList<ShadowData.Card>()
@@ -624,6 +632,27 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         if (it.isEmpty()) null else it[rng.nextInt(it.size)]
     }
 
+    /**
+     * Accept a separately recorded Scorched effect. Earlier single-status
+     * tests and saved UI code still use scorched/scorchTurns/scorchSource.
+     */
+    internal fun syncScorchView(unit: Unit) {
+        val active = unit.scorchEffects.filter { it.turns > 0 && it.damage > 0 }
+        unit.scorched = active.sumOf { it.damage }
+        unit.scorchTurns = active.maxOfOrNull { it.turns } ?: 0
+        unit.scorchSource = if (active.size == 1) active.first().source else null
+    }
+
+    internal fun addScorch(target: Unit, source: Unit, damage: Int, turns: Int) {
+        if (!isPresent(target) || target.suppressed || damage <= 0 || turns <= 0) return
+        if (target.scorchEffects.isEmpty() && target.scorchTurns > 0 && target.scorched > 0)
+            target.scorchEffects.add(
+                ScorchEffect(target.scorchSource, target.scorched, target.scorchTurns)
+            )
+        target.scorchEffects.add(ScorchEffect(source, damage, turns))
+        syncScorchView(target)
+    }
+
     internal fun suppress(target: Unit?) {
         if (target == null || !isPresent(target)) return
         // A printed "cannot be Suppressed" protection takes precedence over
@@ -646,6 +675,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.scorched = 0
         target.scorchTurns = 0
         target.scorchSource = null
+        target.scorchEffects.clear()
         target.timedBonuses.clear()
         log("SUPPRESSED ▶ " + target.card.name)
     }

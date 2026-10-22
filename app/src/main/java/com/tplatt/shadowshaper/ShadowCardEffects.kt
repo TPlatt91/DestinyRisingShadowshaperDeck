@@ -447,9 +447,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             if (!isPresent(newUnit)) break
             if (watcher.suppressed || !isPresent(watcher)) continue
             if (newUnit.row == 1 && watcher.card.name == "Ayuela" && watcher.row == 0) {
-                newUnit.scorched = 2
-                newUnit.scorchTurns = 2
-                newUnit.scorchSource = watcher
+                addScorch(newUnit, watcher, 2, 2)
                 log("SCORCHED ▶ " + newUnit.card.name + " for 2 turns.")
             }
             if (newUnit.row == ShadowRules.FRONT_ROW &&
@@ -466,9 +464,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             }
             if (newUnit.row == 0 &&
                 watcher.card.name == "Resilient Grenade Dreg" && watcher.row == 0) {
-                newUnit.scorched = 2
-                newUnit.scorchTurns = 2
-                newUnit.scorchSource = watcher
+                addScorch(newUnit, watcher, 2, 2)
                 log("SCORCHED ▶ " + newUnit.card.name +
                     " for 2 turns (Resilient Grenade Dreg).")
             }
@@ -482,18 +478,27 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             // Inspired can trigger retaliation and immediately destroy the
             // inspired unit. Do not resolve the rest of its stale snapshot.
             if (!isPresent(unit)) continue
-            if (unit.scorchTurns > 0) {
-                unit.scorchTurns--
-                // Scorched is enemy-origin damage. Using the victim as the
-                // source wrongly fires that victim's "Fallen deals damage"
-                // effects and credits an opponent's ongoing effect to them.
-                dealDirect(unit.scorchSource ?: unit, unit, unit.scorched)
-                sweep()
-                if (!isPresent(unit)) continue
-                if (unit.scorchTurns == 0) {
-                    unit.scorched = 0
-                    unit.scorchSource = null
+            // Preserve compatibility with older saved/test status fields.
+            // New placements go directly into distinct ScorchEffect entries.
+            if (unit.scorchEffects.isEmpty() && unit.scorchTurns > 0 && unit.scorched > 0)
+                unit.scorchEffects.add(
+                    ShadowEngine.ScorchEffect(
+                        unit.scorchSource, unit.scorched, unit.scorchTurns
+                    )
+                )
+            if (unit.scorchEffects.isNotEmpty()) {
+                for (effect in unit.scorchEffects.toList()) {
+                    if (!isPresent(unit)) break
+                    if (effect !in unit.scorchEffects || effect.turns <= 0) continue
+                    effect.turns--
+                    // Individual enemy sources get attribution on each tick.
+                    // A first lethal Scorched hit must stop further ticks.
+                    dealDirect(effect.source ?: unit, unit, effect.damage)
+                    sweep()
+                    if (effect.turns <= 0) unit.scorchEffects.remove(effect)
                 }
+                if (!isPresent(unit)) continue
+                syncScorchView(unit)
             }
             if (unit.card.name == "Elite Sniper Vandal" && unit.sniperTurnsRemaining > 0)
                 unit.sniperTurnsRemaining--
