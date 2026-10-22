@@ -644,7 +644,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun addScorch(target: Unit, source: Unit, damage: Int, turns: Int) {
-        if (!isPresent(target) || target.suppressed || damage <= 0 || turns <= 0) return
+        // Suppression clears existing statuses; it does not create blanket
+        // immunity to a new independently inflicted Scorched effect.
+        if (!isPresent(target) || damage <= 0 || turns <= 0) return
         if (target.scorchEffects.isEmpty() && target.scorchTurns > 0 && target.scorched > 0)
             target.scorchEffects.add(
                 ScorchEffect(target.scorchSource, target.scorched, target.scorchTurns)
