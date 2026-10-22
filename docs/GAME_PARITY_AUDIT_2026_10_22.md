@@ -77,3 +77,14 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 - Updated outdated UI audit labels for Helhest (damage-based bonus after prevention/overkill) and Tomb Ship (summon-only Shade permitted in its pool). Updated an outdated Kotlin migration comment.
 
 **Testing limitation:** The new and strengthened Kotlin tests have been committed and source reviewed, but **not executed** using Gradle, an Android emulator, or a device during this GitHub-only pass. Run `run_local_engine_checks.bat` on the user's PC when available; do not run GitHub Actions or workflows that consume usage credits. Observed failures should be fixed before certifying gameplay parity.
+
+## Full-match event-ordering and durable CPU diagnostics — 22 October 2026
+
+**Implemented and pushed:**
+- **Grenade Dreg placement watchers:** `fireAllyPlacement` stops dispatching subsequent arrival reactions if the incoming unit is defeated and removed during an earlier placement bonus (for example, when Unrelenting Captain grants a summoned Dreg +1 Power and two Elite Sniper Vandals counterattack). The behavior now matches the live-unit membership check already used by enemy arrival watchers. Existing live arrivals still trigger one matching bonus for each eligible Grenade Dreg.
+- **Two new ordering regressions** in `ShadowSimultaneousEffectsTest.kt`: lethal arrival cancels downstream Grenade Dreg responses, whereas a surviving summoned ally grants +1 to both watching Grenade Dregs.
+- **Durable CPU rejection telemetry:** `ShadowEngine.rejectedCpuMoves` records rejected computer plays without relying on the rolling 90-entry event journal. Reset on match start and displayed in `diagnosticReport()`. A rejected play increments this counter at the point the CPU receives the failed result.
+- **Twenty full-match test scenarios** now assert `rejectedCpuMoves == 0` after each simulated turn and at final scoring, ensuring errors remain detectable even after older event lines roll off.
+- **Three new diagnostic tests** in `ShadowCpuDiagnosticsTest.kt` verify long-log persistence, match reset, and an ordinary legal CPU move.
+
+**Validation status:** Source files and GitHub branch changes are verified. **The JVM/Gradle test cases have not been executed** on the unavailable Android development PC and no GitHub Actions workflows were run. Treat runtime/parity claims as pending until `run_local_engine_checks.bat` successfully completes.
