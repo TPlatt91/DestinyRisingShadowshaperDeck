@@ -12,7 +12,7 @@ object ShadowEffectCoverage {
             // Original video mechanics for these five cards have now been
             // coded. They remain SCRIPTED / QA PENDING until local and device
             // regression tests actually pass.
-            "Tomb Ship" -> "INCOMPLETE: Random Hive summon pool needs verification."
+            "Tomb Ship" -> "SCRIPTED / QA PENDING: Random Hive summons implemented using verified constructible Hive catalog; exact hidden pool needs verification."
             "Drop Pod" -> "SCRIPTED / QA PENDING: Summons from printed Line-affix card pool; confirm exact random pool against game."
             "Xuan Wei" -> "SCRIPTED / QA PENDING: Front Row 5-damage and relocation; confirm full-board behavior."
             else -> "SCRIPTED / QA PENDING: Engine behavior has not passed full in-game verification."

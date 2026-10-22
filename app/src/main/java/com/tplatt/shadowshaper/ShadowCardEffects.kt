@@ -252,9 +252,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 log("Kevarrh: draw 2.")
             }
             "Luksis-3" -> {
-                val rocks = all(foe).count {
-                    it.card.name in setOf("Rock", "Rock Pile")
-                }
+                // The recorded effect names "Rocks", not "Rock Piles".
+                val rocks = all(foe).count { it.card.name == "Rock" }
                 buff(actor, rocks * 2)
             }
             "Carrier", "Ketch" -> {
@@ -267,7 +266,24 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 spawnAt(me, actor.row, actor.column - 1, "Guerrilla")
                 spawnAt(me, actor.row, actor.column + 1, "Guerrilla")
             }
-            "Tomb Ship" -> incomplete(actor.card, "Random Hive summon pool unverified.")
+            "Tomb Ship" -> {
+                // Recorded: one random Hive unit on EACH side of the Tomb Ship.
+                // The exact hidden game summon pool is not exposed by the clip,
+                // so use the verified, constructible Hive units in our catalog.
+                val hivePool = catalog.values.filter {
+                    it.faction.equals("Hive", true) && it.isPlayable
+                }.sortedBy { it.name }
+                if (hivePool.isEmpty()) {
+                    incomplete(actor.card, "No playable Hive units in the card catalog.")
+                } else {
+                    for (col in listOf(actor.column - 1, actor.column + 1)) {
+                        if (empty(me, actor.row, col)) {
+                            val randomHive = hivePool[rng.nextInt(hivePool.size)]
+                            spawnAt(me, actor.row, col, randomHive.name)
+                        }
+                    }
+                }
+            }
             "Drop Pod" -> if (line(actor, 2)) {
                 // The original video says a random 'Line' unit, not a random
                 // Cabal unit. Build the pool from cards with the printed Line affix.
@@ -421,6 +437,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 "Shinka Scorpius" -> if (line(unit, 3))
                     randomUnit(other(side))?.let { damage(unit, it, 2) }
                 "Elite Walker" -> {
+                    if (unit.row != ShadowRules.BACK_ROW) continue
                     val targets = all(other(side))
                     Collections.shuffle(targets, rng)
                     for (victim in targets.take(2))
