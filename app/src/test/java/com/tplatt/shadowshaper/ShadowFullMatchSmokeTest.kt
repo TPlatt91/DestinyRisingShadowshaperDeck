@@ -204,6 +204,13 @@ class ShadowFullMatchSmokeTest {
                 for (turn in 0 until ShadowRules.ROUNDS * 2) {
                     if (e.humanTurn) playPlayerTurn(e) else playCpuTurn(e)
                     assertBoardInvariant(e)
+                    // Any rejected CPU move indicates a targeting/placement
+                    // legality mismatch that can waste remaining Light.
+                    assertFalse(
+                        "CPU attempted an invalid move: faction=" + faction +
+                            " seed=" + seed + "\\n" + e.diagnosticReport(),
+                        e.journal.any { it.startsWith("CPU rejected move:") }
+                    )
                     if (!e.finished) {
                         assertNull("Pending relocation after end of turn", e.pendingMovedUnit)
                     }
@@ -213,6 +220,24 @@ class ShadowFullMatchSmokeTest {
                         "\n" + e.diagnosticReport(), e.finished
                 )
                 assertTrue(e.result() in setOf("VICTORY", "DEFEAT", "DRAW"))
+                assertEquals(
+                    "Match must finish after exactly twelve player turns",
+                    ShadowRules.ROUNDS * 2,
+                    (e.round - 1) * 2 + e.completedTurns
+                )
+                assertNull("Relocation left pending at final score", e.pendingMovedUnit)
+                assertEquals(
+                    "Final player score differs from visible board Power",
+                    e.human.board.flatMap { it.toList() }.filterNotNull()
+                        .sumOf { e.power(it) },
+                    e.score(e.human)
+                )
+                assertEquals(
+                    "Final CPU score differs from visible board Power",
+                    e.cpu.board.flatMap { it.toList() }.filterNotNull()
+                        .sumOf { e.power(it) },
+                    e.score(e.cpu)
+                )
             }
         }
     }
