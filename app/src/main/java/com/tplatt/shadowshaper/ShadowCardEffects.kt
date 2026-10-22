@@ -335,37 +335,44 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     }
 
     fun onBuff(target: ShadowEngine.Unit) = with(e) {
+        if (!isPresent(target) || target.suppressed) return@with
         val own = target.owner
         val foe = other(own)
-        for (unit in all(own)) {
-            if (unit.suppressed) continue
-            val name = unit.card.name
-            if (unit === target && name in setOf("Ogre", "Tenacious Ogre", "Shrieker")) {
-                if (name != "Shrieker" || unit.row == ShadowRules.BACK_ROW) {
-                    val targets = all(foe)
-                    Collections.shuffle(targets, rng)
-                    val count = when (name) {
+        when (target.card.name) {
+            "Ogre", "Tenacious Ogre", "Shrieker" -> {
+                if (target.card.name != "Shrieker" ||
+                    target.row == ShadowRules.BACK_ROW) {
+                    val victims = all(foe)
+                    Collections.shuffle(victims, rng)
+                    val count = when (target.card.name) {
                         "Tenacious Ogre" -> 4
                         "Ogre" -> 2
                         else -> 1
                     }
-                    val amount = if (name == "Shrieker") 2 else 1
-                    for (victim in targets.take(count)) damage(unit, victim, amount)
+                    val amount = if (target.card.name == "Shrieker") 2 else 1
+                    for (victim in victims.take(count)) {
+                        if (!isPresent(target)) break
+                        if (!isPresent(victim)) continue
+                        damage(target, victim, amount)
+                        // Defeated Clones can eliminate later snapshot victims.
+                        // Resolve each hit before the next distinct attack.
+                        sweep()
+                    }
                 }
             }
-            if (unit === target && name == "The Disfavored" && unit.row == 1) {
-                val hive = faction(own, "Hive")
-                hive.remove(target)
-                if (hive.isNotEmpty()) buff(hive[rng.nextInt(hive.size)], 2)
+            "The Disfavored" -> if (target.row == ShadowRules.FRONT_ROW &&
+                claimDisfavoredTrigger(target)) {
+                val others = faction(own, "Hive").filter { it !== target }
+                if (others.isNotEmpty()) buff(others[rng.nextInt(others.size)], 2)
             }
-            if (unit === target && name == "The Speaker" && unit.row == 0)
-                buff(at(own, unit.row, unit.column + 1), 2)
-            if (unit === target && name == "Guerrilla Captain")
-                randomUnit(foe)?.let { damage(unit, it, 2) }
-            if (unit === target && name == "Denzin")
-                spawnAt(own, unit.row, unit.column - 1, "Guerrilla")
-            if (unit === target && name == "Xur")
-                spawnRandom(foe, ShadowRules.FRONT_ROW, "Rock", unit.card)
+            "The Speaker" -> if (target.row == ShadowRules.BACK_ROW)
+                buff(at(own, target.row, target.column + 1), 2)
+            "Guerrilla Captain" ->
+                randomUnit(foe)?.let { damage(target, it, 2) }
+            "Denzin" ->
+                spawnAt(own, target.row, target.column - 1, "Guerrilla")
+            "Xur" ->
+                spawnRandom(foe, ShadowRules.FRONT_ROW, "Rock", target.card)
         }
     }
 

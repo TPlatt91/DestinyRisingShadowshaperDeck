@@ -83,6 +83,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal val effects = ShadowCardEffects(this)
     private var resolutionDepth = 0
+    // Identity-based: two copies of The Disfavored are separate sources.
+    // A source may activate once per causal bonus chain. The set is cleared
+    // between independent bonuses, not once per turn.
+    private val disfavoredTriggeredInChain =
+        Collections.newSetFromMap(IdentityHashMap<Unit, Boolean>())
+    internal fun claimDisfavoredTrigger(source: Unit): Boolean =
+        disfavoredTriggeredInChain.add(source)
     internal fun actionTurnId(): Int = (round - 1) * 2 + completedTurns
 
     internal fun log(message: String) {
@@ -108,6 +115,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         // A replay using this match's seed must produce the same opening
         // coin toss, shuffle and random decisions after restart.
         rng.setSeed(seed)
+        disfavoredTriggeredInChain.clear()
         clear(human)
         clear(cpu)
         journal.clear()
@@ -527,6 +535,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal fun buff(target: Unit?, amount: Int) {
         if (target == null || amount <= 0 || !isPresent(target)) return
+        // Stop pathological recursive bonuses before mutating Power.
+        // The Disfavored cycle guard normally prevents this path.
+        if (resolutionDepth >= 32) {
+            unresolvedEffects++
+            log("SAFETY: recursive Power bonus rejected after 32 resolutions.")
+            return
+        }
         var applied = amount
         val doubler = all(target.owner).firstOrNull {
             !it.suppressed && it.card.name == "Tan-2" && !it.bonusDoublerConsumed
@@ -543,12 +558,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     private fun onBuff(target: Unit) {
-        if (resolutionDepth++ > 32) {
-            resolutionDepth--
-            unresolvedEffects++
-            log("SAFETY: recursive Power triggers capped after 32 resolutions.")
-            return
-        }
+        if (resolutionDepth == 0) disfavoredTriggeredInChain.clear()
+        resolutionDepth++
         try {
             effects.onBuff(target)
             // A triggered ability may destroy or move the buff recipient
@@ -569,6 +580,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             }
         } finally {
             resolutionDepth--
+            if (resolutionDepth == 0) disfavoredTriggeredInChain.clear()
         }
     }
 
