@@ -249,6 +249,19 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         } else message = e.lastActionError
     }
 
+    fun shieldRossiSelf() {
+        val e = engine ?: return
+        val co = current ?: return
+        val position = pendingPosition ?: return
+        val card = e.human.hand.getOrNull(selectedIndex) ?: return
+        if (card.name != "Rossi-11") return
+        if (co.play(e.human, selectedIndex, position.first, position.second, null)) {
+            selectedIndex = -1
+            pendingPosition = null
+            message = "Overshield granted to Rossi-11."
+        } else message = e.lastActionError
+    }
+
     BackHandler(settingsDialog || engine != null) {
         if (settingsDialog) settingsDialog = false else exitConfirmation = true
     }
@@ -539,6 +552,17 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     }
                 }
                 Column(Modifier.width(if (compactLayout) 106.dp else 120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (pendingPosition != null &&
+                        engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
+                        Button(
+                            onClick = { shieldRossiSelf() },
+                            enabled = snapshot.playerTurn && !snapshot.finished,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("SHIELD SELF", fontSize = 10.sp,
+                                fontWeight = FontWeight.Black)
+                        }
+                    }
                     Button(
                         enabled = snapshot.playerTurn && !snapshot.finished,
                         onClick = {

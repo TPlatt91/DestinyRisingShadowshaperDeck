@@ -32,7 +32,9 @@ class ShadowProtectionAndDamageTest {
             card("Shinka Phalanx", "Cabal",
                 "Sustained (Column): Units directly in front of or behind take 1 less damage."),
             card("Saladin", "Humans",
-                "Sustained: Human allies receiving damage gain +3 Power.")
+                "Sustained: Human allies receiving damage gain +3 Power."),
+            card("Rossi-11", "Humans",
+                "When Played: Grants Overshield to one of your units.", 3)
         ).associateBy { it.name }
         return ShadowEngine(cards, seed)
     }
@@ -134,6 +136,22 @@ class ShadowProtectionAndDamageTest {
         assertFalse(defender.overshield)
         e.damage(source, defender, 2)
         assertEquals(9, defender.power)
+    }
+
+    @Test fun rossiCanShieldItselfEvenWhenOtherAlliesAreAvailable() {
+        val e = engine()
+        e.humanTurn = true
+        e.human.points = 2
+        place(e, "Dreg", e.human, 0, 0)
+        val rossi = e.catalog.getValue("Rossi-11")
+        e.human.hand.add(rossi)
+        val options = e.targetOptions(e.human, rossi, 1, 2)
+        assertEquals(1, options.size)
+        assertTrue(e.validatePlay(e.human, 0, 1, 2, null).isEmpty())
+        assertTrue(e.play(e.human, 0, 1, 2, null))
+        assertTrue(e.human.board[1][2]!!.overshield)
+        assertEquals(3, e.human.board[1][2]!!.power)
+        assertEquals(1, e.human.points)
     }
 
     @Test fun saladinBuffsOnlyAfterActualDamageNotBlockedHit() {

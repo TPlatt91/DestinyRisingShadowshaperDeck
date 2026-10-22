@@ -270,7 +270,11 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (choices.none {
                     it.owner === target.owner && it.row == target.row && it.column == target.column
                 }) return "That unit is not a legal target for " + card.name + "."
-        } else if (choices.isNotEmpty()) return "Choose a target for " + card.name + "."
+        } else if (choices.isNotEmpty() && card.name != "Rossi-11") {
+            return "Choose a target for " + card.name + "."
+        }
+        // A null target explicitly means self for Rossi-11: the target card
+        // is only placed on the board after the action is committed.
         return ""
     }
 
