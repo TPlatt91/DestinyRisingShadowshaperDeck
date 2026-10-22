@@ -59,6 +59,30 @@ class ShadowCpuTargetEvaluationTest {
         assertEquals(0, target!!.column)
     }
 
+    @Test fun lethalVandalHitBeatsAnExtremelyHighPowerEnemy() {
+        val e = fixture()
+        put(e, "Dreg", e.human, 1, 0, rawPower = 2)
+        put(e, "Dreg", e.human, 1, 2, rawPower = 80)
+
+        assertEquals(0, selected(e, "Vandal")!!.column)
+    }
+
+    @Test fun fixedDamagePrefersAUnitNearerToEliminationWhenNeitherIsLethal() {
+        val e = fixture()
+        put(e, "Dreg", e.human, 1, 0, rawPower = 3)
+        put(e, "Dreg", e.human, 1, 2, rawPower = 50)
+
+        assertEquals(0, selected(e, "Vandal")!!.column)
+    }
+
+    @Test fun areaDamageStillFavorsClusterOverHugeSingleEnemy() {
+        val e = fixture()
+        for (col in 0..2) put(e, "Dreg", e.human, 0, col, rawPower = 4)
+        put(e, "Dreg", e.human, 1, 3, rawPower = 80)
+
+        assertEquals(0, selected(e, "Ikora")!!.row)
+    }
+
     @Test fun directDamagePrefersAnUnshieldedUnitToAnOvershieldedOne() {
         val e = fixture()
         val shielded = put(e, "Dreg", e.human, 1, 1, rawPower = 16)
