@@ -34,7 +34,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         "Elite Sniper Vandal", "Ayuela", "Resilient Grenade Dreg",
         "Zhiyao", "Denzin", "Unrelenting Captain", "The Speaker",
         "Guerrilla Captain", "Umeko", "Jolder", "Xur",
-        "Mind Disruptor", "Resilient Captain"
+        "Mind Disruptor", "Resilient Captain", "Helhest"
     )
 
     fun isTargeted(name: String): Boolean = name in allyTargets || name in enemyTargets
@@ -85,7 +85,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         for (other in all(source.owner)) {
             if (other.suppressed) continue
             if (other.card.name == "Servitor") bonus++
-            if (other.card.name == "Juggernaut" &&
+            if (other.card.name == "Juggernaut" && partnerInColumn(other) &&
                 source.card.faction.equals("Cabal", true) && adjacent(other, source)) bonus++
             if (other.card.name == "Shinka Decurion" && line(other, 3) &&
                 source.card.faction.equals("Cabal", true)) bonus += 2
@@ -129,6 +129,10 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 protectedUnit.overshield = true
                 log("OVERSHIELD granted ▶ " + protectedUnit.card.name)
             }
+            "Harrow" -> if (rng.nextBoolean()) {
+                buff(actor, 5)
+                log("Harrow: heads, +5 Power.")
+            } else log("Harrow: tails, no bonus.")
             "Umbliks Prime" -> {
                 val recipient = picked ?: actor
                 if (rng.nextBoolean()) {
@@ -445,6 +449,29 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                             damage(unit, victim, 2)
                 }
                 "Pandora-7" -> buff(at(side, unit.row, unit.column + 1), 2)
+                "Helhest" -> if (unit.row == ShadowRules.BACK_ROW) {
+                    val chosen = randomUnit(other(side))
+                    if (chosen != null) {
+                        val targets = listOfNotNull(
+                            at(chosen.owner, chosen.row, chosen.column - 1),
+                            chosen,
+                            at(chosen.owner, chosen.row, chosen.column + 1)
+                        )
+                        var totalDamage = 0
+                        for (victim in targets) {
+                            if (victim.owner.board[victim.row][victim.column] !== victim) continue
+                            val before = victim.power
+                            damage(unit, victim, 1)
+                            totalDamage += (before - victim.power).coerceAtLeast(0)
+                        }
+                        // The video says "gaining Power based on the damage dealt"
+                        // but provides no formula. Use 1 Power per point of
+                        // observed damage, marking the gain formula as provisional.
+                        if (totalDamage > 0) buff(unit, totalDamage)
+                        log("Helhest: dealt " + totalDamage +
+                            " total damage; Power gain formula pending original rule verification.")
+                    }
+                }
             }
         }
         sweep()
