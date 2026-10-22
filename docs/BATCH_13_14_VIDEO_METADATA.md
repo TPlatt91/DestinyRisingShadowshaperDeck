@@ -42,3 +42,15 @@ Full individual flavor text is also in `card_details.tsv`, under the source note
 Rules index: `app/src/main/assets/video_keyword_rules_01_14.tsv`.
 
 **Code-vs-game caution:** Kotlin handler presence is not proof of gameplay correctness; formation semantics are still provisional without a recorded live-play confirmation. Original-image and GIF ZIP exports are separate and were not committed in this source-code metadata push.
+
+## Source-code gameplay changes
+
+The following changes have been pushed directly to `main`:
+
+- **Molkrul:** Back Row only. Requires a selected opposing unit of 10 or less current Power; a heads coin flip instantly defeats the chosen target.
+- **Shinka Gladiator:** Requires a 5-unit Line and grants the selected ally plus same-row neighbors **+2 damage dealt**, not +2 Power. Shinka Gladiator no longer incorrectly restricts its selected target to Front Row.
+- **Shinka Centurion:** The sustained +3 Power to left/right allies activates only while Shinka Centurion has a Column partner.
+- **Maru:** When Played, all other allies in the same row gain +2 Power; excludes Maru itself.
+- Existing video-consistent handlers retained for Thinktank, High Servitor, Lady Skorri, Amu-Atu, Augmented Shank, Kabr, Ikora, Attal, Estela, Vanok, Paradoxical Neophyte and Shade, Goliath Tank, Buhr, Thagrius and Sabikis.
+
+11 JVM regression tests in `ShadowBatch1314VideoRulesTest.kt` are committed but **not executed**. Test with local `gradlew.bat :app:testDebugUnitTest` and `gradlew.bat :app:assembleDebug`, requiring no GitHub Actions credits. The card-detail videos establish printed rules, not definitive simulation of every timing or formation edge case.

@@ -1,3 +1,16 @@
+# Batches 13 and 14 — gameplay integration status (21 October 2026)
+
+- **20/20 original-video card definitions** committed; unique records for Power, Light, rarity, faction, original effect text and acquisition
+- **20/20 corresponding gameplay source references**, including new/adjusted Molkrul, Maru, Shinka Gladiator and Shinka Centurion handling
+- **11 local regression cases** in `ShadowBatch1314VideoRulesTest.kt`
+- **Paradoxical Neophyte's Shade** remains a non-deckable `Summoned unit` with 1 Power, 6 Light and Inspired Hive scaling
+- **No Android build, local unit-test run or actual match verification has occurred**. Do not label the entire batch as runtime-verified.
+- **Pending exact original rules:** Line/Column formation qualification is currently based on adjacent matching-faction units, not fully demonstrated from the card-detail recording alone. Instant defeat with an overshield may need a separate interaction check.
+
+Source details: [Batch 13–14 metadata and rules](BATCH_13_14_VIDEO_METADATA.md).
+
+---
+
 # Batch 12 video implementation update
 
 **8/8** cards have unique video-confirmed definitions and detailed metadata: Tenacious Ogre, Tenacious Wizard, Shinka Vigile, Shinka Scorpius, Juggernaut, Pandora-7, Harrow, Helhest. **8/8** have source-code battle handlers, and 10 local JVM regression scenarios have been added.
