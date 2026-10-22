@@ -43,3 +43,13 @@ Source commits:
 - `ea6edb9f99252d998a417899acd01b0191901c8e`: regressions for Inspired triggering Xur's summons and Suppressed blocking Zhiyao's Sustained reaction.
 
 Keyword mechanics now have separate centralized checks for **When Played, Front/Back Row, Sustained, Suppressed, Inspired, Scorched, Line, and Column**. These repairs aim to align with observed rules, but a source-code change is **not** an Android gameplay test. There is still no verified successful local Gradle build in this session; GitHub Actions were not invoked.
+
+## Next shared-engine safety pass — 21 October 2026
+
+- **Stale unit references:** `ShadowEngine.isPresent` prevents old snapshot objects from receiving buffs, damage, direct damage, Inspired, or Suppressed after leaving the board. Clone death splash still permits the dead card as the *damage source*, while requiring a valid on-board target.
+- **End-turn status timing:** After Inspired activates, remaining status processing checks that its target is still present; Scorched damage now resolves deaths before processing additional effects. Removed units cannot activate later Sustained effects.
+- **Placement watchers:** Only watchers still present on the board can react to an enemy deployment.
+- **Focused local tests:** Added regressions for stale removed cards and lethal Scorched resolution in `ShadowKeywordEngineMechanicsTest.kt`.
+- **Verification workflow:** The root `run_local_engine_checks.bat` runs the local JVM regression suite and assembles the debug APK, displaying results and writing `shadow_engine_test_log.txt`. It **does not** run GitHub Actions or spend workflow credits.
+
+**QA status remains unverified until this script completes on a configured Android/Gradle workstation.**
