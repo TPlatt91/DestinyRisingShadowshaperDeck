@@ -55,12 +55,12 @@ Shinka Decurion	shinka_decurion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED	
 Legionary	legionary	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/legionary.webp
 War Beast	war_beast	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171136	card_art/war_beast.webp
 Centurion	centurion	Cabal	community_cards.tsv	BUNDLED_LOCAL_GIF		screen_20261021_171326	card_art/centurion.gif
-Shinka Psion	shinka_psion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_psion.webp
-Shinka Legionary	shinka_legionary	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_legionary.webp
-Shinka Phalanx	shinka_phalanx	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_phalanx.webp
-Incendior	incendior	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/incendior.webp
-Decurion	decurion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/decurion.webp
-Psion	psion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/psion.webp
+Shinka Psion	shinka_psion	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/shinka_psion.webp
+Shinka Legionary	shinka_legionary	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/shinka_legionary.webp
+Shinka Phalanx	shinka_phalanx	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/shinka_phalanx.webp
+Incendior	incendior	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/incendior.webp
+Decurion	decurion	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/decurion.webp
+Psion	psion	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/psion.webp
 Scorpius	scorpius	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/scorpius.webp
 Vigile	vigile	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/vigile.webp
 Phalanx	phalanx	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/phalanx.webp
@@ -82,8 +82,8 @@ Sabikis	sabikis	Fallen	community_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcas
 Umeko	umeko	Humans	expanded_cards.tsv	BUNDLED_LOCAL_GIF		screen_20261021_171326	card_art/umeko.gif
 The Speaker	the_speaker	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171431	card_art/the_speaker.gif
 Guerrilla Captain	guerrilla_captain	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/guerrilla_captain.webp
-Jolder	jolder	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/jolder.webp
-Finnala	finnala	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/finnala.webp
+Jolder	jolder	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/jolder.gif
+Finnala	finnala	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/finnala.gif
 Xuan Wei	xuan_wei	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/xuan_wei.webp
 Chinnawat	chinnawat	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/chinnawat.webp
 Lady Skorri	lady_skorri	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/lady_skorri.webp
