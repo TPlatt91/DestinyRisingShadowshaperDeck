@@ -151,6 +151,44 @@ class ShadowFullMatchSmokeTest {
         }
     }
 
+    @Test fun everyConstructibleCardCanBePlacedWithoutUnresolvedEffectBranches() {
+        val catalog = liveCatalog()
+        val playable = catalog.values.filter { it.isPlayable }
+        assertTrue(playable.size >= 100)
+        val support = catalog.getValue("Dreg")
+        val opponent = catalog.getValue("Thrall")
+        for (card in playable) {
+            // Isolate card dispatch from turn economy and unrelated summons.
+            val e = ShadowEngine(catalog, 41L)
+            e.humanFirst = true
+            e.humanTurn = true
+            e.human.points = 50
+            e.human.board[0][4] = ShadowEngine.Unit(e.human, support, 0, 4)
+            e.human.board[1][4] = ShadowEngine.Unit(e.human, support, 1, 4)
+            e.cpu.board[0][0] = ShadowEngine.Unit(e.cpu, opponent, 0, 0)
+            e.cpu.board[1][0] = ShadowEngine.Unit(e.cpu, opponent, 1, 0)
+            val preferredRow =
+                if (card.trigger.contains("Back Row", ignoreCase = true) ||
+                    card.effect.startsWith("When Played (Back Row)", ignoreCase = true)) {
+                    ShadowRules.BACK_ROW
+                } else ShadowRules.FRONT_ROW
+            e.human.hand.add(card)
+            val options = e.targetOptions(e.human, card, preferredRow, 2)
+            val target = options.maxByOrNull { e.power(it.unit()!!) }
+            assertTrue(
+                "Card play failed: " + card.name + ": " +
+                    e.validatePlay(e.human, 0, preferredRow, 2, target),
+                e.play(e.human, 0, preferredRow, 2, target)
+            )
+            resolvePlayerMovement(e)
+            assertBoardInvariant(e)
+            assertEquals(
+                "Unresolved effect branch in " + card.name + ":\\n" +
+                    e.diagnosticReport(), 0, e.unresolvedEffects
+            )
+        }
+    }
+
     @Test fun fullSixRoundMatchesAgainstEachCpuFactionDoNotSoftLock() {
         val catalog = liveCatalog()
         val deck = ShadowData.opponentDeck(catalog)
