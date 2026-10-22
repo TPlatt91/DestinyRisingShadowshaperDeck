@@ -103,6 +103,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         require(error.isEmpty()) { error }
         error = ShadowData.validate(cpuDeck, catalog)
         require(error.isEmpty()) { "CPU: " + error }
+        // A replay using this match's seed must produce the same opening
+        // coin toss, shuffle and random decisions after restart.
+        rng.setSeed(seed)
         clear(human)
         clear(cpu)
         journal.clear()
@@ -471,11 +474,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         try {
             effects.onBuff(target)
             val foe = other(target.owner)
-            // Video confirms opposing units in either row; limit each sniper
-            // to one hit per target per turn while the two-turn effect is active.
+            // Check live battlefield membership after each nested trigger:
+            // the buff itself may have killed its target or retaliating sniper.
             for (sniper in all(foe)) {
-                if (sniper.card.name != "Elite Sniper Vandal" || sniper.suppressed ||
-                    sniper.row != ShadowRules.BACK_ROW || sniper.sniperTurnsRemaining <= 0) continue
+                if (!isPresent(target)) break
+                if (!isPresent(sniper) || sniper.card.name != "Elite Sniper Vandal" ||
+                    sniper.suppressed || sniper.row != ShadowRules.BACK_ROW ||
+                    sniper.sniperTurnsRemaining <= 0) continue
                 if (sniper.sniperLastHitTurn[target] == actionTurnId()) continue
                 sniper.sniperLastHitTurn[target] = actionTurnId()
                 damage(sniper, target, 1)
