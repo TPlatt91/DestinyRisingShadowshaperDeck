@@ -4,10 +4,18 @@ package com.tplatt.shadowshaper
  * Current contiguous interpretation is provisional pending in-game proof.
  */
 object ShadowPositionRules {
-    /** A printed Line ability, not merely card text referring to Line units. */
+    /**
+     * Only a printed ability header grants the Line keyword. Mentions such
+     * as "If a 3-Unit Line exists, gain Power" do not themselves make that
+     * unit a Line card (or eligible for Drop Pod's random summon pool).
+     * Some recorded cards print "2 Unit Line" without the hyphen.
+     */
     @JvmStatic
     fun hasLineAffix(effect: String): Boolean =
-        Regex("""\b\d+[- ]Unit Line\b""", RegexOption.IGNORE_CASE).containsMatchIn(effect)
+        Regex(
+            """\b(?:When Played|Sustained)\s*\([^)]*\b\d+[- ]Unit Line\b[^)]*\)""",
+            RegexOption.IGNORE_CASE
+        ).containsMatchIn(effect)
 
     /**
      * A Line consists of contiguous units bearing the PRINTED Line affix.
