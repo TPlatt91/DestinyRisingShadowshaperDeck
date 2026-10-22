@@ -77,3 +77,14 @@ These are **source-code changes only**, not an asserted match to the original De
 **Regression coverage:** `ShadowSimultaneousEffectsTest.kt` contains **five** local JVM tests: simultaneous Clone death waves; destroyed summoned Dreg; destroyed normally played Dreg; Augmented Shank target-centered splash; and Gwynn target-centered splash plus self-penalty.
 
 **Verification:** All five tests are committed but **not executed**. Run the repository's `run_local_engine_checks.bat` locally for JVM tests and Android debug build. No GitHub Actions minutes were consumed. Actual parity with the original client still requires match footage and full-round QA.
+
+## Overshield, reduction and Power/damage modifier pass
+
+**Corrections now implemented on `main`:**
+- **Damage pipeline:** Combine ordinary outgoing damage with aura bonuses and Umeko's 1–3 random addition, then apply Shinka Phalanx/Phalanx reductions to the **whole event**. A zero-damage event logs that the damage was prevented rather than consuming Jolder's next successfully dealt hit or a target's Overshield.
+- **Overshield vs. damage doubling:** After a nonzero damage event is formed, Overshield absorbs it *before* Jolder's next-hit doubler is spent. The shielded unit takes no damage and damage reactions do not fire.
+- **Mind Disruptor vs. suppression:** The left-side anti-Suppression protection is checked before Overshield, avoiding wasting Overshield on an effect the target is inherently immune to.
+- **Rossi-11 self-targeting:** The engine supports `null` ability target as an explicit self target only for Rossi-11, while every other targeted card retains normal mandatory target checks. The battle UI displays a **SHIELD SELF** action when choosing a Rossi-11 target, alongside its existing allied-target choices.
+- **Local regression coverage:** `ShadowProtectionAndDamageTest.kt` now contains seven tests for suppression immunity vs shield, shield vs Jolder, full damage prevention, Umeko bonus reduction, not consuming shields on prevented hits, Saladin's actual-damage trigger, and Rossi-11 selecting itself with existing allied targets.
+
+**Original-game parity caution:** These are implementation corrections inferred from printed rules and existing simulated behavior; the entire Android test suite and real-match original-client comparisons still have not been executed in this session. Run `run_local_engine_checks.bat` locally (no GitHub Actions credits) and share `shadow_engine_test_log.txt` for a validated result.
