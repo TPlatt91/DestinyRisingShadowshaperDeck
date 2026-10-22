@@ -32,6 +32,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         @JvmField val timedBonuses: ArrayList<TimedBonus> = ArrayList()
         @JvmField var inspired = false
         @JvmField var suppressed = false
+        @JvmField var overshield = false
+        @JvmField var resilientCaptainDregs = 0
         @JvmField var bonusDoublerConsumed = false
         @JvmField var damageDoublerConsumed = false
         // Video Batch 07: sniper retaliation lasts two owner turns and can hit
@@ -438,6 +440,15 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal fun suppress(target: Unit?) {
         if (target == null) return
+        if (shieldAbsorbs(target, "Suppression")) return
+        val leftProtected = all(target.owner).any {
+            it.card.name == "Mind Disruptor" && !it.suppressed &&
+                it !== target && it.row == target.row && it.column == target.column + 1
+        }
+        if (leftProtected) {
+            log("MIND DISRUPTOR protects " + target.card.name + " from Suppression.")
+            return
+        }
         target.power -= target.bonus
         target.bonus = 0
         target.suppressed = true
@@ -467,10 +478,19 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         dealDirect(source, target, actual)
     }
 
+    private fun shieldAbsorbs(target: Unit, effect: String): Boolean {
+        if (!target.overshield) return false
+        target.overshield = false
+        log("OVERSHIELD blocks " + effect + " ▶ " + target.card.name)
+        return true
+    }
+
     internal fun dealDirect(source: Unit, target: Unit?, damage: Int) {
         if (target == null || damage <= 0) return
+        if (shieldAbsorbs(target, "damage")) return
         target.power -= damage
         log("DAMAGE " + damage + " ▶ " + target.card.name)
+        effects.fireFallenDamage(source)
         if (target.card.faction.equals("Humans", true)) {
             for (ally in all(target.owner))
                 if (!ally.suppressed && ally.card.name == "Saladin") buff(target, 3)
@@ -483,6 +503,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
      */
     internal fun destroyUnit(target: Unit?) {
         if (target == null || target.owner.board[target.row][target.column] !== target) return
+        if (shieldAbsorbs(target, "destruction")) return
         val current = power(target)
         target.power -= current + 1
         log("DESTROY EFFECT ▶ " + target.card.name)
@@ -499,7 +520,6 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
                 log("DESTROYED ▶ " + dead.card.name)
                 val splash = when (dead.card.name) {
                     "Clone" -> 3
-                    "Exploder Shank" -> 1
                     else -> 0
                 }
                 if (splash > 0) for (offset in listOf(-1, 1))
@@ -527,7 +547,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         lastPlacedSide = if (destination.human) 0 else 1
         lastPlacedRow = 1
         lastPlacedColumn = column
-        log("CURSED THRALL ▶ opponent Front Row " + (column + 1) + "; detonates on next original turn.")
+        log(unit.card.name + " ▶ opponent Front Row " + (column + 1) + "; detonates on next original turn.")
         effects.fireEnemyPlacement(bomb)
     }
 
@@ -536,7 +556,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (unit.fuseOrigin !== side || unit.fuseRound > round) continue
             if (controller.board[unit.row][unit.column] !== unit) continue
             controller.board[unit.row][unit.column] = null
-            log("CURSED THRALL DETONATES ▶ " + (unit.column + 1))
+            log(unit.card.name + " DETONATES ▶ " + (unit.column + 1))
             for (offset in listOf(-1, 1))
                 dealDirect(unit, at(controller, unit.row, unit.column + offset), 2)
         }
