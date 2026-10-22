@@ -1,0 +1,9 @@
+keyword	original_video_rule	batch_sources
+When Played	An effect triggered when the unit is placed on the battlefield.	01;02;03;04;05;06;07;08;09;10;11
+Sustained	An effect that lasts as long as the unit is on the battlefield. Expires when Suppressed.	01;02;03;04;05;06;07;08;09;10;11
+Line	Units adjacent to each other in the same horizontal row. Line up a certain number of units with the "Line" affix to trigger certain effects.	08;10
+Column	Units adjacent to each other in the same vertical column. Place units with the "Column" affix behind or in front of one another to trigger certain effects.	08;10
+Back Row	An effect triggered when the unit is placed in the back field.	08;09;10;11
+Front Row	An effect triggered when the unit is placed in the front row.	08;09;10;11
+Inspired	At the end of your turn, gains 1 Power.	05;06;09;10;11
+Suppressed	Sustained effects and special effects (Inspired, Scorched) expire, and Power bonuses are removed.	06;09

@@ -47,3 +47,11 @@ Drop Pod|Legendary|Cabal|3|2|When Played (2 Unit Line): Summons 1 random Line un
 Shinka Incendior|Legendary|Cabal|3|5|When Played (3-Unit Line): Deals 3 damage to a unit in the back row.
 Devil Sentry|Legendary|Fallen|3|5|When Played: Toss a coin. If the result is heads, deals 5 damage to a unit.
 Gladiator|Legendary|Cabal|3|4|When Played (Front Row): A selected front row unit and the units to its left and right deal 1 additional damage.
+Tomb Ship|Exotic|Hive|4|6|When Played: Summons 2 random Hive units to its left and right.
+Saladin|Exotic|Humans|4|6|Sustained: Whenever one of your Human units takes damage, they gain +3 Power.
+Radegast|Mythic|Humans|4|7|When Played: If there are Fallen units on the opponent's field, grants all Guerrillas in this row +4 Power.
+Bazinet|Mythic|Humans|4|2|When Played (Back Row): Deals 3 damage to all opposing units with a bonus.
+Elite Walker|Mythic|Fallen|4|2|Sustained (Back Row): When your turn ends, deals 2 damage to 2 random opposing units.
+Resilient Marauder|Mythic|Fallen|4|6|When Played (Front Row): Deals 5 damage to an opposing unit.
+Luksis-3|Mythic|Fallen|4|5|When Played: Grants Power equal to 2x the number of Rocks on your opponent's field.
+Tenacious Knight|Mythic|Hive|4|6|When Played (Front Row): Randomly grants +3 Power to 2 of your Inspired Hive units.

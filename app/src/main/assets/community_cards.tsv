@@ -11,7 +11,7 @@ Wizard|Legendary|Hive|3|4|When Played: Grants Inspired to 1 of your Hive units.
 Ogre|Legendary|Hive|3|2|Sustained: When acquiring a buff, deals 1 damage to 2 random opposing units.
 Shrieker|Legendary|Hive|3|2|Sustained (Back Row): Upon gaining a buff, deals 2 damage to a random opposing unit.
 Tomb Ship|Exotic|Hive|4|6|When Played: Summons 2 random Hive units to its left and right.
-Tenacious Knight|Mythic|Hive|4|6|When Played (Front Row): Gives +3 Power to 2 random Inspired Hive units.
+Tenacious Knight|Mythic|Hive|4|6|When Played (Front Row): Randomly grants +3 Power to 2 of your Inspired Hive units.
 Tenacious Ogre|Mythic|Hive|4|5|Sustained: When buffed, deals 1 damage to 4 random opposing units.
 Tenacious Wizard|Mythic|Hive|4|5|When Played: Grants Inspired to 2 random Hive units.
 Paradoxical Neophyte|Exotic|Hive|6|10|When Played: Summons 1 Shade on the left.
@@ -36,9 +36,9 @@ Goliath Tank|Exotic|Cabal|6|10|When Played (5-Unit Line): Deals 3 damage to all 
 Buhr|Exotic|Cabal|6|10|When Played (Column): Grants +3 Power to all units in a column.
 Thagrius|Exotic|Cabal|6|10|When Played (6-Unit Line): Deals twice the number of Line units as damage to a unit.
 Gwynn|Exotic|Humans|4|6|When Played (Front Row): Deals 3 damage to target and adjacent units; loses 2 Power.
-Saladin|Exotic|Humans|4|6|Sustained: Whenever your Human unit takes damage, it gains +3 Power.
-Radegast|Mythic|Humans|4|7|When Played: If opponent has Fallen, gives Guerrillas in this row +4 Power.
-Bazinet|Mythic|Humans|4|2|When Played (Back Row): Deals 3 damage to all buffed opposing units.
+Saladin|Exotic|Humans|4|6|Sustained: Whenever one of your Human units takes damage, they gain +3 Power.
+Radegast|Mythic|Humans|4|7|When Played: If there are Fallen units on the opponent's field, grants all Guerrillas in this row +4 Power.
+Bazinet|Mythic|Humans|4|2|When Played (Back Row): Deals 3 damage to all opposing units with a bonus.
 Pandora-7|Legendary|Humans|4|5|Sustained: At end of turn grants right-hand unit +2 Power.
 Ikora|Exotic|Humans|6|13|When Played: Deals 2 damage to every opposing unit in a row.
 Estela|Exotic|Humans|6|13|When Played: Grants unit Power equal to twice opposing front-row unit count.
