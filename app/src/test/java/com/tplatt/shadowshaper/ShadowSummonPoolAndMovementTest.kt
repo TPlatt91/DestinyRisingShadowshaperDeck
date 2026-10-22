@@ -159,6 +159,32 @@ class ShadowSummonPoolAndMovementTest {
         assertTrue(victim.power <= 0)
     }
 
+    @Test fun cpuPrefersTombShipPositionWithTwoOpenNeighbors() {
+        val e = engine()
+        e.humanTurn = false
+        e.cpu.points = 4
+        e.cpu.hand.add(e.catalog.getValue("Tomb Ship"))
+        assertTrue(e.cpuPlayOne())
+        val ship = e.cpu.board.flatMap { it.toList() }.filterNotNull()
+            .single { it.card.name == "Tomb Ship" && it.card === e.catalog.getValue("Tomb Ship") }
+        assertTrue(ship.column in 1 until ShadowRules.COLUMNS - 1)
+        assertNotNull(e.cpu.board[ship.row][ship.column - 1])
+        assertNotNull(e.cpu.board[ship.row][ship.column + 1])
+    }
+
+    @Test fun cpuDropPodUsesAnEligibleLeftSlotInsteadOfWastingSummon() {
+        val e = engine()
+        e.humanTurn = false
+        e.cpu.points = 3
+        put(e, "Shinka Psion", e.cpu, 1, 3)
+        e.cpu.hand.add(e.catalog.getValue("Drop Pod"))
+        assertEquals(2, e.effects.requiredFactionLine("Drop Pod"))
+        assertTrue(e.cpuPlayOne())
+        assertEquals("Drop Pod", e.cpu.board[1][2]?.card?.name)
+        assertEquals("Shinka Psion", e.cpu.board[1][1]?.card?.name)
+        assertEquals(0, e.unresolvedEffects)
+    }
+
     @Test fun relocationDoesNotCountAsNewEnemyPlacement() {
         val e = engine()
         val watcher = put(e, "Zhiyao", e.human, 0, 1)

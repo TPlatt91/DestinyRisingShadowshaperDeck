@@ -41,7 +41,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     fun targetsEnemy(name: String): Boolean = name in enemyTargets
 
     fun requiredFactionLine(name: String): Int = when (name) {
-        "Shinka Psion" -> 2
+        "Shinka Psion", "Drop Pod" -> 2
         "Shinka Incendior", "Shinka Vigile" -> 3
         "Shinka Gladiator", "Goliath Tank" -> 5
         "Thagrius" -> 6

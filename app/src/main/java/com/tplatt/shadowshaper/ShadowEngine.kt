@@ -747,6 +747,21 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         if (cpu.board[1 - row][col] != null) value += 0.9
         if (col > 0 && cpu.board[row][col - 1] != null) value += 0.3
         if (col < COLUMNS - 1 && cpu.board[row][col + 1] != null) value += 0.3
+        // Prefer locations where summon-on-play abilities can actually
+        // place their units; random flavor is not a substitute for legality.
+        when (card.name) {
+            "Tomb Ship" -> {
+                val openNeighbors = listOf(col - 1, col + 1)
+                    .count { empty(cpu, row, it) }
+                value += if (ShadowSummonRules.tombShipPool(catalog).isEmpty()) -3.0
+                         else openNeighbors * 3.0
+            }
+            "Drop Pod" -> {
+                val canSummon = contiguous >= 2 && empty(cpu, row, col - 1) &&
+                    ShadowSummonRules.dropPodPool(catalog).isNotEmpty()
+                value += if (canSummon) 3.5 else -3.5
+            }
+        }
         if (isTargeted(card)) {
             // The CPU used to prefer raw Power even when a stronger
             // placement of this same targeted card could trigger its effect.
