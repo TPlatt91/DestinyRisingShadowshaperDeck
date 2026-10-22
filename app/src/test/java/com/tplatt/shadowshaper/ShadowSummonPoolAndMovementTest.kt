@@ -34,6 +34,8 @@ class ShadowSummonPoolAndMovementTest {
             "When Played (2-Unit Line): Deals 3 damage."),
         card("Line Mention Only", "Cabal", 3, 2,
             "When Played: Grant Power to a nearby Line unit."),
+        card("Narrative Line Threshold", "Cabal", 3, 2,
+            "When Played: If an allied 2-Unit Line exists, gain 2 Power."),
         card("Rock", "Humans", 1, 1, "No special effects.", "Summoned unit"),
         card("Xuan Wei", "Humans", 6, 3,
             "When Played (Front Row): Deals 5 damage to a unit and moves it."),
@@ -113,7 +115,25 @@ class ShadowSummonPoolAndMovementTest {
         assertEquals(listOf("Shinka Psion"), pool.map { it.name })
         assertFalse(pool.any { it.name == "Drop Pod" })
         assertFalse(pool.any { it.name == "Line Mention Only" })
+        assertFalse(pool.any { it.name == "Narrative Line Threshold" })
         assertFalse(pool.any { it.name == "Paradoxical Neophyte's Shade" })
+    }
+
+    @Test fun aNumericLineMentionDoesNotExtendOrStartPrintedLineFormation() {
+        val e = engine()
+        put(e, "Shinka Psion", e.human, 1, 3)
+        put(e, "Narrative Line Threshold", e.human, 1, 4)
+        // Drop Pod at column 2 qualifies with the Shinka Psion at 3.
+        // The narrative-only unit at 4 must not increase the length to 3.
+        assertEquals(2, ShadowPositionRules.contiguousLineUnits(
+            e.human, 1, 2, e.catalog.getValue("Drop Pod")
+        ))
+        assertEquals(0, ShadowPositionRules.contiguousLineUnits(
+            e.human, 1, 4
+        ))
+        assertEquals(0, ShadowPositionRules.contiguousLineUnits(
+            e.human, 1, 5, e.catalog.getValue("Narrative Line Threshold")
+        ))
     }
 
     @Test fun dropPodSummonsOneLineCardOnItsLeftWhenLineExists() {

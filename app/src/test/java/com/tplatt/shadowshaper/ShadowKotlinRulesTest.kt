@@ -77,6 +77,18 @@ class ShadowKotlinRulesTest {
         assertFalse(ShadowPositionRules.hasLineAffix("Grants +2 Power to a Line unit."))
         assertTrue(ShadowPositionRules.hasLineAffix("When Played (2 Unit Line): Summons a unit."))
         assertTrue(ShadowPositionRules.hasLineAffix("Sustained (4-Unit Line): Gives +2 Power."))
+        assertTrue(ShadowPositionRules.hasLineAffix(
+            "Sustained (Back Row, 3-Unit Line): Grants bonus damage."
+        ))
+        assertFalse(ShadowPositionRules.hasLineAffix(
+            "When Played: If an allied 2-Unit Line exists, gain 2 Power."
+        ))
+        assertFalse(ShadowPositionRules.hasLineAffix(
+            "Sustained: Grants 1 Power when 3-Unit Line is formed."
+        ))
+        assertFalse(ShadowPositionRules.hasLineAffix(
+            "When Played: Summons a random 2-Unit Line card to the left."
+        ))
     }
 
     @Test fun kotlinDamageNeverBecomesNegative() {
