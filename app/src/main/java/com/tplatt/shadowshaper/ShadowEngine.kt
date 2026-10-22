@@ -359,9 +359,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun spawnRandom(side: Player, row: Int, token: String, source: ShadowData.Card) {
-        // Rock is not a generic summon: only Xur's own effect can create it.
-        if (token == "Rock" && source.name != "Xur") {
-            log("SUMMON RESTRICTED: Rock may only be summoned by Xur, not " + source.name)
+        // Rock is a summon-only card. Its printed summoners are Xur and Common Cover.
+        if (token == "Rock" && source.name !in setOf("Xur", "Common Cover")) {
+            log("SUMMON RESTRICTED: Rock cannot be summoned by " + source.name)
             return
         }
         val choices = (0 until COLUMNS).filter { empty(side, row, it) }
@@ -375,9 +375,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun spawnAt(
         side: Player, row: Int, col: Int, name: String, summoner: String? = null
     ) {
-        // Defense-in-depth: prevent direct Rock spawning that bypasses spawnRandom.
-        if (name == "Rock" && summoner != "Xur") {
-            log("SUMMON RESTRICTED: Rock requires Xur as its source.")
+        // Also guard direct spawnAt calls: no manual or unrelated Rock creation.
+        if (name == "Rock" && summoner !in setOf("Xur", "Common Cover")) {
+            log("SUMMON RESTRICTED: Rock requires Xur or Common Cover as its source.")
             return
         }
         if (!empty(side, row, col)) return

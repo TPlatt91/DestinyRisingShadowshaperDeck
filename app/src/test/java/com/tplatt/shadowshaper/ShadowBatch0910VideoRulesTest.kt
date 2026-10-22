@@ -150,10 +150,35 @@ class ShadowBatch0910VideoRulesTest {
         assertEquals(10, unselected.power)
     }
 
-    @Test fun commonCoverCannotSummonRockBecauseRockIsExclusiveToXur() {
+    @Test fun commonCoverSummonsTwoDistinctRocksIntoOpposingFrontRow() {
         val e = engine()
-        play(e, "Common Cover", 1, 1)
-        assertEquals(0, e.cpu.board[1].filterNotNull().count { it.card.name == "Rock" })
+        play(e, "Common Cover", ShadowRules.FRONT_ROW, 1)
+        val rocks = e.cpu.board[ShadowRules.FRONT_ROW].filterNotNull()
+            .filter { it.card.name == "Rock" }
+        assertEquals(2, rocks.size)
+        assertEquals(2, rocks.map { it.column }.toSet().size)
+        assertTrue(e.cpu.board[ShadowRules.BACK_ROW].all { it == null })
+        assertTrue(rocks.all { !it.card.isPlayable })
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun commonCoverSummonsAtMostAvailableFrontRowSlots() {
+        val e = engine()
+        for (col in 0 until ShadowRules.COLUMNS - 1) {
+            set(e, "Dreg", ShadowRules.FRONT_ROW, col, e.cpu)
+        }
+        play(e, "Common Cover", ShadowRules.FRONT_ROW, 1)
+        val rocks = e.cpu.board[ShadowRules.FRONT_ROW].filterNotNull()
+            .count { it.card.name == "Rock" }
+        assertEquals(1, rocks)
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun commonCoverDoesNotSummonFromBackRow() {
+        val e = engine()
+        play(e, "Common Cover", ShadowRules.BACK_ROW, 1)
+        assertEquals(0, e.cpu.board[ShadowRules.FRONT_ROW].filterNotNull()
+            .count { it.card.name == "Rock" })
     }
 
     @Test fun guerrillaCaptainDealsTwoUponOwnPowerBonus() {

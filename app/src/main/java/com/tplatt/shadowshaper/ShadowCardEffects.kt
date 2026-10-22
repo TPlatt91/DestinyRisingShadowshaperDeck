@@ -123,6 +123,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 damage(actor, picked, 5)
             } else log("Devil Sentry: tails; no damage.")
             "Common Cover" -> if (actor.row == ShadowRules.FRONT_ROW) {
+                // Two separate random empty opponent Front Row positions.
+                // Newly summoned Rock occupies its position before the second roll.
                 repeat(2) { spawnRandom(foe, ShadowRules.FRONT_ROW, "Rock", actor.card) }
             }
             "Rossi-11" -> {
