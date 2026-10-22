@@ -23,6 +23,11 @@ class ShadowKeywordEngineMechanicsTest {
                  "Sustained: Opponent Front Row placements grant +1 Power for 3 turns."),
             card("Tan-2", "Humans",
                  "Sustained: Doubles the next Power bonus."),
+            card("Xur", "Humans",
+                 "Sustained: On acquiring a Power bonus, places Rock in opposing Front Row."),
+            card("Rock", "Humans", "No special effects.").apply {
+                classification = "Summoned unit"
+            },
             card("Dreg", "Fallen", "No special effects."),
             card("Legionary", "Cabal", "Sustained (Column): Gains +1 Power.")
         ).associateBy { it.name }
@@ -103,6 +108,29 @@ class ShadowKeywordEngineMechanicsTest {
         assertEquals(2, watcher.timedBonuses.single().value)
         repeat(3) { e.effects.endSide(e.human) }
         assertEquals(10, watcher.power)
+    }
+
+    @Test fun inspiredGainsPowerAtOwnerEndTurnAndTriggersXurRockSummon() {
+        val e = engine()
+        val xur = put(e, "Xur", e.human, 0, 2)
+        e.inspire(xur)
+        assertEquals(10, xur.power)
+        e.effects.endSide(e.human)
+        assertEquals(11, xur.power)
+        assertEquals(1, e.cpu.board[ShadowRules.FRONT_ROW].filterNotNull()
+            .count { it.card.name == "Rock" })
+        assertFalse(e.catalog.getValue("Rock").isPlayable)
+    }
+
+    @Test fun suppressedZhiyaoCannotReactToEnemyFrontRowPlacement() {
+        val e = engine()
+        val watcher = put(e, "Zhiyao", e.human, 0, 1)
+        e.suppress(watcher)
+        val enemy = put(e, "Dreg", e.cpu, ShadowRules.FRONT_ROW, 1)
+        e.effects.fireEnemyPlacement(enemy)
+        assertEquals(10, watcher.power)
+        assertEquals(0, watcher.bonus)
+        assertTrue(watcher.timedBonuses.isEmpty())
     }
 
     @Test fun normalColumnUnitDoesNotCountAsPrintedLineUnit() {
