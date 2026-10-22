@@ -310,6 +310,14 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun at(side: Player, row: Int, column: Int): Unit? =
         if (ShadowRules.isOnBoard(row, column)) side.board[row][column] else null
 
+    /**
+     * Snapshot-based effects may still hold a unit after an earlier effect
+     * destroyed or transferred it. Never mutate that stale board reference.
+     */
+    internal fun isPresent(unit: Unit): Boolean =
+        ShadowRules.isOnBoard(unit.row, unit.column) &&
+            unit.owner.board[unit.row][unit.column] === unit
+
     internal fun countRow(side: Player, row: Int): Int = side.board[row].count { it != null }
     internal fun rowEmpty(side: Player, row: Int): Boolean = countRow(side, row) == 0
     internal fun hasEmptySlot(side: Player): Boolean =
@@ -396,7 +404,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun inspire(target: Unit?) {
-        if (target == null) return
+        if (target == null || !isPresent(target)) return
         target.inspired = true
         log("INSPIRED ▶ " + target.card.name)
     }
@@ -414,7 +422,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun buff(target: Unit?, amount: Int) {
-        if (target == null || amount <= 0) return
+        if (target == null || amount <= 0 || !isPresent(target)) return
         var applied = amount
         val doubler = all(target.owner).firstOrNull {
             !it.suppressed && it.card.name == "Tan-2" && !it.bonusDoublerConsumed
@@ -460,7 +468,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun suppress(target: Unit?) {
-        if (target == null) return
+        if (target == null || !isPresent(target)) return
         if (shieldAbsorbs(target, "Suppression")) return
         val leftProtected = all(target.owner).any {
             it.card.name == "Mind Disruptor" && !it.suppressed &&
@@ -483,7 +491,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun damage(source: Unit, target: Unit?, amount: Int) {
-        if (target == null || amount <= 0) return
+        if (target == null || amount <= 0 || !isPresent(target)) return
         var actual = ShadowDamageRules.afterAuras(
             amount, effects.extraDamage(source), effects.reduction(target)
         )
@@ -509,7 +517,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun dealDirect(source: Unit, target: Unit?, damage: Int) {
-        if (target == null || damage <= 0) return
+        if (target == null || damage <= 0 || !isPresent(target)) return
         if (shieldAbsorbs(target, "damage")) return
         target.power -= damage
         log("DAMAGE " + damage + " ▶ " + target.card.name)

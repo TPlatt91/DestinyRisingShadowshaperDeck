@@ -416,7 +416,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     fun fireEnemyPlacement(newUnit: ShadowEngine.Unit) = with(e) {
         val enemy = other(newUnit.owner)
         for (watcher in all(enemy)) {
-            if (watcher.suppressed) continue
+            if (watcher.suppressed || !isPresent(watcher)) continue
             if (newUnit.row == 1 && watcher.card.name == "Ayuela" && watcher.row == 0) {
                 newUnit.scorched = 2
                 newUnit.scorchTurns = 2
@@ -450,12 +450,17 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         for (unit in all(side)) {
             if (side.board[unit.row][unit.column] !== unit) continue
             if (unit.inspired && !unit.suppressed) buff(unit, 1)
+            // Inspired can trigger retaliation and immediately destroy the
+            // inspired unit. Do not resolve the rest of its stale snapshot.
+            if (!isPresent(unit)) continue
             if (unit.scorchTurns > 0) {
                 unit.scorchTurns--
                 // Scorched is enemy-origin damage. Using the victim as the
                 // source wrongly fires that victim's "Fallen deals damage"
                 // effects and credits an opponent's ongoing effect to them.
                 dealDirect(unit.scorchSource ?: unit, unit, unit.scorched)
+                sweep()
+                if (!isPresent(unit)) continue
                 if (unit.scorchTurns == 0) {
                     unit.scorched = 0
                     unit.scorchSource = null

@@ -147,6 +147,35 @@ class ShadowKeywordEngineMechanicsTest {
         assertEquals(10, victim.power)
     }
 
+
+    @Test fun destroyedCardSnapshotCannotReceiveLaterBuffDamageOrStatuses() {
+        val e = engine()
+        val attacker = put(e, "Dreg", e.cpu, 1, 0)
+        val victim = put(e, "Dreg", e.human, 1, 0)
+        e.human.board[1][0] = null
+        e.buff(victim, 5)
+        e.damage(attacker, victim, 4)
+        e.dealDirect(attacker, victim, 3)
+        e.inspire(victim)
+        e.suppress(victim)
+        assertEquals(10, victim.power)
+        assertEquals(0, victim.bonus)
+        assertFalse(victim.inspired)
+        assertFalse(victim.suppressed)
+        assertNull(e.human.board[1][0])
+    }
+
+    @Test fun lethalScorchedIsRemovedBeforeLaterStatusOrEndTurnTriggers() {
+        val e = engine()
+        val victim = put(e, "Scorpius", e.human, 0, 1)
+        val foe = put(e, "Dreg", e.cpu, 1, 1)
+        victim.power = 1
+        victim.scorched = 2
+        victim.scorchTurns = 1
+        e.effects.endSide(e.human)
+        assertNull(e.human.board[0][1])
+        assertEquals(10, foe.power)
+    }
     @Test fun normalColumnUnitDoesNotCountAsPrintedLineUnit() {
         val e = engine()
         val legionary = put(e, "Legionary", e.human, 0, 1)
