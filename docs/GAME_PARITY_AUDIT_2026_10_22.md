@@ -54,3 +54,15 @@ Run the root `run_local_engine_checks.bat` on an Android SDK / Gradle configured
 5. **Local regressions**: `ShadowSummonPoolAndMovementTest.kt` provides **11** tests covering candidate eligibility and Shade deck exclusion, actual random Shade appearances, blocked/edge slots, Drop Pod printed Line filtering and placement, full-board / lethal Xuan Wei targets, movement not counting as new placement, and CPU choices for both summoners.
 
 **Execution:** These changes are committed on `main`. **Kotlin/Gradle and Android runtime tests have not been executed**; `run_local_engine_checks.bat` runs local unit tests and debug compilation without GitHub Actions credits. Do not claim exact hidden summon probabilities without observed original-game data.
+
+## 22 October — match-level verification harness and legal CPU decks
+
+This pass changes runtime code and **adds tests for the actual Android card catalog**:
+
+- **CPU deck legality** (`ShadowData.opponentDeck`): Older generators required 15 distinct card names and returned an empty mixed deck or changed a requested faction even when a legal 15-card single-faction deck could be formed with up to two copies per card. A centralized constructor now tries one copy per eligible name, then fills using second copies while enforcing the game's rarity, copy, deck-size and summon-only restrictions. The Mixed fallback also fills with other constructible cards when its predefined names are missing.
+- **CPU deck regressions** (`ShadowCpuDeckIntegrityTest.kt`): Four tests check 8 unique cards producing 15 legal copies, sparse Mixed presets, never using summon-only cards or exceeding Exotic/Mythic limits, and legal fallback when a requested faction truly cannot build a deck.
+- **Actual asset-backed match smoke tests** (`ShadowFullMatchSmokeTest.kt`): A local JVM test loads the shipped `cards.tsv`, `community_cards.tsv`, `expanded_cards.tsv`, `verified_video_cards.tsv`, and `card_details.tsv` with the same override precedence as Android. It validates catalog numeric stats, invokes each constructible card in an isolated battle state and checks that no resolver declares `UNIMPLEMENTED`, and plays **20 scripted six-round matches** (five CPU faction choices × four seeds) through real `ShadowEngine` and CPU decision logic. Board ownership, coordinate consistency, nonnegative Light, defeated-card cleanup, pending relocations, final match state, and deck legality are asserted with detailed diagnostic output.
+
+**Critical qualification:** This is *not* a completed pass report. The new tests have been pushed to GitHub but **not run**. A successful invocation of an individual card in a basic state is not proof that its keyword interactions and edge cases are correct; match-level runtime verification and comparison against original Destiny: Rising footage are still required.
+
+Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It saves `shadow_engine_test_log.txt` and uses **no GitHub Actions minutes**. If tests fail, use the fixture's named card, seed and diagnostic log to correct the actual effect handler before certifying a mechanic.
