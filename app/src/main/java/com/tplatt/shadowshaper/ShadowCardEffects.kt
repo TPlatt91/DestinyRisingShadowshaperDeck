@@ -386,8 +386,12 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             if (unrelenting > 0) buff(newUnit, unrelenting)
         }
         for (watcher in all(own)) {
+            // The first placement bonus can cause enemy sniper retaliation
+            // that defeats the newly arrived unit. Once removed, it cannot
+            // continue generating new ally-placement reactions.
+            if (!isPresent(newUnit)) break
             if (watcher.card.name != "Grenade Dreg" || watcher.suppressed ||
-                watcher.row != newUnit.row || own.board[watcher.row][watcher.column] !== watcher)
+                watcher.row != newUnit.row || !isPresent(watcher))
                 continue
             buff(watcher, 1)
             log("Grenade Dreg +1 Power: " + newUnit.card.name + " deployed in its row.")
