@@ -40,3 +40,6 @@ Batch 08 tooltip glossary is separately preserved in `app/src/main/assets/video_
 Source assets were extracted separately; this commit **does not upload binary artwork files**. The Batch 08 GIF and MP4 packages are already available to the user, including Finnala's corrected animation window. Metadata and rules do not imply a successful device or Gradle test.
 
 **Known gaps across Batches 01–08:** `ShadowEffectCoverage.kt` explicitly tracks unfinished handlers (including Rossi-11 and Mind Disruptor). Do not claim all 8 batches are gameplay-complete unless those are addressed and tested.
+
+## Current source-code audit (21 October 2026)
+All **57 distinct video-batch cards** have catalog and detailed stats entries; 60 recorded appearances across eight batches. Every one of their 45 non-basic cards has a source handler reference; Android gameplay correctness is **not** established by that check. See [current coverage](CARD_ENGINE_COVERAGE.md) and `ShadowBatch0108VideoRulesTest.kt`.

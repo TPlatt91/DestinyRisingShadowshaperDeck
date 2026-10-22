@@ -1,3 +1,5 @@
+> **CURRENT STATUS (21 October 2026):** This document is a historical extraction audit. See [the current Batch 01–08 audit](CARD_ENGINE_COVERAGE.md) and [video metadata index](VIDEO_CARD_METADATA_BATCHES_01_08.md). Some missing-card/ability claims below have been superseded by subsequent source commits. Device gameplay tests are still pending.
+
 # Batch 06–07 original card-detail video implementation
 
 Source recordings:
