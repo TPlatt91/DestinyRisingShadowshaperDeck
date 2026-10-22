@@ -57,6 +57,51 @@ class ShadowDetonationAndTriggerLifecycleTest {
         fuseRound = dueRound
     }
 
+    @Test fun transferredCardsPublishDestinationArrivalRatherThanVacatedSlot() {
+        for (name in listOf("Cursed Thrall", "Exploder Shank")) {
+            val e = engine()
+            e.humanTurn = true
+            e.human.points = 3
+            // Only one Front Row slot is open on the receiving side.
+            for (column in 0 until ShadowRules.COLUMNS)
+                if (column != 2) place(e, "Dreg", e.cpu, 1, column)
+            e.human.hand.add(e.catalog.getValue(name))
+
+            assertTrue(e.lastActionError,
+                e.play(e.human, e.human.hand.lastIndex, 0, 0, null))
+            val transferred = e.cpu.board[1][2]!!
+            assertEquals(name, transferred.card.name)
+            assertNull(e.human.board[0][0])
+            assertSame(e.human, transferred.fuseOrigin)
+            assertEquals(3, transferred.fuseRound)
+            assertEquals(2, e.placementRevision)
+            assertEquals(1, e.lastPlacedSide)
+            assertEquals(1, e.lastPlacedRow)
+            assertEquals(2, e.lastPlacedColumn)
+            assertEquals(0, e.unresolvedEffects)
+        }
+    }
+
+    @Test fun consecutiveTransferredCardsKeepIncrementingPlacementRevision() {
+        val e = engine()
+        e.humanTurn = true
+        e.human.points = 3
+        val names = listOf("Cursed Thrall", "Exploder Shank")
+        names.forEachIndexed { i, name ->
+            e.human.hand.add(e.catalog.getValue(name))
+            assertTrue(e.lastActionError,
+                e.play(e.human, e.human.hand.lastIndex, 0, i, null))
+            assertEquals(2 * (i + 1), e.placementRevision)
+            assertEquals(1, e.lastPlacedSide)
+            assertEquals(1, e.lastPlacedRow)
+            val selected = e.cpu.board[1][e.lastPlacedColumn]
+            assertNotNull(selected)
+            assertEquals(name, selected!!.card.name)
+        }
+        assertEquals(2, e.cpu.board[1].filterNotNull().size)
+        assertEquals(0, e.unresolvedEffects)
+    }
+
     @Test fun twoSimultaneousBombsLeaveTheBoardBeforeAnyExplosionHits() {
         val e = engine()
         val left = place(e, "Dreg", e.cpu, 1, 0)
