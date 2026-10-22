@@ -15,7 +15,7 @@ Tenacious Knight|Mythic|Hive|4|6|When Played (Front Row): Randomly grants +3 Pow
 Tenacious Ogre|Mythic|Hive|4|5|Sustained: When acquiring a buff, deals 1 damage to 4 random opposing units.
 Tenacious Wizard|Mythic|Hive|4|5|When Played (Back Row): Grants Inspired to 2 random Hive units.
 Paradoxical Neophyte|Exotic|Hive|6|10|When Played: Summons 1 Shade on the left.
-Paradoxical Neophyte's Shade|Exotic|Hive|Token|1|Sustained: Gains +4 Power for each Inspired Hive on your field.
+Paradoxical Neophyte's Shade|Exotic|Hive|6|1|Sustained: Gains 4 Power for every Inspired Hive on your field.
 Shinka Decurion|Mythic|Cabal|1|1|Sustained (3-Unit Line): Your Cabal units deal 2 additional damage.
 Legionary|Rare|Cabal|1|2|Sustained (Column): Gains +1 Power.
 War Beast|Rare|Cabal|1|2|No special effects.
@@ -30,17 +30,17 @@ Scorpius|Legendary|Cabal|3|4|Sustained: At the end of your turn, deals 1 damage 
 Vigile|Legendary|Cabal|3|5|When Played (Front Row): Grants +2 Power to a Line unit.
 Phalanx|Legendary|Cabal|3|4|Sustained (3-Unit Line): Your Cabal units take 1 less damage.
 Juggernaut|Mythic|Cabal|4|8|Sustained (Column): Cabal units to the left and right deal 1 additional damage.
-Shinka Gladiator|Mythic|Cabal|5|8|When Played (5-Unit Line): Chosen unit and adjacent units deal 2 more damage.
-Shinka Centurion|Legendary|Cabal|5|6|Sustained (Column): Adjacent units gain +3 Power.
+Shinka Gladiator|Mythic|Cabal|5|8|When Played (5-Unit Line): A selected unit and the units to its left and right deal 2 additional damage.
+Shinka Centurion|Legendary|Cabal|5|6|Sustained (Column): Grants +3 Power to units on the left and right.
 Goliath Tank|Exotic|Cabal|6|10|When Played (5-Unit Line): Deals 3 damage to all units in a row.
-Buhr|Exotic|Cabal|6|10|When Played (Column): Grants +3 Power to all units in a column.
-Thagrius|Exotic|Cabal|6|10|When Played (6-Unit Line): Deals twice the number of Line units as damage to a unit.
+Buhr|Exotic|Cabal|6|10|When Played (Column): Grants +3 Power to all units in a Column.
+Thagrius|Exotic|Cabal|6|10|When Played (6-Unit Line): Deals damage to a unit equal to double the number of Line units.
 Gwynn|Exotic|Humans|4|6|When Played (Front Row): Deals 3 damage to target and adjacent units; loses 2 Power.
 Saladin|Exotic|Humans|4|6|Sustained: Whenever one of your Human units takes damage, they gain +3 Power.
 Radegast|Mythic|Humans|4|7|When Played: If there are Fallen units on the opponent's field, grants all Guerrillas in this row +4 Power.
 Bazinet|Mythic|Humans|4|2|When Played (Back Row): Deals 3 damage to all opposing units with a bonus.
 Pandora-7|Legendary|Humans|4|5|Sustained: When your turn ends, grants the unit on the right +2 Power.
-Ikora|Exotic|Humans|6|13|When Played: Deals 2 damage to every opposing unit in a row.
-Estela|Exotic|Humans|6|13|When Played: Grants unit Power equal to twice opposing front-row unit count.
-Vanok|Exotic|Fallen|6|10|When Played: Grants +2 Power to all your Fallen units.
-Sabikis|Mythic|Fallen|6|8|When Played (Back Row): Gives a unit Power equal to unit on its left.
+Ikora|Exotic|Humans|6|13|When Played: Deals 2 damage to all opposing units in a row.
+Estela|Exotic|Humans|6|13|When Played: Grants a unit Power equal to 2x the number of units in the opponent's front row.
+Vanok|Exotic|Fallen|6|10|When Played: Grants +2 Power to all your Fallen on the field.
+Sabikis|Mythic|Fallen|6|8|When Played (Back Row): Grants a unit the Power of the unit to its left.

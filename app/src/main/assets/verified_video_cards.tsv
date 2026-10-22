@@ -63,3 +63,23 @@ Juggernaut|Mythic|Cabal|4|8|Sustained (Column): Cabal units to the left and righ
 Pandora-7|Legendary|Humans|4|5|Sustained: When your turn ends, grants the unit on the right +2 Power.
 Harrow|Legendary|Humans|4|7|When Played: Toss a coin. If the result is heads, this unit gains +5 Power.
 Helhest|Exotic|Humans|5|6|Sustained (Back Row): When your turn ends, deal 1 damage to 1 random opposing unit and the units to its left and right, while also gaining Power based on the damage dealt.
+Thinktank|Mythic|Humans|5|7|When Played: Deals damage to a unit equal to the highest bonus on your field.
+High Servitor|Mythic|Fallen|5|7|When Played: Deals damage to a unit equal to the number of Fallen units on your field.
+Shinka Gladiator|Mythic|Cabal|5|8|When Played (5-Unit Line): A selected unit and the units to its left and right deal 2 additional damage.
+Molkrul|Mythic|Fallen|5|8|When Played (Back Row): Toss a coin. If the result is heads, instantly defeats an opposing unit with no more than 10 Power.
+Lady Skorri|Legendary|Humans|5|7|When Played: If there are units in the opponent's back row, grants +5 Power to the unit on the left.
+Amu-Atu|Legendary|Humans|5|8|When Played: Deals damage to an opposing unit equal to the number of units in the opponent's back row.
+Augmented Shank|Legendary|Fallen|5|5|When Played (Front Row): Deals 2 damage to a unit and the units on its left and right.
+Shinka Centurion|Legendary|Cabal|5|6|Sustained (Column): Grants +3 Power to units on the left and right.
+Maru|Exotic|Humans|6|13|When Played: Grants all units in this row (except for this unit) +2 Power.
+Kabr|Exotic|Humans|6|7|When Played: Grants all Guerrilla units +3 Power.
+Ikora|Exotic|Humans|6|13|When Played: Deals 2 damage to all opposing units in a row.
+Attal|Exotic|Humans|6|6|When Played: Doubles the Power of a unit.
+Estela|Exotic|Humans|6|13|When Played: Grants a unit Power equal to 2x the number of units in the opponent's front row.
+Vanok|Exotic|Fallen|6|10|When Played: Grants +2 Power to all your Fallen on the field.
+Paradoxical Neophyte|Exotic|Hive|6|10|When Played: Summons 1 Shade on the left.
+Paradoxical Neophyte's Shade|Exotic|Hive|6|1|Sustained: Gains 4 Power for every Inspired Hive on your field.
+Goliath Tank|Exotic|Cabal|6|10|When Played (5-Unit Line): Deals 3 damage to all units in a row.
+Buhr|Exotic|Cabal|6|10|When Played (Column): Grants +3 Power to all units in a Column.
+Thagrius|Exotic|Cabal|6|10|When Played (6-Unit Line): Deals damage to a unit equal to double the number of Line units.
+Sabikis|Mythic|Fallen|6|8|When Played (Back Row): Grants a unit the Power of the unit to its left.

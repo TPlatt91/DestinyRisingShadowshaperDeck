@@ -5,11 +5,11 @@ Jolder|Exotic|Humans|3|3|Sustained: The next instance of damage dealt is doubled
 Finnala|Exotic|Humans|3|6|When Played (Front Row): Grants +8 Power to one of your units and gains -3 Power.
 Xuan Wei|Exotic|Humans|3|6|When Played (Front Row): Deals 5 damage to a unit and moves it to another location on the battlefield.
 Chinnawat|Legendary|Humans|3|4|When Played (Front Row): Grants +1 Power to one of your units and the units on its left and right.
-Lady Skorri|Legendary|Humans|5|7|When Played: If the opponent has back-row units, grants +5 Power to the unit on the left.
-Amu-Atu|Legendary|Humans|5|8|When Played: Deals damage equal to the number of enemy back-row units to an opposing unit.
-Thinktank|Mythic|Humans|5|7|When Played: Damages a unit equal to the highest Power bonus on your field.
-Attal|Exotic|Humans|5|6|When Played: Doubles the Power of a unit.
-Kabr|Exotic|Humans|6|7|When Played: Grants +3 Power to all Guerrilla units.
+Lady Skorri|Legendary|Humans|5|7|When Played: If there are units in the opponent's back row, grants +5 Power to the unit on the left.
+Amu-Atu|Legendary|Humans|5|8|When Played: Deals damage to an opposing unit equal to the number of units in the opponent's back row.
+Thinktank|Mythic|Humans|5|7|When Played: Deals damage to a unit equal to the highest bonus on your field.
+Attal|Exotic|Humans|6|6|When Played: Doubles the Power of a unit.
+Kabr|Exotic|Humans|6|7|When Played: Grants all Guerrilla units +3 Power.
 Ketch|Mythic|Fallen|2|3|When Played: Summons 2 Fallen Dregs, one on each side.
 Servitor|Legendary|Fallen|2|2|Sustained: Your units deal 1 additional damage.
 Guarding Servitor|Mythic|Fallen|3|4|When Played: Grants Inspired to one of your units.
@@ -20,8 +20,8 @@ Blinder Shank|Mythic|Fallen|3|8|When Played: Suppresses the units on the left an
 Elite Walker|Mythic|Fallen|4|2|Sustained (Back Row): When your turn ends, deals 2 damage to 2 random opposing units.
 Resilient Marauder|Mythic|Fallen|4|6|When Played (Front Row): Deals 5 damage to an opposing unit.
 Luksis-3|Mythic|Fallen|4|5|When Played: Grants Power equal to 2x the number of Rocks on your opponent's field.
-Augmented Shank|Legendary|Fallen|5|5|When Played (Front Row): Deals 2 damage to a unit and adjacent units.
-High Servitor|Mythic|Fallen|5|7|When Played: Deals damage equal to the number of Fallen units you control.
+Augmented Shank|Legendary|Fallen|5|5|When Played (Front Row): Deals 2 damage to a unit and the units on its left and right.
+High Servitor|Mythic|Fallen|5|7|When Played: Deals damage to a unit equal to the number of Fallen units on your field.
 Shinka Incendior|Legendary|Cabal|3|5|When Played (3-Unit Line): Deals 3 damage to a unit in the back row.
 Gladiator|Legendary|Cabal|3|4|When Played (Front Row): A selected front row unit and the units to its left and right deal 1 additional damage.
 Colossus|Legendary|Cabal|3|6|Sustained (Column): Grants Cabal units directly in front of or behind 1 Power.
@@ -30,3 +30,5 @@ Shinka Vigile|Mythic|Cabal|4|8|When Played (3-Unit Line): Deals 4 damage to a un
 Shinka Scorpius|Mythic|Cabal|4|7|Sustained (3-Unit Line): At the end of your turn, deals 2 damage to a random opposing unit.
 Harrow|Legendary|Humans|4|7|When Played: Toss a coin. If the result is heads, this unit gains +5 Power.
 Helhest|Exotic|Humans|5|6|Sustained (Back Row): When your turn ends, deal 1 damage to 1 random opposing unit and the units to its left and right, while also gaining Power based on the damage dealt.
+Molkrul|Mythic|Fallen|5|8|When Played (Back Row): Toss a coin. If the result is heads, instantly defeats an opposing unit with no more than 10 Power.
+Maru|Exotic|Humans|6|13|When Played: Grants all units in this row (except for this unit) +2 Power.
