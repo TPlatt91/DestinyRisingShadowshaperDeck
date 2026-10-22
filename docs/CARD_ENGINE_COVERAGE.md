@@ -1,3 +1,11 @@
+# Current batch-coverage snapshot — Batches 01–10
+
+**2026-10-21:** All **83 recorded card appearances** (80 unique cards) across Batches 01–10 have card catalog and detailed metadata records. The newest Batches 09–10 include **23/23 video-derived metadata definitions**, source-referenced Kotlin gameplay handlers and 21 authored local JVM test scenarios. Code present does **not** mean Android gameplay has passed QA. Batches 09–10 detail: [video metadata](BATCH_09_10_VIDEO_METADATA.md) and [gameplay implementation](BATCH_09_10_GAMEPLAY_IMPLEMENTATION.md).
+
+The total catalog contains 114 distinct card names; do not claim all cards are complete based solely on these video batches. Original Line affix formations and Drop Pod's exact random summon pool remain test/verification priorities.
+
+---
+
 # Shadowshaper Duels — current video batch metadata and engine audit (21 October 2026)
 
 **This current report supersedes the older 20 October inventory totals beneath it.**

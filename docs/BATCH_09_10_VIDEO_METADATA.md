@@ -33,3 +33,6 @@ The source videos, not community/wiki text, are authoritative for the 23 names, 
 **Artwork:** Images/GIFs/MP4s were supplied as separate ZIP files; they have not been committed by this metadata change. Inventory records are marked `EXTRACTED_AWAITING_UPLOAD` rather than misrepresenting binary availability.
 
 **Important gameplay QA caveats:** A scripted handler is not proof of correct Android gameplay. Line/Column geometry, full-row cases, timing windows and random token pools may require additional in-game confirmation. No GitHub Actions or Android-device gameplay verification was run as part of the metadata import.
+
+## Gameplay source-code update
+Batch 09–10 abilities are implemented in `ShadowCardEffects.kt`, `ShadowEngine.kt`, and `ShadowPositionRules.kt`. Recorded row/formation and target restrictions have been applied, including 2 Rock summons, Jaren's distributed damage and Gladiator's outgoing-damage bonus. See [implementation and remaining QA](BATCH_09_10_GAMEPLAY_IMPLEMENTATION.md). **No local Gradle or Android-device tests have been executed yet.**
