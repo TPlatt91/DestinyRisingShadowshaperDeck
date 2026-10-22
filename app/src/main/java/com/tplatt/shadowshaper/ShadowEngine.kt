@@ -416,7 +416,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         side.board[row][col] = summoned
         log("SUMMON ▶ " + name + " at " + (if (row == 0) "back " else "front ") + (col + 1))
         effects.fireAllyPlacement(summoned)
-        effects.fireEnemyPlacement(summoned)
+        // Ally-placement buffs can trigger counter-damage and destroy this
+        // summon before enemy-placement watchers are allowed to observe it.
+        if (isPresent(summoned)) effects.fireEnemyPlacement(summoned)
+        sweep()
     }
 
     internal fun inspire(target: Unit?) {
@@ -565,10 +568,17 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         repeat(ShadowRules.ROWS * COLUMNS * 2) {
             val killed = (all(human) + all(cpu)).filter { power(it) <= 0 }
             if (killed.isEmpty()) return
+            // Remove all units defeated in this wave before any death
+            // splashes resolve. Otherwise the first Clone could damage
+            // another Clone that is already defeated in the same wave.
+            val removed = ArrayList<Unit>()
             for (dead in killed) {
-                if (dead.owner.board[dead.row][dead.column] !== dead) continue
+                if (!isPresent(dead)) continue
                 dead.owner.board[dead.row][dead.column] = null
+                removed.add(dead)
                 log("DESTROYED ▶ " + dead.card.name)
+            }
+            for (dead in removed) {
                 val splash = when (dead.card.name) {
                     "Clone" -> 3
                     else -> 0

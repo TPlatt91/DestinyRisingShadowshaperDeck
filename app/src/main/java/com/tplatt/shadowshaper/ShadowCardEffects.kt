@@ -416,6 +416,9 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
     fun fireEnemyPlacement(newUnit: ShadowEngine.Unit) = with(e) {
         val enemy = other(newUnit.owner)
         for (watcher in all(enemy)) {
+            // An earlier triggered effect may remove the newly arrived unit;
+            // later watchers must not react to a nonexistent target.
+            if (!isPresent(newUnit)) break
             if (watcher.suppressed || !isPresent(watcher)) continue
             if (newUnit.row == 1 && watcher.card.name == "Ayuela" && watcher.row == 0) {
                 newUnit.scorched = 2
