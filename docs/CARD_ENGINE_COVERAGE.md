@@ -1,3 +1,18 @@
+# Batch 11 implementation status — 21 October 2026
+
+- **8/8 original-video definitions** committed (metadata, Light costs, Power, factions, rarity, acquisitions and printed abilities)
+- **8/8 source-code effect handlers** present and checked in repository
+- **10 local JVM regression cases** committed as `ShadowBatch11VideoRulesTest.kt`
+- **No GitHub Actions credits used**
+- **Compilation, JVM tests, and on-device match execution have not been performed** and remain QA pending
+- **Tomb Ship**: the two Hive summons now resolve; source video does not reveal the exact random summon pool, so the engine currently uses all eligible verified constructible Hive units
+- **Elite Walker**: end-of-turn two-target damage now requires Back Row placement
+- **Luksis-3**: counts only `Rock`, not `Rock Pile`, as the card actually says
+
+See [Batch 11 source metadata](BATCH_11_VIDEO_METADATA.md).
+
+---
+
 # Current batch-coverage snapshot — Batches 01–10
 
 **2026-10-21:** All **83 recorded card appearances** (80 unique cards) across Batches 01–10 have card catalog and detailed metadata records. The newest Batches 09–10 include **23/23 video-derived metadata definitions**, source-referenced Kotlin gameplay handlers and 21 authored local JVM test scenarios. Code present does **not** mean Android gameplay has passed QA. Batches 09–10 detail: [video metadata](BATCH_09_10_VIDEO_METADATA.md) and [gameplay implementation](BATCH_09_10_GAMEPLAY_IMPLEMENTATION.md).

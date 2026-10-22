@@ -29,3 +29,16 @@ Keyword definitions are recorded in `app/src/main/assets/video_keyword_rules_01_
 Battle handlers are located in `ShadowCardEffects.kt` and `ShadowEngine.kt`. Tomb Ship's random Hive pool is necessarily based on available catalog cards; the recording does **not** show the complete in-game random pool. For all eight cards, full match-level testing and compilation remain required before calling gameplay verified.
 
 The separate Batch 11 ZIP contains artwork, GIFs and MP4s; **this source commit does not upload those binary files**.
+
+## Gameplay implementation on main
+
+All eight printed Batch 11 card effects now have battle-engine handlers. Tomb Ship's adjacent random Hive summoning and Elite Walker's Back Row restriction were added/corrected; Luksis-3 now counts only Rock units. Saladin's Human-damage bonus, Radegast's conditional Guerrilla row bonus, Bazinet's buffed-target damage, Resilient Marauder's Front Row damage and Tenacious Knight's two Inspired Hive buffs are preserved in their existing handlers.
+
+Ten focused local regression tests were added at `app/src/test/java/com/tplatt/shadowshaper/ShadowBatch11VideoRulesTest.kt`. **The tests have not yet been run**, and behavior is not yet verified in actual Android gameplay.
+
+Run without GitHub Actions:
+
+```bat
+gradlew.bat :app:testDebugUnitTest
+gradlew.bat :app:assembleDebug
+```
