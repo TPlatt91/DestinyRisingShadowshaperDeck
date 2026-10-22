@@ -249,10 +249,22 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 ShadowSpecialCardRules.wolfCanDestroy(all(me).size, power(picked)))
                 destroyUnit(picked)
             "Wu Ming" -> if (actor.row == 0) suppress(picked)
-            "Gwynn" -> if (actor.row == 1 && picked != null) {
-                for (unit in all(foe))
-                    if (unit === picked || adjacent(unit, picked)) damage(actor, unit, 3)
-                dealDirect(actor, actor, 2)
+            "Gwynn" -> if (actor.row == ShadowRules.FRONT_ROW && picked != null) {
+                // Printed: deal 3 to selected opponent and adjacent units,
+                // then LOSE 2 Power. That last clause is a Power penalty,
+                // not a damage event: Overshield cannot prevent it and
+                // Saladin cannot grant Power in response to it.
+                val victims = all(foe).filter { it === picked || adjacent(it, picked) }
+                for (victim in victims) {
+                    if (!isPresent(actor)) break
+                    if (!isPresent(victim)) continue
+                    damage(actor, victim, 3)
+                    sweep()
+                }
+                if (isPresent(actor)) {
+                    actor.power -= 2
+                    log("Gwynn: -2 Power (self penalty; not damage).")
+                }
             }
             "Xuan Wei" -> if (actor.row == ShadowRules.FRONT_ROW && picked != null) {
                 damage(actor, picked, 5)
