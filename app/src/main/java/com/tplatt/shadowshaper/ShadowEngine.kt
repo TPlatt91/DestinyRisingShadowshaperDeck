@@ -303,6 +303,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             effects.fireEnemyPlacement(unit)
         }
         sweep()
+        expireImpossibleRelocation()
         if (me === cpu) resolveCpuMove()
         return true
     }
@@ -323,18 +324,32 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun hasEmptySlot(side: Player): Boolean =
         (0..1).any { row -> (0 until COLUMNS).any { empty(side, row, it) } }
 
+    /**
+     * Relocation may outlive its original target or lose all available
+     * destinations when summons/placement triggers complete. Clear such
+     * impossible decisions instead of soft-locking the match.
+     */
+    private fun expireImpossibleRelocation(): Boolean {
+        val moving = pendingMovedUnit ?: return false
+        val reason = when {
+            !isPresent(moving) -> "Target is no longer on the battlefield."
+            !hasEmptySlot(moving.owner) -> "No empty destination remains; relocation is skipped."
+            else -> return false
+        }
+        pendingMovedUnit = null
+        pendingMoveCaster = null
+        lastActionError = reason
+        log("RELOCATION CANCELLED: " + reason)
+        return true
+    }
+
     fun resolveMove(actor: Player, row: Int, col: Int): Boolean {
         val moving = pendingMovedUnit
         if (moving == null || pendingMoveCaster !== actor) {
             lastActionError = "No movement is pending for this player."
             return false
         }
-        if (moving.owner.board[moving.row][moving.column] !== moving) {
-            pendingMovedUnit = null
-            pendingMoveCaster = null
-            lastActionError = "Target was removed before relocation."
-            return false
-        }
+        if (expireImpossibleRelocation()) return false
         if (!empty(moving.owner, row, col)) {
             lastActionError = "Select an empty destination on the target's battlefield."
             return false
@@ -359,6 +374,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     fun resolveCpuMove() {
         val moving = pendingMovedUnit ?: return
         if (pendingMoveCaster !== cpu) return
+        if (expireImpossibleRelocation()) return
         val choices = ArrayList<Target>()
         for (r in 0..1) for (c in 0 until COLUMNS)
             if (empty(moving.owner, r, c)) choices.add(Target(moving.owner, r, c))
@@ -600,6 +616,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     fun endTurn() {
         if (finished) return
+        expireImpossibleRelocation()
         if (pendingMovedUnit != null) {
             lastActionError = "Relocate " + pendingMovedUnit!!.card.name + " before ending your turn."
             return
@@ -681,8 +698,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         if (cpu.board[1 - row][col] != null) value += 0.9
         if (col > 0 && cpu.board[row][col - 1] != null) value += 0.3
         if (col < COLUMNS - 1 && cpu.board[row][col + 1] != null) value += 0.3
-        if (isTargeted(card))
-            value += if (targetOptions(cpu, card, row, col).isNotEmpty()) 1.3 else -1.0
+        if (isTargeted(card)) {
+            // The CPU used to prefer raw Power even when a stronger
+            // placement of this same targeted card could trigger its effect.
+            // Legal targets reward the placement; dead-on-arrival effects
+            // are still playable, but should generally be deprioritized.
+            value += if (targetOptions(cpu, card, row, col).isNotEmpty()) 3.0 else -3.0
+        }
         return value + rng.nextDouble() * 0.12
     }
 
