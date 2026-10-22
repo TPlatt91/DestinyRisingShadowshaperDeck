@@ -220,7 +220,14 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     fun power(unit: Unit): Int = max(0, unit.power + effects.aura(unit))
     fun original(unit: Unit): Int = max(0, unit.card.numericPower())
-    fun powerBonus(unit: Unit): Int = max(0, power(unit) - original(unit))
+    /**
+     * Active bonus Power is not the same as current Power minus printed
+     * Power: a buffed unit can take damage and still carry a +Power bonus.
+     * Bazinet and Thinktank refer to the bonus itself, not remaining HP.
+     * Include ongoing Column/Line auras while excluding suffered damage.
+     */
+    fun powerBonus(unit: Unit): Int =
+        if (!isPresent(unit)) 0 else max(0, unit.bonus + effects.aura(unit))
 
     fun projectedFactionLine(side: Player, card: ShadowData.Card, row: Int, column: Int): Int =
         ShadowPositionRules.contiguousLineUnits(side, row, column, card)
