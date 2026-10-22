@@ -80,6 +80,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     @JvmField var round = 1
     @JvmField var completedTurns = 0
     @JvmField var unresolvedEffects = 0
+    /** First unresolved card/effect reasons survive the capped battle journal. */
+    @JvmField val unresolvedEffectDetails = ArrayList<String>()
     /** Cumulative rejected CPU moves; unlike the 90-line log this never rolls off. */
     @JvmField var rejectedCpuMoves = 0
     @JvmField var lastPlacedSide = -1
@@ -105,9 +107,16 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         if (journal.size > 90) journal.removeAt(0)
     }
 
-    internal fun incomplete(card: ShadowData.Card, reason: String) {
+    internal fun recordUnresolvedEffect(message: String) {
         unresolvedEffects++
-        log("UNIMPLEMENTED: " + card.name + " — " + reason)
+        // Retain the initial causes: the event journal deliberately keeps
+        // only 90 recent events and may roll away the first failure.
+        if (unresolvedEffectDetails.size < 64) unresolvedEffectDetails.add(message)
+        log(message)
+    }
+
+    internal fun incomplete(card: ShadowData.Card, reason: String) {
+        recordUnresolvedEffect("UNIMPLEMENTED: " + card.name + " — " + reason)
     }
 
     internal fun noEffect(card: ShadowData.Card): Boolean =
@@ -128,6 +137,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         clear(cpu)
         journal.clear()
         unresolvedEffects = 0
+        unresolvedEffectDetails.clear()
         rejectedCpuMoves = 0
         lastActionError = ""
         pendingMovedUnit = null
@@ -561,8 +571,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     private fun applyPowerBonus(target: Unit?, amount: Int): Boolean {
         if (target == null || amount <= 0 || !isPresent(target)) return false
         if (resolutionDepth >= 32) {
-            unresolvedEffects++
-            log("SAFETY: recursive Power bonus rejected after 32 resolutions.")
+            recordUnresolvedEffect(
+                "SAFETY: recursive Power bonus rejected after 32 resolutions."
+            )
             return false
         }
         var applied = amount
@@ -950,6 +961,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         append("Score: ").append(score(human)).append(" / ").append(score(cpu)).append("\n")
         append("Light: player ").append(human.points).append(", CPU ").append(cpu.points).append("\n")
         append("Pending card effects: ").append(unresolvedEffects).append("\n")
+        if (unresolvedEffectDetails.isNotEmpty()) {
+            append("UNRESOLVED EFFECT REASONS (first 64)\n")
+            for (detail in unresolvedEffectDetails) append(detail).append('\n')
+        }
         append("Rejected CPU moves: ").append(rejectedCpuMoves).append("\n")
         append("Match complete: ").append(finished).append("\n\n")
         appendSideReport(this, "PLAYER", human)
