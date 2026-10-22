@@ -92,6 +92,22 @@ class ShadowBatch0607EffectsTest {
         assertTrue(before - victim.power in 2..4)
     }
 
+    @Test fun rockCannotBePlayedOrDirectlySummonedWithoutXur() {
+        val e = engine()
+        val rock = e.catalog.getValue("Rock")
+        assertFalse(rock.isPlayable)
+        assertTrue(ShadowDeckRules.canAdd(emptyMap(), rock, e.catalog).isNotBlank())
+        assertTrue(ShadowDeckRules.validate(mapOf("Rock" to 1), e.catalog).isNotBlank())
+        e.human.hand.add(rock)
+        assertFalse(e.isPlayablePlacement(e.human, e.human.hand.lastIndex, 0, 0))
+        assertFalse(e.play(e.human, e.human.hand.lastIndex, 0, 0, null))
+        assertEquals(1, e.human.hand.size)
+        e.spawnAt(e.cpu, ShadowRules.FRONT_ROW, 0, "Rock")
+        assertNull(e.cpu.board[ShadowRules.FRONT_ROW][0])
+        e.spawnRandom(e.cpu, ShadowRules.FRONT_ROW, "Rock", e.catalog.getValue("Tracker"))
+        assertTrue(e.cpu.board[ShadowRules.FRONT_ROW].all { it == null })
+    }
+
     @Test fun xurSummonsVerifiedRockInEnemyFrontRow() {
         val e = engine()
         val xur = play(e, "Xur", 0, 2)

@@ -388,7 +388,7 @@ private fun DeckScreen(
     val legality = vm.legality()
     val deckCards = state.cards.keys.mapNotNull { vm.catalog[it] }.sortedBy { it.name }
     val suggestions = vm.alphabetical.filter { card ->
-        card.name !in state.cards &&
+        card.isPlayable && card.name !in state.cards &&
         (addSearch.isBlank() || card.name.contains(addSearch.trim(), true))
     }.take(30)
 

@@ -150,10 +150,10 @@ class ShadowBatch0910VideoRulesTest {
         assertEquals(10, unselected.power)
     }
 
-    @Test fun commonCoverSpawnsTwoRocksAtRandomFreeEnemyFrontSlots() {
+    @Test fun commonCoverCannotSummonRockBecauseRockIsExclusiveToXur() {
         val e = engine()
         play(e, "Common Cover", 1, 1)
-        assertEquals(2, e.cpu.board[1].filterNotNull().count { it.card.name == "Rock" })
+        assertEquals(0, e.cpu.board[1].filterNotNull().count { it.card.name == "Rock" })
     }
 
     @Test fun guerrillaCaptainDealsTwoUponOwnPowerBonus() {

@@ -250,6 +250,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         if (me !== (if (humanTurn) human else cpu)) return "It is not this player's turn."
         if (index !in me.hand.indices) return "Selected card is not in hand."
         val card = me.hand[index]
+        if (!card.isPlayable) return card.name + " is summon-only and cannot be played from hand."
         if (card.numericCost() < 1) return "Card is not playable (missing or invalid cost)."
         if (card.numericPower() < 0) return "Card Power is not verified."
         if (card.numericCost() > me.points) return "Insufficient Light."
@@ -274,7 +275,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     fun isPlayablePlacement(side: Player, index: Int, row: Int, column: Int): Boolean =
         (side === human || side === cpu) && !finished && pendingMovedUnit == null &&
             side === (if (humanTurn) human else cpu) && index in side.hand.indices &&
-            affordable(side, index) && side.hand[index].numericPower() >= 0 &&
+            affordable(side, index) && side.hand[index].isPlayable &&
+                side.hand[index].numericPower() >= 0 &&
             empty(side, row, column)
 
     fun turnLabel(): String = if (finished) "FINAL" else
@@ -357,15 +359,27 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun spawnRandom(side: Player, row: Int, token: String, source: ShadowData.Card) {
+        // Rock is not a generic summon: only Xur's own effect can create it.
+        if (token == "Rock" && source.name != "Xur") {
+            log("SUMMON RESTRICTED: Rock may only be summoned by Xur, not " + source.name)
+            return
+        }
         val choices = (0 until COLUMNS).filter { empty(side, row, it) }
         if (choices.isEmpty()) {
             log("SUMMON: No open slot for " + token + "; effect cannot place token.")
             return
         }
-        spawnAt(side, row, choices[rng.nextInt(choices.size)], token)
+        spawnAt(side, row, choices[rng.nextInt(choices.size)], token, source.name)
     }
 
-    internal fun spawnAt(side: Player, row: Int, col: Int, name: String) {
+    internal fun spawnAt(
+        side: Player, row: Int, col: Int, name: String, summoner: String? = null
+    ) {
+        // Defense-in-depth: prevent direct Rock spawning that bypasses spawnRandom.
+        if (name == "Rock" && summoner != "Xur") {
+            log("SUMMON RESTRICTED: Rock requires Xur as its source.")
+            return
+        }
         if (!empty(side, row, col)) return
         val card = card(name)
         if (card == null || card.numericPower() < 0) {

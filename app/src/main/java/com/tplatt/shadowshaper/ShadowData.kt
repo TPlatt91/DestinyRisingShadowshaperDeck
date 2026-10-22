@@ -36,6 +36,9 @@ object ShadowData {
         fun numericPower(): Int = power.toIntOrNull() ?: -1
         val isPlayable: Boolean get() =
             numericCost() > 0 && numericPower() >= 0 &&
+                // Rock is an Xur-only summon even if an old catalog omits
+                // its "Summoned unit" classification.
+                !name.equals("Rock", ignoreCase = true) &&
                 !classification.equals("Summoned unit", ignoreCase = true) &&
                 !cost.equals("Token", ignoreCase = true)
     }
