@@ -10,12 +10,16 @@ object ShadowPositionRules {
      * unit a Line card (or eligible for Drop Pod's random summon pool).
      * Some recorded cards print "2 Unit Line" without the hyphen.
      */
+    // The CPU checks this against many proposed board positions. Compile
+    // once rather than constructing a fresh Regex for every candidate.
+    private val printedLineHeader = Regex(
+        """\b(?:When Played|Sustained)\s*\([^)]*\b\d+[- ]Unit Line\b[^)]*\)""",
+        RegexOption.IGNORE_CASE
+    )
+
     @JvmStatic
     fun hasLineAffix(effect: String): Boolean =
-        Regex(
-            """\b(?:When Played|Sustained)\s*\([^)]*\b\d+[- ]Unit Line\b[^)]*\)""",
-            RegexOption.IGNORE_CASE
-        ).containsMatchIn(effect)
+        printedLineHeader.containsMatchIn(effect)
 
     /**
      * A Line consists of contiguous units bearing the PRINTED Line affix.
