@@ -55,3 +55,11 @@ Elite Walker|Mythic|Fallen|4|2|Sustained (Back Row): When your turn ends, deals 
 Resilient Marauder|Mythic|Fallen|4|6|When Played (Front Row): Deals 5 damage to an opposing unit.
 Luksis-3|Mythic|Fallen|4|5|When Played: Grants Power equal to 2x the number of Rocks on your opponent's field.
 Tenacious Knight|Mythic|Hive|4|6|When Played (Front Row): Randomly grants +3 Power to 2 of your Inspired Hive units.
+Tenacious Ogre|Mythic|Hive|4|5|Sustained: When acquiring a buff, deals 1 damage to 4 random opposing units.
+Tenacious Wizard|Mythic|Hive|4|5|When Played (Back Row): Grants Inspired to 2 random Hive units.
+Shinka Vigile|Mythic|Cabal|4|8|When Played (3-Unit Line): Deals 4 damage to a unit in the back row.
+Shinka Scorpius|Mythic|Cabal|4|7|Sustained (3-Unit Line): At the end of your turn, deals 2 damage to a random opposing unit.
+Juggernaut|Mythic|Cabal|4|8|Sustained (Column): Cabal units to the left and right deal 1 additional damage.
+Pandora-7|Legendary|Humans|4|5|Sustained: When your turn ends, grants the unit on the right +2 Power.
+Harrow|Legendary|Humans|4|7|When Played: Toss a coin. If the result is heads, this unit gains +5 Power.
+Helhest|Exotic|Humans|5|6|Sustained (Back Row): When your turn ends, deal 1 damage to 1 random opposing unit and the units to its left and right, while also gaining Power based on the damage dealt.

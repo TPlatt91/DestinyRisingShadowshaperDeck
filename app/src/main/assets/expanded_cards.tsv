@@ -28,3 +28,5 @@ Colossus|Legendary|Cabal|3|6|Sustained (Column): Grants Cabal units directly in 
 Drop Pod|Legendary|Cabal|3|2|When Played (2 Unit Line): Summons 1 random Line unit on the left.
 Shinka Vigile|Mythic|Cabal|4|8|When Played (3-Unit Line): Deals 4 damage to a unit in the back row.
 Shinka Scorpius|Mythic|Cabal|4|7|Sustained (3-Unit Line): At the end of your turn, deals 2 damage to a random opposing unit.
+Harrow|Legendary|Humans|4|7|When Played: Toss a coin. If the result is heads, this unit gains +5 Power.
+Helhest|Exotic|Humans|5|6|Sustained (Back Row): When your turn ends, deal 1 damage to 1 random opposing unit and the units to its left and right, while also gaining Power based on the damage dealt.
