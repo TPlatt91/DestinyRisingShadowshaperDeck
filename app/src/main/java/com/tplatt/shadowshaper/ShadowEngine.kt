@@ -72,6 +72,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     @JvmField var round = 1
     @JvmField var completedTurns = 0
     @JvmField var unresolvedEffects = 0
+    /** Cumulative rejected CPU moves; unlike the 90-line log this never rolls off. */
+    @JvmField var rejectedCpuMoves = 0
     @JvmField var lastPlacedSide = -1
     @JvmField var lastPlacedRow = -1
     @JvmField var lastPlacedColumn = -1
@@ -110,6 +112,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         clear(cpu)
         journal.clear()
         unresolvedEffects = 0
+        rejectedCpuMoves = 0
         lastActionError = ""
         pendingMovedUnit = null
         pendingMoveCaster = null
@@ -724,20 +727,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     private fun startSide(side: Player) {
-        // All bombs scheduled for this turn detonate simultaneously. Remove
-        // the full wave before resolving its damage so one explosion cannot
-        // hit another bomb that has already been scheduled to explode.
-        val detonating = (all(human) + all(cpu)).filter { unit ->
-            unit.fuseOrigin === side && unit.fuseRound <= round && isPresent(unit)
-        }
-        for (bomb in detonating) {
-            bomb.owner.board[bomb.row][bomb.column] = null
-            log(bomb.card.name + " DETONATES ▶ " + (bomb.column + 1))
-        }
-        for (bomb in detonating) {
-            for (offset in listOf(-1, 1)) {
-                dealDirect(bomb, at(bomb.owner, bomb.row, bomb.column + offset), 2)
-            }
+        for (controller in listOf(human, cpu)) for (unit in all(controller)) {
+            if (unit.fuseOrigin !== side || unit.fuseRound > round) continue
+            if (controller.board[unit.row][unit.column] !== unit) continue
+            controller.board[unit.row][unit.column] = null
+            log(unit.card.name + " DETONATES ▶ " + (unit.column + 1))
+            for (offset in listOf(-1, 1))
+                dealDirect(unit, at(controller, unit.row, unit.column + offset), 2)
         }
         sweep()
     }
@@ -805,6 +801,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         val card = cpu.hand[bestIndex]
         val target = chooseAI(cpu, card, bestRow, bestColumn)
         if (!play(cpu, bestIndex, bestRow, bestColumn, target)) {
+            rejectedCpuMoves++
             log("CPU rejected move: " + lastActionError)
             return false
         }
@@ -864,6 +861,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         append("Score: ").append(score(human)).append(" / ").append(score(cpu)).append("\n")
         append("Light: player ").append(human.points).append(", CPU ").append(cpu.points).append("\n")
         append("Pending card effects: ").append(unresolvedEffects).append("\n")
+        append("Rejected CPU moves: ").append(rejectedCpuMoves).append("\n")
         append("Match complete: ").append(finished).append("\n\n")
         appendSideReport(this, "PLAYER", human)
         appendSideReport(this, "CPU", cpu)

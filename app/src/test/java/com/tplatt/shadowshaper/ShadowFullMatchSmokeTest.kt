@@ -209,7 +209,7 @@ class ShadowFullMatchSmokeTest {
                     assertFalse(
                         "CPU attempted an invalid move: faction=" + faction +
                             " seed=" + seed + "\\n" + e.diagnosticReport(),
-                        e.journal.any { it.startsWith("CPU rejected move:") }
+                        e.rejectedCpuMoves > 0
                     )
                     if (!e.finished) {
                         assertNull("Pending relocation after end of turn", e.pendingMovedUnit)
@@ -226,6 +226,7 @@ class ShadowFullMatchSmokeTest {
                     (e.round - 1) * 2 + e.completedTurns
                 )
                 assertNull("Relocation left pending at final score", e.pendingMovedUnit)
+                assertEquals("CPU rejected a move during the match", 0, e.rejectedCpuMoves)
                 assertEquals(
                     "Final player score differs from visible board Power",
                     e.human.board.flatMap { it.toList() }.filterNotNull()
