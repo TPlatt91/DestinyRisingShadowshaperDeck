@@ -4,6 +4,7 @@ import java.util.ArrayList
 import java.util.Collections
 import java.util.Locale
 import java.util.Random
+import java.util.IdentityHashMap
 import kotlin.math.max
 import kotlin.math.min
 
@@ -33,6 +34,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         @JvmField var suppressed = false
         @JvmField var bonusDoublerConsumed = false
         @JvmField var damageDoublerConsumed = false
+        // Video Batch 07: sniper retaliation lasts two owner turns and can hit
+        // a particular opposing unit only once per turn.
+        @JvmField var sniperTurnsRemaining: Int = 2
+        @JvmField val sniperLastHitTurn: IdentityHashMap<Unit, Int> = IdentityHashMap()
         @JvmField var fuseOrigin: Player? = null
         @JvmField var fuseRound: Int = 0
     }
@@ -70,6 +75,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal val effects = ShadowCardEffects(this)
     private var resolutionDepth = 0
+    internal fun actionTurnId(): Int = (round - 1) * 2 + completedTurns
 
     internal fun log(message: String) {
         journal.add(message)
@@ -346,7 +352,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun spawnRandom(side: Player, row: Int, token: String, source: ShadowData.Card) {
         val choices = (0 until COLUMNS).filter { empty(side, row, it) }
         if (choices.isEmpty()) {
-            incomplete(source, "No empty slot for " + token + "; full-row behavior not verified.")
+            log("SUMMON: No open slot for " + token + "; effect cannot place token.")
             return
         }
         spawnAt(side, row, choices[rng.nextInt(choices.size)], token)
@@ -411,9 +417,14 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         try {
             effects.onBuff(target)
             val foe = other(target.owner)
-            if (target.row == 1) {
-                for (sniper in all(foe)) if (sniper.card.name == "Elite Sniper Vandal" && !sniper.suppressed)
-                    damage(sniper, target, 1)
+            // Video confirms opposing units in either row; limit each sniper
+            // to one hit per target per turn while the two-turn effect is active.
+            for (sniper in all(foe)) {
+                if (sniper.card.name != "Elite Sniper Vandal" || sniper.suppressed ||
+                    sniper.row != ShadowRules.BACK_ROW || sniper.sniperTurnsRemaining <= 0) continue
+                if (sniper.sniperLastHitTurn[target] == actionTurnId()) continue
+                sniper.sniperLastHitTurn[target] = actionTurnId()
+                damage(sniper, target, 1)
             }
             sweep()
         } finally {
@@ -451,7 +462,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             log("Jolder doubles the next damage event without becoming Suppressed.")
         }
         if (all(source.owner).any {
-                it !== source && !it.suppressed && it.card.name == "Umeko" && it.row == 0
+                !it.suppressed && it.card.name == "Umeko" && it.row == ShadowRules.BACK_ROW
             }) actual += 1 + rng.nextInt(3)
         dealDirect(source, target, actual)
     }
