@@ -244,8 +244,80 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     fun other(side: Player): Player = if (side === human) cpu else human
     internal fun targetUnit(target: Target?): Unit? = target?.unit()
 
-    private fun chooseAI(me: Player, card: ShadowData.Card, row: Int, col: Int): Target? =
-        targetOptions(me, card, row, col).maxByOrNull { power(it.unit()!!) }
+    /**
+     * Choose among *legal* targets using the printed effect's purpose.
+     * Choosing the largest visible Power for every effect previously made the
+     * CPU damage heavily protected units while missing smaller lethal hits,
+     * inspire already-Inspired allies, or waste Overshield on shielded allies.
+     *
+     * Heuristics guide CPU play; they do not alter card targeting legality.
+     */
+    internal fun chooseAI(me: Player, card: ShadowData.Card, row: Int, col: Int): Target? {
+        val options = targetOptions(me, card, row, col)
+        if (options.isEmpty()) return null
+        if (card.name == "Rossi-11" && options.all { it.unit()?.overshield == true })
+            return null // grant its own freshly played card an Overshield instead
+
+        return options.maxByOrNull { option ->
+            val unit = option.unit()!!
+            val unitPower = power(unit).toDouble()
+            if (effects.targetsEnemy(card.name)) {
+                when (card.name) {
+                    "Wu Ming" -> {
+                        // Suppression removes Power bonuses and ongoing text,
+                        // but Overshield/Mind Disruptor can nullify the effect.
+                        val left = at(unit.owner, unit.row, unit.column + 1)
+                        val protected = left?.card?.name == "Mind Disruptor" &&
+                            !left.suppressed
+                        unit.bonus * 5.0 + unitPower * 0.2 +
+                            (if (unit.suppressed) -25.0 else 8.0) -
+                            (if (unit.overshield || protected) 30.0 else 0.0)
+                    }
+                    "Wolf", "Molkrul" ->
+                        unitPower + (if (unit.overshield) -30.0 else 15.0)
+                    else -> {
+                        val hit = when (card.name) {
+                            "Inquisitor", "Shinka Vigile" -> 4
+                            "Psion", "Vandal", "Augmented Shank", "Ikora" -> 2
+                            "Tracer Shank", "Incendior", "Shinka Psion",
+                            "Shinka Incendior", "Gwynn", "Goliath Tank" -> 3
+                            "Resilient Marauder", "Xuan Wei", "Devil Sentry" -> 5
+                            "Wretch" -> 1
+                            else -> 0 // variable or non-damage effects
+                        }
+                        val effective = if (hit > 0) ShadowDamageRules.afterAuras(
+                            hit, 0,
+                            effects.reduction(unit)
+                        ) else 0
+                        val lethal = effective > 0 && unitPower <= effective
+                        val area = when (card.name) {
+                            "Ikora", "Goliath Tank" ->
+                                countRow(unit.owner, unit.row).toDouble() * 3.0
+                            "Gwynn", "Augmented Shank" ->
+                                all(unit.owner).count { it === unit || adjacent(it, unit) } * 3.0
+                            else -> 0.0
+                        }
+                        unitPower + area +
+                            (if (lethal) 18.0 else effective * 0.5) -
+                            (if (unit.overshield) 40.0 else 0.0)
+                    }
+                }
+            } else {
+                when (card.name) {
+                    "Wizard", "Guarding Servitor" ->
+                        (if (unit.inspired) -40.0 else 20.0) + unitPower * 0.1
+                    "Rossi-11" ->
+                        unitPower - (if (unit.overshield) 50.0 else 0.0)
+                    "Gladiator", "Shinka Gladiator" ->
+                        unitPower * 0.2 + all(me).count {
+                            it === unit || adjacent(it, unit)
+                        } * 8.0
+                    "Attal", "Sabikis" -> unitPower
+                    else -> unitPower
+                }
+            }
+        }
+    }
 
     fun validatePlay(me: Player, index: Int, row: Int, column: Int, target: Target?): String {
         if (me !== human && me !== cpu) return "Unknown player."
