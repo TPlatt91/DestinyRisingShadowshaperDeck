@@ -273,7 +273,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 // Cabal unit. Build the pool from cards with the printed Line affix.
                 val candidates = catalog.values.filter {
                     it.isPlayable && it.name != "Drop Pod" &&
-                        it.effect.contains(Regex("""\bLine\b"""))
+                        ShadowPositionRules.hasLineAffix(it.effect)
                 }.sortedBy { it.name }
                 if (candidates.isNotEmpty()) {
                     val randomCard = candidates[rng.nextInt(candidates.size)]

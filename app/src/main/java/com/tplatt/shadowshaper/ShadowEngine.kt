@@ -226,7 +226,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (card.name == "Wolf" &&
                 !ShadowSpecialCardRules.wolfTargetEligible(power(unit))) continue
             if (card.name == "Vigile" &&
-                !unit.card.effect.contains(Regex("""\bLine\b"""))) continue
+                !ShadowPositionRules.hasLineAffix(unit.card.effect)) continue
             if (card.name in setOf("Gladiator", "Shinka Gladiator") && r != 1) continue
             if (card.name == "Sabikis" &&
                 (col == 0 || side.board[r][col - 1] == null)) continue

@@ -4,6 +4,11 @@ package com.tplatt.shadowshaper
  * Current contiguous interpretation is provisional pending in-game proof.
  */
 object ShadowPositionRules {
+    /** A printed Line ability, not merely card text referring to Line units. */
+    @JvmStatic
+    fun hasLineAffix(effect: String): Boolean =
+        Regex("""\\b\\d+[- ]Unit Line\\b""", RegexOption.IGNORE_CASE).containsMatchIn(effect)
+
     @JvmStatic
     fun isAdjacent(rowA: Int, columnA: Int, rowB: Int, columnB: Int): Boolean =
         rowA == rowB && kotlin.math.abs(columnA - columnB) == 1
