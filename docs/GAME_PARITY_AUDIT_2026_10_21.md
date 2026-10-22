@@ -53,3 +53,14 @@ Keyword mechanics now have separate centralized checks for **When Played, Front/
 - **Verification workflow:** The root `run_local_engine_checks.bat` runs the local JVM regression suite and assembles the debug APK, displaying results and writing `shadow_engine_test_log.txt`. It **does not** run GitHub Actions or spend workflow credits.
 
 **QA status remains unverified until this script completes on a configured Android/Gradle workstation.**
+
+## Next engine pass — targeting, AI placement and relocation
+
+The following source changes were made on `main`:
+
+- **Relocation deadlock prevention:** If the target of a pending relocation has left the battlefield, or if the destination side no longer has any free positions, the pending choice is cleared. The match may advance instead of remaining stuck on an impossible selection. An attempted *occupied* destination is still rejected without losing the existing valid choice.
+- **CPU relocation:** Computer-controlled Xuan Wei relocations check that the target and potential destination still exist before attempting to resolve.
+- **AI targeted placement:** A position where a targeted When Played ability can actually select a legal unit now scores higher than a position where the same effect cannot activate. Target-free plays are still legal for their printed Power.
+- **Local regression suite:** Added six scenarios in `ShadowRelocationAndAiTest.kt` for full-board relocation cancellation, destroyed movement targets, invalid destinations, automatic CPU movement, AI Back Row targeting and target-free CPU deployment.
+
+These are **source-code changes only**, not an asserted match to the original Destiny: Rising NPC AI. Exact NPC behavior, movement constraints on a filled battlefield and battle runtime remain pending original-game verification. No GitHub Actions or workflow credits were used. Run `run_local_engine_checks.bat` from the repository root to compile and run the local Android/JVM verification suite.
