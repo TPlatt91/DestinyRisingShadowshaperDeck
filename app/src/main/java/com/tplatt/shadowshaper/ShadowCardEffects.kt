@@ -412,14 +412,22 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         for (captain in all(source.owner)) {
             // Summons and their nested triggers can invalidate the rest of
             // the watcher snapshot. A defeated Captain cannot summon.
+            if (!isPresent(source)) break
             if (!isPresent(captain) || captain.card.name != "Resilient Captain" ||
                 captain.suppressed || captain.resilientCaptainDregs >= 6) continue
             val col = captain.column + 1
             if (!empty(source.owner, captain.row, col)) continue
-            spawnAt(source.owner, captain.row, col, "Dreg")
-            if (at(source.owner, captain.row, col)?.card?.name == "Dreg") {
-                captain.resilientCaptainDregs++
-                log("Resilient Captain summons Dreg " + captain.resilientCaptainDregs + "/6.")
+            // Reserve the activation BEFORE processing the summoned unit's
+            // nested placement/buff/damage effects. Reentrant damage may
+            // return to this handler while its initial summon is unresolved.
+            if (card("Dreg")?.numericPower()?.let { it >= 0 } != true) continue
+            captain.resilientCaptainDregs++
+            val count = captain.resilientCaptainDregs
+            val summoned = spawnAt(source.owner, captain.row, col, "Dreg")
+            if (!summoned) {
+                captain.resilientCaptainDregs--
+            } else {
+                log("Resilient Captain summons Dreg " + count + "/6.")
             }
         }
     }

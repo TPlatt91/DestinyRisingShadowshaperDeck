@@ -490,22 +490,31 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         spawnAt(side, row, choices[rng.nextInt(choices.size)], token, source.name)
     }
 
+    /**
+     * True if a unit entered a legal free slot. This does NOT require it to
+     * survive arrival reactions: on-play summon caps count a deployed Dreg
+     * even when sniper retaliation defeats it immediately.
+     */
     internal fun spawnAt(
         side: Player, row: Int, col: Int, name: String, summoner: String? = null
-    ) {
+    ): Boolean {
         // Also guard direct spawnAt calls: no manual or unrelated Rock creation.
         if (name == "Rock" && summoner !in setOf("Xur", "Common Cover")) {
             log("SUMMON RESTRICTED: Rock requires Xur or Common Cover as its source.")
-            return
+            return false
         }
-        if (!empty(side, row, col)) return
+        if (!empty(side, row, col)) return false
         val card = card(name)
         if (card == null || card.numericPower() < 0) {
             if (card != null) incomplete(card, "Token/base Power missing.")
-            return
+            return false
         }
         val summoned = Unit(side, card, row, col)
         side.board[row][col] = summoned
+        lastPlacedSide = if (side.human) 0 else 1
+        lastPlacedRow = row
+        lastPlacedColumn = col
+        placementRevision++
         log("SUMMON ▶ " + name + " at " + (if (row == 0) "back " else "front ") + (col + 1))
         effects.fireAllyPlacement(summoned)
         // Remove a summoned 0-Power unit before its enemy-arrival watchers
@@ -513,6 +522,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         sweep()
         if (isPresent(summoned)) effects.fireEnemyPlacement(summoned)
         sweep()
+        return true
     }
 
     internal fun inspire(target: Unit?) {
