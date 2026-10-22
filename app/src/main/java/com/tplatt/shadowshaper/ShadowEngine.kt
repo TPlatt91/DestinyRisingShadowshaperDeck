@@ -534,7 +534,11 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun sweep() {
-        repeat(12) {
+        // A death splash can eliminate another unit and cause another death
+        // splash. At most both full boards (2 players × rows × columns) can
+        // be removed in a single sweep; a fixed 12-pass cap was insufficient
+        // for the full 24-unit battlefield.
+        repeat(ShadowRules.ROWS * COLUMNS * 2) {
             val killed = (all(human) + all(cpu)).filter { power(it) <= 0 }
             if (killed.isEmpty()) return
             for (dead in killed) {
