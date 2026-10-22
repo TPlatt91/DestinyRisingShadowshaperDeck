@@ -298,10 +298,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         log((if (me.human) "YOU" else "CPU") + " ▶ " + card.name + " • " +
             (if (row == 0) "BACK" else "FRONT") + " " + (col + 1))
         effects.onPlayed(unit, target)
-        if (me.board[unit.row][unit.column] === unit) {
-            effects.fireAllyPlacement(unit)
-            effects.fireEnemyPlacement(unit)
-        }
+        if (isPresent(unit)) effects.fireAllyPlacement(unit)
+        // Ally placement can cause buffs and lethal retaliation. A card
+        // destroyed during that event must not trigger enemy arrival effects.
+        if (isPresent(unit)) effects.fireEnemyPlacement(unit)
         sweep()
         expireImpossibleRelocation()
         if (me === cpu) resolveCpuMove()
