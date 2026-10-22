@@ -26,6 +26,8 @@ class ShadowEndTurnChainedDamageTest {
                 "Sustained (Back Row): Deal 1 damage to a random enemy and units left and right, gaining Power equal to damage dealt."),
             card("Elite Walker", "Fallen", 5,
                 "Sustained (Back Row): Deal 2 damage to two random opposing units."),
+            card("Scorpius", "Cabal", 4,
+                "Sustained: At the end of your turn, deals 1 damage to a random opposing unit."),
             card("Clone", "Humans", 1,
                 "When destroyed: Deal 3 damage to the units to its left and right."),
             card("Dreg", "Fallen", 10, "No special effects.")
@@ -93,6 +95,45 @@ class ShadowEndTurnChainedDamageTest {
         assertEquals(10, protected.power)
         assertFalse(protected.overshield)
         assertTrue(e.journal.any { it.contains("Helhest: dealt 0 damage") })
+    }
+
+    @Test fun recordedScorpiusEffectHitsExactlyOneRandomEnemy() {
+        val e = fixture(1L)
+        // The newer recorded text specifies one random target with no
+        // printed Back Row restriction; do not reinstate the old-client bug.
+        put(e, "Scorpius", e.human, ShadowRules.FRONT_ROW, 3)
+        val first = put(e, "Dreg", e.cpu, 0, 0)
+        val second = put(e, "Dreg", e.cpu, 1, 1)
+
+        e.effects.endSide(e.human)
+
+        assertEquals(19, first.power + second.power)
+        assertEquals(1, e.journal.count { it == "DAMAGE 1 ▶ Dreg" })
+    }
+
+    @Test fun frontRowEliteWalkerDoesNotActivateItsBackRowAbility() {
+        val e = fixture(8L)
+        put(e, "Elite Walker", e.human, ShadowRules.FRONT_ROW, 4)
+        val first = put(e, "Dreg", e.cpu, 1, 0)
+        val second = put(e, "Dreg", e.cpu, 1, 1)
+
+        e.effects.endSide(e.human)
+
+        assertEquals(10, first.power)
+        assertEquals(10, second.power)
+        assertFalse(e.journal.any { it.startsWith("DAMAGE") })
+    }
+
+    @Test fun multipleScorpiusSourcesEachResolveTheirOwnOneDamageEvent() {
+        val e = fixture(15L)
+        put(e, "Scorpius", e.human, 0, 0)
+        put(e, "Scorpius", e.human, 1, 1)
+        val victim = put(e, "Dreg", e.cpu, 1, 0)
+
+        e.effects.endSide(e.human)
+
+        assertEquals(8, victim.power)
+        assertEquals(2, e.journal.count { it == "DAMAGE 1 ▶ Dreg" })
     }
 
     @Test fun suppressedEndTurnSourcesCannotDealChainedDamage() {
