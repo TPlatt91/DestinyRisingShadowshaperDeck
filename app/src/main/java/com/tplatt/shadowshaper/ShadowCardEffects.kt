@@ -387,10 +387,16 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         val own = newUnit.owner
         if (own.board[newUnit.row][newUnit.column] !== newUnit) return@with
         if (newUnit.card.name == "Dreg") {
-            val unrelenting = all(own).count {
-                it.card.name == "Unrelenting Captain" && !it.suppressed
+            // Each Captain grants a separate +1 Power bonus. Combining two
+            // Captains into one +2 bonus incorrectly lets Tan-2 double both.
+            // Retaliation may also destroy the Dreg before later Captains
+            // resolve, so revisit board membership after every bonus.
+            for (captain in all(own)) {
+                if (!isPresent(newUnit)) break
+                if (!isPresent(captain) || captain.suppressed ||
+                    captain.card.name != "Unrelenting Captain") continue
+                buff(newUnit, 1)
             }
-            if (unrelenting > 0) buff(newUnit, unrelenting)
         }
         for (watcher in all(own)) {
             // The first placement bonus can cause enemy sniper retaliation
