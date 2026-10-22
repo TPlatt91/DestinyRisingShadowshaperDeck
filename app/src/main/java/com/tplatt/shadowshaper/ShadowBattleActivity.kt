@@ -226,7 +226,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         val card = e.human.hand[index]
         if (e.isTargeted(card) && e.targetOptions(e.human, card, row, column).isNotEmpty()) {
             pendingPosition = row to column
-            message = "Choose a gold-highlighted target for " + card.name
+            message = if (card.name == "Rossi-11")
+                "Choose a highlighted ally or SHIELD SELF."
+            else "Choose a gold-highlighted target for " + card.name
         } else {
             if (co.play(e.human, index, row, column, null)) {
                 selectedIndex = -1
