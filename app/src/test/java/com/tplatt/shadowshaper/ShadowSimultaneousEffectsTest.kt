@@ -28,6 +28,8 @@ class ShadowSimultaneousEffectsTest {
             card("Fragile Dreg", "Fallen", 1, 1, "No special effects."),
             card("Unrelenting Captain", "Fallen", 10, 1,
                 "Sustained: Newly summoned Dregs gain 1 Power."),
+            card("Grenade Dreg", "Fallen", 3, 1,
+                "Sustained: When an ally deploys in the same row, this unit gains +1 Power."),
             card("Elite Sniper Vandal", "Fallen", 10, 1,
                 "Sustained (Back Row): Damages opposing units that gain Power."),
             card("Zhiyao", "Humans", 10, 1,
@@ -123,6 +125,42 @@ class ShadowSimultaneousEffectsTest {
         assertEquals(8, center.power)
         assertEquals(8, right.power)
         assertEquals(10, otherRow.power)
+    }
+
+    @Test fun lethalArrivalBuffStopsLaterAlliedGrenadeDregWatchers() {
+        val e = engine()
+        put(e, "Unrelenting Captain", e.human, 0, 3)
+        val watcherA = put(e, "Grenade Dreg", e.human, 1, 0)
+        val watcherB = put(e, "Grenade Dreg", e.human, 1, 1)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 0)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 1)
+        e.catalog.getValue("Dreg").power = "1"
+
+        e.spawnAt(e.human, 1, 2, "Dreg")
+
+        assertNull(e.human.board[1][2])
+        assertEquals(3, watcherA.power)
+        assertEquals(3, watcherB.power)
+        assertEquals(0, watcherA.bonus)
+        assertEquals(0, watcherB.bonus)
+        assertTrue(e.journal.any { it.contains("DESTROYED ▶ Dreg") })
+    }
+
+    @Test fun survivingArrivalStillBuffsEachMatchingGrenadeDregOnce() {
+        val e = engine()
+        val watcherA = put(e, "Grenade Dreg", e.human, 1, 0)
+        val watcherB = put(e, "Grenade Dreg", e.human, 1, 1)
+
+        e.spawnAt(e.human, 1, 2, "Dreg")
+
+        assertNotNull(e.human.board[1][2])
+        assertEquals(4, watcherA.power)
+        assertEquals(4, watcherB.power)
+        assertEquals(1, watcherA.bonus)
+        assertEquals(1, watcherB.bonus)
+        assertEquals(2, e.journal.count {
+            it.contains("Grenade Dreg +1 Power: Dreg deployed")
+        })
     }
 
     @Test fun gwynnSplashStaysOnSelectedEnemyRowAndAppliesSelfPenalty() {
