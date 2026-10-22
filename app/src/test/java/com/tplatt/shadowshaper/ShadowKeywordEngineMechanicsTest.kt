@@ -23,6 +23,8 @@ class ShadowKeywordEngineMechanicsTest {
                  "Sustained: Opponent Front Row placements grant +1 Power for 3 turns."),
             card("Tan-2", "Humans",
                  "Sustained: Doubles the next Power bonus."),
+            card("Scorpius", "Cabal",
+                 "Sustained: At your turn end, deal 1 damage to a random opposing unit."),
             card("Xur", "Humans",
                  "Sustained: On acquiring a Power bonus, places Rock in opposing Front Row."),
             card("Rock", "Humans", "No special effects.").apply {
@@ -131,6 +133,18 @@ class ShadowKeywordEngineMechanicsTest {
         assertEquals(10, watcher.power)
         assertEquals(0, watcher.bonus)
         assertTrue(watcher.timedBonuses.isEmpty())
+    }
+
+    @Test fun scorchedUnitDestroyedBeforeItsEndTurnSustainedCanTrigger() {
+        val e = engine()
+        val scorpius = put(e, "Scorpius", e.human, 0, 1)
+        val victim = put(e, "Dreg", e.cpu, 0, 1)
+        scorpius.power = 1
+        scorpius.scorched = 2
+        scorpius.scorchTurns = 1
+        e.effects.endSide(e.human)
+        assertNull(e.human.board[0][1])
+        assertEquals(10, victim.power)
     }
 
     @Test fun normalColumnUnitDoesNotCountAsPrintedLineUnit() {

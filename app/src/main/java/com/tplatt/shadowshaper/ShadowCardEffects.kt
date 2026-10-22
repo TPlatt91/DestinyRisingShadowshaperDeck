@@ -474,6 +474,10 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 }
             }
         }
+        // Scorched and expiring bonuses can reduce a unit to zero before
+        // end-turn Sustained effects resolve. Remove it (and handle death
+        // splashes) first so a destroyed source cannot still activate.
+        sweep()
         for (unit in all(side)) {
             if (side.board[unit.row][unit.column] !== unit || unit.suppressed) continue
             when (unit.card.name) {
@@ -513,6 +517,9 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     }
                 }
             }
+            // Complete each source's damage/death effects before the next
+            // end-turn source. A dead source must never fire from the snapshot.
+            sweep()
         }
         sweep()
     }
