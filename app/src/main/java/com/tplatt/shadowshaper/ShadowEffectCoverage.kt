@@ -13,6 +13,10 @@ object ShadowEffectCoverage {
             // coded. They remain SCRIPTED / QA PENDING until local and device
             // regression tests actually pass.
 
+            "Molkrul" -> "SCRIPTED / QA PENDING: Coin flip instant defeat of a selected opponent unit of at most 10 Power, Back Row only."
+            "Shinka Gladiator" -> "SCRIPTED / QA PENDING: In a 5-unit Line grants selected allied unit and adjacent allies +2 outgoing damage, not Power."
+            "Shinka Centurion" -> "SCRIPTED / QA PENDING: Vertical Column partner required for sustained +3 Power to left/right units."
+            "Paradoxical Neophyte's Shade" -> "SCRIPTED / QA PENDING: Related summoned unit, excluded from constructed decks; +4 Power per Inspired Hive ally."
             "Helhest" -> "SCRIPTED / QA PENDING: Back Row random target and adjacent splash implemented. Power gained is provisionally one per damage dealt; original card text does not define the exact conversion."
             "Juggernaut" -> "SCRIPTED / QA PENDING: Column condition combined with printed left/right Cabal damage. Confirm Column and adjacency interpretation against original gameplay."
             "Tomb Ship" -> "SCRIPTED / QA PENDING: Random Hive summons implemented using verified constructible Hive catalog; exact hidden pool needs verification."

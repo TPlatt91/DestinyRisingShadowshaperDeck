@@ -23,7 +23,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         "Vandal", "Wretch", "Incendior", "Devil Sentry", "Resilient Marauder",
         "Augmented Shank", "High Servitor", "Thinktank", "Amu-Atu",
         "Shinka Incendior", "Shinka Vigile", "Thagrius",
-        "Wolf", "Wu Ming", "Gwynn", "Xuan Wei", "Ikora", "Goliath Tank"
+        "Wolf", "Wu Ming", "Gwynn", "Xuan Wei", "Ikora", "Goliath Tank", "Molkrul"
     )
     private val knownSustained = setOf(
         "Legionary", "Shinka Legionary", "Decurion", "Colossus",
@@ -58,7 +58,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 "Decurion" -> if (sameColumn(other, target)) bonus += 2
                 "Colossus" -> if (sameColumn(other, target) &&
                     target.card.faction.equals("Cabal", true)) bonus++
-                "Shinka Centurion" -> if (adjacent(other, target)) bonus += 3
+                "Shinka Centurion" -> if (partnerInColumn(other) &&
+                    adjacent(other, target)) bonus += 3
                 "Centurion" -> if (line(other, 4) && adjacent(other, target)) bonus += 2
             }
         }
@@ -165,6 +166,9 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 }
             }
             "Attal" -> if (picked != null) buff(picked, power(picked))
+            "Maru" -> for (unit in all(me)) {
+                if (unit !== actor && unit.row == actor.row) buff(unit, 2)
+            }
             "Vanok" -> faction(me, "Fallen").forEach { buff(it, 2) }
             "Kabr" -> all(me).filter { it.card.name == "Guerrilla" }.forEach { buff(it, 3) }
             "Bazinet" -> if (actor.row == 0) {
@@ -198,8 +202,13 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 }
             }
             "Shinka Gladiator" -> if (picked != null && line(actor, 5)) {
-                for (unit in all(me))
-                    if (unit === picked || adjacent(unit, picked)) buff(unit, 2)
+                // The card increases damage dealt, not base Power.
+                for (unit in all(me)) {
+                    if (unit === picked || adjacent(unit, picked)) {
+                        unit.damageBonus += 2
+                        log("Shinka Gladiator: +2 outgoing damage to " + unit.card.name)
+                    }
+                }
             }
 
             "Inquisitor" -> if (actor.row == 0) damage(actor, picked, 4)
@@ -224,6 +233,15 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             }
             "Goliath Tank" -> if (picked != null && line(actor, 5)) {
                 for (unit in all(foe)) if (unit.row == picked.row) damage(actor, unit, 3)
+            }
+            "Molkrul" -> if (actor.row == ShadowRules.BACK_ROW &&
+                picked != null && power(picked) <= 10) {
+                if (rng.nextBoolean()) {
+                    log("Molkrul: heads; instantly defeats " + picked.card.name)
+                    destroyUnit(picked)
+                } else {
+                    log("Molkrul: tails; target remains.")
+                }
             }
             "Wolf" -> if (picked != null &&
                 ShadowSpecialCardRules.wolfCanDestroy(all(me).size, power(picked)))

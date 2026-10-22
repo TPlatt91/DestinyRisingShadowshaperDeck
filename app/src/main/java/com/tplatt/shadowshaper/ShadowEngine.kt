@@ -225,9 +225,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (card.name == "Hyssop" && unit.bonus <= 0) continue
             if (card.name == "Wolf" &&
                 !ShadowSpecialCardRules.wolfTargetEligible(power(unit))) continue
+            if (card.name == "Molkrul" && power(unit) > 10) continue
             if (card.name == "Vigile" &&
                 !ShadowPositionRules.hasLineAffix(unit.card.effect)) continue
-            if (card.name in setOf("Gladiator", "Shinka Gladiator") && r != 1) continue
+            if (card.name == "Gladiator" && r != 1) continue
             if (card.name == "Sabikis" &&
                 (col == 0 || side.board[r][col - 1] == null)) continue
             options.add(Target(side, r, col))
