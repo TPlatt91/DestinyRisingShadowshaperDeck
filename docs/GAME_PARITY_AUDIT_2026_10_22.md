@@ -88,3 +88,13 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 - **Three new diagnostic tests** in `ShadowCpuDiagnosticsTest.kt` verify long-log persistence, match reset, and an ordinary legal CPU move.
 
 **Validation status:** Source files and GitHub branch changes are verified. **The JVM/Gradle test cases have not been executed** on the unavailable Android development PC and no GitHub Actions workflows were run. Treat runtime/parity claims as pending until `run_local_engine_checks.bat` successfully completes.
+
+## Trigger lifecycle and simultaneous delayed explosions
+
+**New source corrections:**
+
+- **Scheduled detonation waves:** At the start of the original player's turn, all surviving transferred Cursed Thralls / Exploder Shanks due to explode are gathered and removed from their host battlefield *before* any blast is applied. Each then deals its printed 2 damage to its left/right neighbors. This prevents one scheduled bomb from damaging another already scheduled for the same turn. Bombs due in later rounds stay in play.
+- **Resilient Captain watcher lifecycle:** Damage-triggered Dreg summons now require the Captain to still exist in its current battlefield position. Nested summoning and buff retaliation cannot activate a Captain removed earlier in the event.
+- **Zhiyao watcher lifecycle:** When its +1 bonus causes an immediate enemy Elite Sniper Vandal retaliation that kills Zhiyao, no temporary bonus bookkeeping is attached to the already-defeated unit.
+- **Regression suite:** Five new local tests added in `ShadowDetonationAndTriggerLifecycleTest.kt`, covering simultaneous bomb removal/order, future-round detonation timing, unaffected adjacent units, lethal retaliation deleting a Zhiyao before it can record a timed bonus, and surviving Zhiyao bonuses retaining the normal three-turn duration.
+- **Status:** Source changes pushed to `main`; no GitHub Actions, Android emulator or Gradle test task was run during this session. Printed simultaneous detonation timing is handled as one event batch in the simulator; exact original-client animation ordering still needs video comparison.
