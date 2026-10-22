@@ -1,0 +1,133 @@
+package com.tplatt.shadowshaper
+
+import org.junit.Assert.*
+import org.junit.Test
+
+/**
+ * Transfers that detonate on a shared turn boundary, plus watcher lifecycle.
+ * Execute on the local workstation using run_local_engine_checks.bat.
+ */
+class ShadowDetonationAndTriggerLifecycleTest {
+    private fun card(name: String, faction: String, power: Int, effect: String) =
+        ShadowData.Card().apply {
+            this.name = name
+            this.faction = faction
+            rarity = "Rare"
+            cost = "1"
+            this.power = power.toString()
+            this.effect = effect
+        }
+
+    private fun engine(): ShadowEngine {
+        val cards = listOf(
+            card("Cursed Thrall", "Hive", 1,
+                "When Played: Transfers to opponent Front Row; explodes at start of your next turn."),
+            card("Exploder Shank", "Fallen", 4,
+                "When Played: Transfers to opponent Front Row; damages units to its left and right."),
+            card("Dreg", "Fallen", 6, "No special effects."),
+            card("Zhiyao", "Humans", 3,
+                "Sustained: On opponent Front Row placement, +1 Power for three turns."),
+            card("Elite Sniper Vandal", "Fallen", 4,
+                "Sustained (Back Row): When enemy gets a bonus, deal 1 damage once per turn."),
+            card("Servitor", "Fallen", 2,
+                "Sustained: Your units deal one extra damage.")
+        ).associateBy { it.name }
+        return ShadowEngine(cards, 63L).apply {
+            humanFirst = true
+            humanTurn = false
+            round = 2
+            completedTurns = 0
+        }
+    }
+
+    private fun place(
+        e: ShadowEngine, name: String, side: ShadowEngine.Player,
+        row: Int, col: Int, power: Int? = null
+    ): ShadowEngine.Unit {
+        val unit = ShadowEngine.Unit(side, e.catalog.getValue(name), row, col)
+        if (power != null) unit.power = power
+        side.board[row][col] = unit
+        return unit
+    }
+
+    private fun scheduledBomb(
+        e: ShadowEngine, name: String, col: Int, dueRound: Int
+    ): ShadowEngine.Unit = place(e, name, e.cpu, 1, col).apply {
+        fuseOrigin = e.human
+        fuseRound = dueRound
+    }
+
+    @Test fun twoSimultaneousBombsLeaveTheBoardBeforeAnyExplosionHits() {
+        val e = engine()
+        val left = place(e, "Dreg", e.cpu, 1, 0)
+        val right = place(e, "Dreg", e.cpu, 1, 3)
+        scheduledBomb(e, "Exploder Shank", 1, 2)
+        scheduledBomb(e, "Cursed Thrall", 2, 2)
+
+        e.endTurn() // CPU ends; human starts round 2, both bombs detonate.
+
+        assertNull(e.cpu.board[1][1])
+        assertNull(e.cpu.board[1][2])
+        assertEquals(4, left.power)
+        assertEquals(4, right.power)
+        assertEquals(2, e.journal.count { it.contains("DETONATES") })
+        assertEquals(2, e.journal.count { it.contains("DAMAGE 2 ▶ Dreg") })
+        val lastDetonation = e.journal.indexOfLast { it.contains("DETONATES") }
+        val firstBlast = e.journal.indexOfFirst { it.startsWith("DAMAGE 2") }
+        assertTrue("All scheduled bombs must leave play before blast damage", lastDetonation < firstBlast)
+        assertFalse(e.finished)
+    }
+
+    @Test fun bombsOnlyDetonateOnTheirScheduledOriginalOwnerTurn() {
+        val e = engine()
+        val neighbor = place(e, "Dreg", e.cpu, 1, 0)
+        val bomb = scheduledBomb(e, "Exploder Shank", 1, 3)
+        e.endTurn() // owner starts round 2; this one is not due
+        assertSame(bomb, e.cpu.board[1][1])
+        assertEquals(6, neighbor.power)
+        assertFalse(e.journal.any { it.contains("DETONATES") })
+
+        e.round = 3
+        e.completedTurns = 0
+        e.humanTurn = false
+        e.endTurn() // now owner starts round 3
+        assertNull(e.cpu.board[1][1])
+        assertEquals(4, neighbor.power)
+        assertEquals(1, e.journal.count { it.contains("DETONATES") })
+    }
+
+    @Test fun unscheduledNormalUnitIsNeverRemovedByBombResolution() {
+        val e = engine()
+        val civilian = place(e, "Dreg", e.cpu, 1, 4)
+        scheduledBomb(e, "Exploder Shank", 1, 2)
+        e.endTurn()
+        assertSame(civilian, e.cpu.board[1][4])
+        assertEquals(6, civilian.power)
+    }
+
+    @Test fun zhiyaoDefeatedByBonusRetaliationDoesNotKeepTemporaryBuff() {
+        val e = engine()
+        val zhiyao = place(e, "Zhiyao", e.cpu, 0, 2, power = 1)
+        place(e, "Elite Sniper Vandal", e.human, 0, 0)
+        place(e, "Servitor", e.human, 0, 1)
+        val newUnit = place(e, "Dreg", e.human, 1, 5)
+
+        e.effects.fireEnemyPlacement(newUnit)
+        // Zhiyao 1 -> 2 via its own +1; sniper damage 1 + Servitor 1
+        // removes it before temporary bonus metadata may be registered.
+        assertNull(e.cpu.board[0][2])
+        assertEquals(0, zhiyao.timedBonuses.size)
+        assertTrue(e.journal.any { it.contains("DESTROYED ▶ Zhiyao") })
+    }
+
+    @Test fun existingSniperLimitsStillApplyWhenWatcherSurvives() {
+        val e = engine()
+        val zhiyao = place(e, "Zhiyao", e.cpu, 0, 2)
+        val incoming = place(e, "Dreg", e.human, 1, 5)
+        e.effects.fireEnemyPlacement(incoming)
+        assertSame(zhiyao, e.cpu.board[0][2])
+        assertEquals(4, zhiyao.power)
+        assertEquals(1, zhiyao.timedBonuses.size)
+        assertEquals(3, zhiyao.timedBonuses.single().turns)
+    }
+}
