@@ -543,14 +543,19 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         shuffled.take(count).forEach { buff(it, amount) }
     }
 
-    internal fun buff(target: Unit?, amount: Int) {
-        if (target == null || amount <= 0 || !isPresent(target)) return
-        // Stop pathological recursive bonuses before mutating Power.
-        // The Disfavored cycle guard normally prevents this path.
+    /**
+     * Apply one independent Power bonus without dispatching its reactive
+     * on-buff effects yet. Simultaneous on-damage grants (multiple Saladins)
+     * must all have an opportunity to save a damaged unit before an on-buff
+     * sniper or death sweep can remove it. Each grant still independently
+     * consumes Tan-2's next-bonus modifier.
+     */
+    private fun applyPowerBonus(target: Unit?, amount: Int): Boolean {
+        if (target == null || amount <= 0 || !isPresent(target)) return false
         if (resolutionDepth >= 32) {
             unresolvedEffects++
             log("SAFETY: recursive Power bonus rejected after 32 resolutions.")
-            return
+            return false
         }
         var applied = amount
         val doubler = all(target.owner).firstOrNull {
@@ -564,7 +569,28 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.power += applied
         target.bonus += applied
         log("BUFF +" + applied + " ▶ " + target.card.name)
-        onBuff(target)
+        return true
+    }
+
+    internal fun buff(target: Unit?, amount: Int) {
+        if (applyPowerBonus(target, amount)) onBuff(target!!)
+    }
+
+    /** Resolve all surviving Saladins' reactions to this one damage event. */
+    private fun grantSaladinDamageBonuses(target: Unit) {
+        val sources = all(target.owner).filter { it.card.name == "Saladin" }
+        var granted = 0
+        for (saladin in sources) {
+            if (!isPresent(target)) break
+            if (!isPresent(saladin) || saladin.suppressed) continue
+            if (applyPowerBonus(target, 3)) granted++
+        }
+        // Each bonus is still its own acquisition for on-buff effects. The
+        // Power gains happen first so an intermediate negative value cannot
+        // cause one Saladin to cancel another Saladin's same-hit response.
+        repeat(granted) {
+            if (isPresent(target)) onBuff(target)
+        }
     }
 
     private fun onBuff(target: Unit) {
@@ -677,10 +703,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.power -= damage
         log("DAMAGE " + damage + " ▶ " + target.card.name)
         effects.fireFallenDamage(source)
-        if (target.card.faction.equals("Humans", true)) {
-            for (ally in all(target.owner))
-                if (!ally.suppressed && ally.card.name == "Saladin") buff(target, 3)
-        }
+        if (target.card.faction.equals("Humans", true))
+            grantSaladinDamageBonuses(target)
     }
 
     /** An outright "destroy" effect is not damage: no damage-reduction or
