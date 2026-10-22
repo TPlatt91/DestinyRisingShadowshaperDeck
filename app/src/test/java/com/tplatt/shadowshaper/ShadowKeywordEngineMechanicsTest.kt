@@ -19,6 +19,10 @@ class ShadowKeywordEngineMechanicsTest {
                  "Sustained: When a Fallen ally deals damage, summon a Dreg to the right."),
             card("Ayuela", "Humans",
                  "Sustained (Back Row): Scorches opposing Front Row cards."),
+            card("Zhiyao", "Humans",
+                 "Sustained: Opponent Front Row placements grant +1 Power for 3 turns."),
+            card("Tan-2", "Humans",
+                 "Sustained: Doubles the next Power bonus."),
             card("Dreg", "Fallen", "No special effects."),
             card("Legionary", "Cabal", "Sustained (Column): Gains +1 Power.")
         ).associateBy { it.name }
@@ -70,6 +74,35 @@ class ShadowKeywordEngineMechanicsTest {
         assertNull(ally.scorchSource)
         e.effects.endSide(e.human)
         assertEquals(10, ally.power)
+    }
+
+    @Test fun zhiyaoThreeTurnBonusUsesBuffTriggersAndExpires() {
+        val e = engine()
+        val watcher = put(e, "Zhiyao", e.human, 0, 1)
+        val opponent = put(e, "Dreg", e.cpu, 1, 1)
+        e.effects.fireEnemyPlacement(opponent)
+        assertEquals(11, watcher.power)
+        assertEquals(1, watcher.bonus)
+        assertEquals(1, watcher.timedBonuses.size)
+        e.effects.endSide(e.human)
+        e.effects.endSide(e.human)
+        assertEquals(11, watcher.power)
+        e.effects.endSide(e.human)
+        assertEquals(10, watcher.power)
+        assertEquals(0, watcher.bonus)
+        assertTrue(watcher.timedBonuses.isEmpty())
+    }
+
+    @Test fun zhiyaoUsesNextBonusDoublerWithoutLeakingTemporaryPower() {
+        val e = engine()
+        put(e, "Tan-2", e.human, 0, 0)
+        val watcher = put(e, "Zhiyao", e.human, 0, 1)
+        val opponent = put(e, "Dreg", e.cpu, 1, 1)
+        e.effects.fireEnemyPlacement(opponent)
+        assertEquals(12, watcher.power)
+        assertEquals(2, watcher.timedBonuses.single().value)
+        repeat(3) { e.effects.endSide(e.human) }
+        assertEquals(10, watcher.power)
     }
 
     @Test fun normalColumnUnitDoesNotCountAsPrintedLineUnit() {

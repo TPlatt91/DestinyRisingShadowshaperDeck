@@ -423,11 +423,17 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 newUnit.scorchSource = watcher
                 log("SCORCHED ▶ " + newUnit.card.name + " for 2 turns.")
             }
-            if (newUnit.row == 1 && watcher.card.name == "Zhiyao") {
-                watcher.power++
-                watcher.bonus++
-                watcher.timedBonuses.add(ShadowEngine.TimedBonus(1, 3))
-                log("Zhiyao reacts +1 Power for 3 turns.")
+            if (newUnit.row == ShadowRules.FRONT_ROW &&
+                watcher.card.name == "Zhiyao") {
+                // Route every Power bonus through the shared resolver so
+                // Tan-2 doubling and own-buff triggers also work for Zhiyao.
+                val beforeBonus = watcher.bonus
+                buff(watcher, 1)
+                val granted = (watcher.bonus - beforeBonus).coerceAtLeast(0)
+                if (granted > 0) {
+                    watcher.timedBonuses.add(ShadowEngine.TimedBonus(granted, 3))
+                    log("Zhiyao reacts +" + granted + " Power for 3 turns.")
+                }
             }
             if (newUnit.row == 0 &&
                 watcher.card.name == "Resilient Grenade Dreg" && watcher.row == 0) {
