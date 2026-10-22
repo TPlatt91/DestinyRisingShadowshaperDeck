@@ -403,8 +403,10 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
         if (!source.card.faction.equals("Fallen", true)) return@with
         if (source.owner.board[source.row][source.column] !== source) return@with
         for (captain in all(source.owner)) {
-            if (captain.card.name != "Resilient Captain" || captain.suppressed ||
-                captain.resilientCaptainDregs >= 6) continue
+            // Summons and their nested triggers can invalidate the rest of
+            // the watcher snapshot. A defeated Captain cannot summon.
+            if (!isPresent(captain) || captain.card.name != "Resilient Captain" ||
+                captain.suppressed || captain.resilientCaptainDregs >= 6) continue
             val col = captain.column + 1
             if (!empty(source.owner, captain.row, col)) continue
             spawnAt(source.owner, captain.row, col, "Dreg")
@@ -436,7 +438,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 val beforeBonus = watcher.bonus
                 buff(watcher, 1)
                 val granted = (watcher.bonus - beforeBonus).coerceAtLeast(0)
-                if (granted > 0) {
+                if (granted > 0 && isPresent(watcher)) {
                     watcher.timedBonuses.add(ShadowEngine.TimedBonus(granted, 3))
                     log("Zhiyao reacts +" + granted + " Power for 3 turns.")
                 }

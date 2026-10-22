@@ -724,13 +724,20 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     private fun startSide(side: Player) {
-        for (controller in listOf(human, cpu)) for (unit in all(controller)) {
-            if (unit.fuseOrigin !== side || unit.fuseRound > round) continue
-            if (controller.board[unit.row][unit.column] !== unit) continue
-            controller.board[unit.row][unit.column] = null
-            log(unit.card.name + " DETONATES ▶ " + (unit.column + 1))
-            for (offset in listOf(-1, 1))
-                dealDirect(unit, at(controller, unit.row, unit.column + offset), 2)
+        // All bombs scheduled for this turn detonate simultaneously. Remove
+        // the full wave before resolving its damage so one explosion cannot
+        // hit another bomb that has already been scheduled to explode.
+        val detonating = (all(human) + all(cpu)).filter { unit ->
+            unit.fuseOrigin === side && unit.fuseRound <= round && isPresent(unit)
+        }
+        for (bomb in detonating) {
+            bomb.owner.board[bomb.row][bomb.column] = null
+            log(bomb.card.name + " DETONATES ▶ " + (bomb.column + 1))
+        }
+        for (bomb in detonating) {
+            for (offset in listOf(-1, 1)) {
+                dealDirect(bomb, at(bomb.owner, bomb.row, bomb.column + offset), 2)
+            }
         }
         sweep()
     }
