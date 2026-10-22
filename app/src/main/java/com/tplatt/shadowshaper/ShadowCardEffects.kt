@@ -262,8 +262,12 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                         pendingMovedUnit = picked
                         pendingMoveCaster = me
                         log("XUAN WEI: Choose a new position for " + picked.card.name + ".")
-                    } else incomplete(actor.card,
-                        "No open destination; full-board relocation behavior unverified.")
+                    } else {
+                        // The target survives, but a full field offers no
+                        // legal destination. Do not label that board constraint
+                        // as missing card support or block the turn.
+                        log("XUAN WEI: No open destination; movement skipped.")
+                    }
                 }
             }
             "Augmented Shank" -> if (actor.row == 1 && picked != null) {
@@ -291,12 +295,10 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 spawnAt(me, actor.row, actor.column + 1, "Guerrilla")
             }
             "Tomb Ship" -> {
-                // Recorded: one random Hive unit on EACH side of the Tomb Ship.
-                // The exact hidden game summon pool is not exposed by the clip,
-                // so use the verified, constructible Hive units in our catalog.
-                val hivePool = catalog.values.filter {
-                    it.faction.equals("Hive", true) && it.isPlayable
-                }.sortedBy { it.name }
+                // The related Neophyte Shade is summon-only but is a
+                // valid Tomb Ship outcome in original-game player reports.
+                // The weights of the original hidden random pool are unknown.
+                val hivePool = ShadowSummonRules.tombShipPool(catalog)
                 if (hivePool.isEmpty()) {
                     incomplete(actor.card, "No playable Hive units in the card catalog.")
                 } else {
@@ -315,10 +317,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 if (!empty(me, actor.row, destination)) {
                     log("Drop Pod: left slot unavailable; no unit summoned.")
                 } else {
-                    val candidates = catalog.values.filter {
-                        it.isPlayable && it.name != "Drop Pod" &&
-                            ShadowPositionRules.hasLineAffix(it.effect)
-                    }.sortedBy { it.name }
+                    val candidates = ShadowSummonRules.dropPodPool(catalog)
                     if (candidates.isNotEmpty()) {
                         val randomCard = candidates[rng.nextInt(candidates.size)]
                         spawnAt(me, actor.row, destination, randomCard.name)
