@@ -797,7 +797,11 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         val destination = other(origin)
         val positions = (0 until COLUMNS).filter { empty(destination, 1, it) }
         if (positions.isEmpty()) {
-            incomplete(unit.card, "Opponent Front Row full; transfer failure behavior unverified.")
+            // This is a board-space constraint, not an unknown card effect.
+            // With no free opposing Front Row location, retain the unit in
+            // its played position rather than overwriting an occupied slot.
+            log("TRANSFER BLOCKED: " + unit.card.name +
+                " stays in its original position; opposing Front Row is full.")
             return
         }
         val column = positions[rng.nextInt(positions.size)]

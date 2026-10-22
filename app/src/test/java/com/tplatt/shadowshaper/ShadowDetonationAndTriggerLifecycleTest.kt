@@ -102,6 +102,33 @@ class ShadowDetonationAndTriggerLifecycleTest {
         assertEquals(0, e.unresolvedEffects)
     }
 
+    @Test fun occupiedEnemyFrontRowDoesNotOverwriteUnitsOrReportUnimplementedTransfer() {
+        for (name in listOf("Cursed Thrall", "Exploder Shank")) {
+            val e = engine()
+            e.humanTurn = true
+            e.human.points = 3
+            val defending = (0 until ShadowRules.COLUMNS).map { column ->
+                place(e, "Dreg", e.cpu, ShadowRules.FRONT_ROW, column)
+            }
+            e.human.hand.add(e.catalog.getValue(name))
+            assertTrue(e.lastActionError,
+                e.play(e.human, e.human.hand.lastIndex, 0, 2, null))
+            val played = e.human.board[0][2]
+            assertNotNull(played)
+            assertEquals(name, played!!.card.name)
+            assertNull(played.fuseOrigin)
+            assertEquals(0, played.fuseRound)
+            assertEquals(1, e.placementRevision)
+            assertEquals(0, e.lastPlacedSide)
+            assertEquals(0, e.lastPlacedRow)
+            assertEquals(2, e.lastPlacedColumn)
+            for (col in 0 until ShadowRules.COLUMNS)
+                assertSame(defending[col], e.cpu.board[ShadowRules.FRONT_ROW][col])
+            assertEquals(0, e.unresolvedEffects)
+            assertTrue(e.journal.any { it.startsWith("TRANSFER BLOCKED: " + name) })
+        }
+    }
+
     @Test fun twoSimultaneousBombsLeaveTheBoardBeforeAnyExplosionHits() {
         val e = engine()
         val left = place(e, "Dreg", e.cpu, 1, 0)
