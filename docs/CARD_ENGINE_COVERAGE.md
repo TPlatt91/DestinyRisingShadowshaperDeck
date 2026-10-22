@@ -1,3 +1,11 @@
+# Current rule fidelity update — 21 October 2026
+
+**Shared keyword resolution advanced:** Only numbered Line-affix cards count in contiguous Line formations. A plain adjacent Cabal unit now interrupts the Line. Target selection, ongoing 3/4-unit auras, damage bonuses, Drop Pod, and CPU projected formations use the same helper. **Scorched** keeps the inflicting caster as damage source; **Zhiyao** triggers shared Power-bonus resolution, including Tan-2 doubling, with a three-turn expiration. In-app Rules reflect these definitions.
+
+**Local test status:** Updated older Line-related fixtures and added seven keyword/interaction regression cases. They are committed but have not run under Gradle or on Android. These rules remain subject to match-level comparison before declaring 100% parity.
+
+---
+
 # Batches 13 and 14 — gameplay integration status (21 October 2026)
 
 - **20/20 original-video card definitions** committed; unique records for Power, Light, rarity, faction, original effect text and acquisition

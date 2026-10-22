@@ -29,7 +29,7 @@ This document distinguishes **verified minigame rules** from engine implementati
 - **Opening hands:** Offensive draws 5; Defensive draws 4. A Destiny Rising player reported these values; modeled in `ShadowRules.openingHand`.
 - **Draw timing:** A new card each subsequent round in the prototype (`ShadowRules.NEW_ROUND_DRAW=1`); this needs gameplay footage confirmation.
 - **Board width:** Six slots per row in the prototype (`ShadowRules.COLUMNS=6`); needs comparison with original in-game board layout.
-- **Faction lines:** The engine currently interprets Line as a *contiguous run of matching faction units in the same row*. Community discussion establishes that a 4-unit Cabal Line requires four Cabal units in one line, but does not fully establish whether a gap interrupts the line. Keep this flagged as provisional; `ShadowEngine.projectedFactionLine` contains the single entry point to adjust it.
+- **Line affix formations (corrected on 21 October 2026):** The engine now counts only uninterrupted horizontal runs of **cards bearing the printed numbered Line affix**. A neighboring ordinary Cabal unit no longer counts and breaks the chain. Hypothetical player/CPU plays use the identical `ShadowPositionRules.contiguousLineUnits` helper. This follows the original captured keyword tooltip, with [community corroboration for Centurion](https://www.reddit.com/r/destinyrisingmobile/comments/1p0c8dz/). Exact client treatment of other unusual keyword edge cases still needs match footage.
 
 ## Core engine integrity / future card work
 

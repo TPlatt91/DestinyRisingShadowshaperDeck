@@ -114,7 +114,7 @@ print("Non-basic names without handler references:", sorted(nonbasic - reference
 print()
 print("IMPORTANT: A referenced handler is NOT proof of correct gameplay.")
 print("Runtime test status: UNKNOWN. Match-level Destiny: Rising parity: NOT VERIFIED.")
-print("Remaining rule concerns: formation-affix geometry; turn/draw timing;")
+print("Remaining rule concerns: unusual Line-affix edge cases; turn/draw timing;")
 print("status/buff stacking; summon selection pools; special full-row behavior;")
 print("opponent NPC decks and AI; effect timing; Helhest Power conversion.")
 print("Run LOCAL tests separately (does not spend GitHub Actions credits):")
