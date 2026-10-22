@@ -82,6 +82,9 @@ class ShadowSimultaneousEffectsTest {
         put(e, "Elite Sniper Vandal", e.cpu, 0, 0)
         put(e, "Elite Sniper Vandal", e.cpu, 0, 1)
         val zhiyao = put(e, "Zhiyao", e.cpu, 0, 2)
+        // A fragile Dreg starts at 1 Power, gains 1 from Unrelenting
+        // Captain, then receives one retaliatory hit from each sniper.
+        e.catalog.getValue("Dreg").power = "1"
 
         e.spawnAt(e.human, ShadowRules.FRONT_ROW, 2, "Dreg")
 
