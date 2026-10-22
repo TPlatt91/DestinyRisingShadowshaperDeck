@@ -709,6 +709,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (card.numericCost() !in 1..cpu.points) continue
             for (row in 0 until ShadowRules.ROWS) for (col in 0 until COLUMNS) {
                 if (!isPlayablePlacement(cpu, index, row, col)) continue
+                // Reject target-dependent placements that would fail the
+                // same legality checks enforced for the human player.
+                val candidateTarget = chooseAI(cpu, card, row, col)
+                if (validatePlay(cpu, index, row, col, candidateTarget).isNotEmpty()) continue
                 val value = evaluateCpuPlacement(card, row, col)
                 if (value > bestValue) {
                     bestValue = value
