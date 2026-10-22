@@ -24,3 +24,26 @@ Decurion|Legendary|Cabal|2|3|Sustained (Column): Grants +2 Power to units direct
 Psion|Rare|Cabal|2|2|When Played (Back Row): Deals 2 damage to a unit.
 Jolder|Exotic|Humans|3|3|Sustained: The next instance of damage dealt is doubled.
 Finnala|Exotic|Humans|3|6|When Played (Front Row): Grants +8 Power to one of your units and gains -3 Power.
+Xuan Wei|Exotic|Humans|3|6|When Played (Front Row): Deals 5 damage to a unit and moves it to another location on the battlefield.
+Jaren|Exotic|Humans|3|4|When Played (Front Row): Deals a total of 6 damage to the opponent's units at random.
+Kevarrh|Mythic|Fallen|3|7|When Played: Draw 2 cards.
+Guarding Servitor|Mythic|Fallen|3|4|When Played: Grants Inspired to one of your units.
+Blinder Shank|Mythic|Fallen|3|8|When Played: Suppresses the units on the left and right.
+Resilient Grenade Dreg|Mythic|Fallen|3|7|Sustained (Back Row): When the opponent places a unit in the back row, deals 2 damage to it for 2 turns.
+Chinnawat|Legendary|Humans|3|4|When Played (Front Row): Grants +1 Power to one of your units and the units on its left and right.
+Common Cover|Legendary|Humans|3|7|When Played (Front Row): Randomly places 2 Rocks in the opponent's front row.
+Guerrilla Captain|Legendary|Humans|3|3|Sustained: When acquiring a bonus, deals 2 damage to a random opposing unit.
+Wretch|Legendary|Fallen|3|6|When Played (Front Row): Deals 1 damage to an opposing unit in the front row.
+Inquisitor|Legendary|Hive|3|3|When Played (Back Row): Deals 4 damage to an opposing unit.
+Knight|Legendary|Hive|3|5|When Played: Grants an Inspired Hive unit +3 Power.
+Wizard|Legendary|Hive|3|4|When Played: Grants Inspired to 1 of your Hive units.
+Ogre|Legendary|Hive|3|2|Sustained: When acquiring a buff, deals 1 damage to 2 random opposing units.
+Shrieker|Legendary|Hive|3|2|Sustained (Back Row): Upon gaining a buff, deals 2 damage to a random opposing unit.
+Vigile|Legendary|Cabal|3|5|When Played (Front Row): Grants +2 Power to a Line unit.
+Scorpius|Legendary|Cabal|3|4|Sustained: At the end of your turn, deals 1 damage to a random opposing unit.
+Colossus|Legendary|Cabal|3|6|Sustained (Column): Grants Cabal units directly in front of or behind 1 Power.
+Phalanx|Legendary|Cabal|3|4|Sustained (3-Unit Line): Your Cabal units take 1 less damage.
+Drop Pod|Legendary|Cabal|3|2|When Played (2 Unit Line): Summons 1 random Line unit on the left.
+Shinka Incendior|Legendary|Cabal|3|5|When Played (3-Unit Line): Deals 3 damage to a unit in the back row.
+Devil Sentry|Legendary|Fallen|3|5|When Played: Toss a coin. If the result is heads, deals 5 damage to a unit.
+Gladiator|Legendary|Cabal|3|4|When Played (Front Row): A selected front row unit and the units to its left and right deal 1 additional damage.

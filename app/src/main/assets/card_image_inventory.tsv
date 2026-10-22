@@ -40,11 +40,11 @@ Thrall	thrall	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_2026102
 Tenacious Shielded Knight	tenacious_shielded_knight	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/tenacious_shielded_knight.webp
 The Disfavored	the_disfavored	Hive	community_cards.tsv	BUNDLED_LOCAL_GIF		screen_20261021_171326	card_art/the_disfavored.gif
 Tenacious Thrall	tenacious_thrall	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171431	card_art/tenacious_thrall.gif
-Inquisitor	inquisitor	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/inquisitor.webp
-Knight	knight	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/knight.webp
-Wizard	wizard	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/wizard.webp
-Ogre	ogre	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/ogre.webp
-Shrieker	shrieker	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/shrieker.webp
+Inquisitor	inquisitor	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/inquisitor.webp
+Knight	knight	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/knight.webp
+Wizard	wizard	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/wizard.webp
+Ogre	ogre	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/ogre.webp
+Shrieker	shrieker	Hive	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/shrieker.webp
 Tomb Ship	tomb_ship	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/tomb_ship.webp
 Tenacious Knight	tenacious_knight	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/tenacious_knight.webp
 Tenacious Ogre	tenacious_ogre	Hive	community_cards.tsv	VIDEO_REVIEW_REQUIRED		hive_showcase	card_art/tenacious_ogre.webp
@@ -61,9 +61,9 @@ Shinka Phalanx	shinka_phalanx	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOA
 Incendior	incendior	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/incendior.webp
 Decurion	decurion	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/decurion.webp
 Psion	psion	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/psion.webp
-Scorpius	scorpius	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/scorpius.webp
-Vigile	vigile	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/vigile.webp
-Phalanx	phalanx	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/phalanx.webp
+Scorpius	scorpius	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/scorpius.webp
+Vigile	vigile	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/vigile.webp
+Phalanx	phalanx	Cabal	community_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/phalanx.webp
 Juggernaut	juggernaut	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/juggernaut.webp
 Shinka Gladiator	shinka_gladiator	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_gladiator.webp
 Shinka Centurion	shinka_centurion	Cabal	community_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_centurion.webp
@@ -81,11 +81,11 @@ Vanok	vanok	Fallen	community_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	ca
 Sabikis	sabikis	Fallen	community_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/sabikis.webp
 Umeko	umeko	Humans	expanded_cards.tsv	BUNDLED_LOCAL_GIF		screen_20261021_171326	card_art/umeko.gif
 The Speaker	the_speaker	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171431	card_art/the_speaker.gif
-Guerrilla Captain	guerrilla_captain	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/guerrilla_captain.webp
+Guerrilla Captain	guerrilla_captain	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/guerrilla_captain.webp
 Jolder	jolder	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/jolder.gif
 Finnala	finnala	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171541	card_art/finnala.gif
-Xuan Wei	xuan_wei	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/xuan_wei.webp
-Chinnawat	chinnawat	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/chinnawat.webp
+Xuan Wei	xuan_wei	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/xuan_wei.webp
+Chinnawat	chinnawat	Humans	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/chinnawat.webp
 Lady Skorri	lady_skorri	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/lady_skorri.webp
 Amu-Atu	amu_atu	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/amu_atu.webp
 Thinktank	thinktank	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/thinktank.webp
@@ -93,23 +93,26 @@ Attal	attal	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card
 Kabr	kabr	Humans	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		mixed_gameplay	card_art/kabr.webp
 Ketch	ketch	Fallen	expanded_cards.tsv	BUNDLED_LOCAL_GIF		screen_20261021_171326	card_art/ketch.gif
 Servitor	servitor	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		user_recording_20261021_134608	card_art/servitor.webp
-Guarding Servitor	guarding_servitor	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/guarding_servitor.webp
-Resilient Grenade Dreg	resilient_grenade_dreg	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/resilient_grenade_dreg.webp
-Wretch	wretch	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/wretch.webp
-Kevarrh	kevarrh	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/kevarrh.webp
-Blinder Shank	blinder_shank	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/blinder_shank.webp
+Guarding Servitor	guarding_servitor	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/guarding_servitor.webp
+Resilient Grenade Dreg	resilient_grenade_dreg	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/resilient_grenade_dreg.webp
+Wretch	wretch	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/wretch.webp
+Kevarrh	kevarrh	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/kevarrh.webp
+Blinder Shank	blinder_shank	Fallen	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/blinder_shank.webp
 Elite Walker	elite_walker	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/elite_walker.webp
 Resilient Marauder	resilient_marauder	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/resilient_marauder.webp
 Luksis-3	luksis_3	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/luksis_3.webp
 Augmented Shank	augmented_shank	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/augmented_shank.webp
 High Servitor	high_servitor	Fallen	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		fallen_showcase	card_art/high_servitor.webp
-Shinka Incendior	shinka_incendior	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_incendior.webp
-Gladiator	gladiator	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/gladiator.webp
-Colossus	colossus	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/colossus.webp
-Drop Pod	drop_pod	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/drop_pod.webp
+Shinka Incendior	shinka_incendior	Cabal	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/shinka_incendior.webp
+Gladiator	gladiator	Cabal	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/gladiator.webp
+Colossus	colossus	Cabal	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/colossus.webp
+Drop Pod	drop_pod	Cabal	expanded_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/drop_pod.webp
 Shinka Vigile	shinka_vigile	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_vigile.webp
 Shinka Scorpius	shinka_scorpius	Cabal	expanded_cards.tsv	VIDEO_REVIEW_REQUIRED		cabal_gameplay	card_art/shinka_scorpius.webp
 Rossi-11	rossi_11	Humans	verified_video_cards.tsv	BUNDLED_LOCAL_GIF		batch03_38646	card_art/rossi_11.gif
 Mind Disruptor	mind_disruptor	Fallen	verified_video_cards.tsv	VIDEO_REVIEW_REQUIRED		batch03_38646	card_art/mind_disruptor.gif
 Tenacious Hexguard	tenacious_hexguard	Hive	verified_video_cards.tsv	BUNDLED_LOCAL_GIF		screen_20261021_171326	card_art/tenacious_hexguard.gif
 Umbliks Prime	umbliks_prime	Fallen	verified_video_cards.tsv	EXTRACTED_AWAITING_UPLOAD		screen_20261021_171431	card_art/umbliks_prime.gif
+Jaren	jaren	Humans	verified_video_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/jaren.webp
+Common Cover	common_cover	Humans	verified_video_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch09_card_detail_video	card_art/common_cover.webp
+Devil Sentry	devil_sentry	Fallen	verified_video_cards.tsv	EXTRACTED_AWAITING_UPLOAD		batch10_card_detail_video	card_art/devil_sentry.webp

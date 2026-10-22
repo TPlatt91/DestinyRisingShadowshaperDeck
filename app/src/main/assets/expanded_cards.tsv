@@ -3,8 +3,8 @@ The Speaker|Legendary|Humans|2|1|Sustained (Back Row): When acquiring a Power bo
 Guerrilla Captain|Legendary|Humans|3|3|Sustained: When acquiring a bonus, deals 2 damage to a random opposing unit.
 Jolder|Exotic|Humans|3|3|Sustained: The next instance of damage dealt is doubled.
 Finnala|Exotic|Humans|3|6|When Played (Front Row): Grants +8 Power to one of your units and gains -3 Power.
-Xuan Wei|Exotic|Humans|3|6|When Played (Back Row): Deals 5 damage to a unit and moves it to another battlefield location.
-Chinnawat|Legendary|Humans|3|4|When Played (Front Row): Grants +1 Power to a unit and the units immediately beside it.
+Xuan Wei|Exotic|Humans|3|6|When Played (Front Row): Deals 5 damage to a unit and moves it to another location on the battlefield.
+Chinnawat|Legendary|Humans|3|4|When Played (Front Row): Grants +1 Power to one of your units and the units on its left and right.
 Lady Skorri|Legendary|Humans|5|7|When Played: If the opponent has back-row units, grants +5 Power to the unit on the left.
 Amu-Atu|Legendary|Humans|5|8|When Played: Deals damage equal to the number of enemy back-row units to an opposing unit.
 Thinktank|Mythic|Humans|5|7|When Played: Damages a unit equal to the highest Power bonus on your field.
@@ -12,19 +12,19 @@ Attal|Exotic|Humans|5|6|When Played: Doubles the Power of a unit.
 Kabr|Exotic|Humans|6|7|When Played: Grants +3 Power to all Guerrilla units.
 Ketch|Mythic|Fallen|2|3|When Played: Summons 2 Fallen Dregs, one on each side.
 Servitor|Legendary|Fallen|2|2|Sustained: Your units deal 1 additional damage.
-Guarding Servitor|Mythic|Fallen|3|4|When Played: Grants Inspired to an allied unit.
-Resilient Grenade Dreg|Mythic|Fallen|3|7|Sustained (Back Row): When opponent places a unit in the back row, deals 2 damage to it for 2 turns.
-Wretch|Legendary|Fallen|3|6|When Played (Front Row): Deals 1 damage to an opposing front-row unit.
+Guarding Servitor|Mythic|Fallen|3|4|When Played: Grants Inspired to one of your units.
+Resilient Grenade Dreg|Mythic|Fallen|3|7|Sustained (Back Row): When the opponent places a unit in the back row, deals 2 damage to it for 2 turns.
+Wretch|Legendary|Fallen|3|6|When Played (Front Row): Deals 1 damage to an opposing unit in the front row.
 Kevarrh|Mythic|Fallen|3|7|When Played: Draw 2 cards.
-Blinder Shank|Mythic|Fallen|3|8|When Played: Suppresses units on its left and right.
+Blinder Shank|Mythic|Fallen|3|8|When Played: Suppresses the units on the left and right.
 Elite Walker|Mythic|Fallen|4|3|At the end of your turn, deals 2 damage to 2 random opposing units.
 Resilient Marauder|Mythic|Fallen|4|6|When Played (Front Row): Deals 5 damage to an opposing unit.
 Luksis-3|Mythic|Fallen|4|5|When Played: Gains Power equal to twice the number of Rocks on the opponent's field.
 Augmented Shank|Legendary|Fallen|5|5|When Played (Front Row): Deals 2 damage to a unit and adjacent units.
 High Servitor|Mythic|Fallen|5|7|When Played: Deals damage equal to the number of Fallen units you control.
-Shinka Incendior|Legendary|Cabal|3|5|When Played (3-Unit Line): Deals 3 damage to a back-row unit.
-Gladiator|Legendary|Cabal|3|4|When Played: Selected front-row unit and adjacent units deal 1 additional damage.
-Colossus|Legendary|Cabal|3|6|Sustained (Column): Units directly ahead or behind gain +1 Power.
-Drop Pod|Legendary|Cabal|3|2|When Played (2-Unit Line): Summons 2 random Line units to the left and right.
+Shinka Incendior|Legendary|Cabal|3|5|When Played (3-Unit Line): Deals 3 damage to a unit in the back row.
+Gladiator|Legendary|Cabal|3|4|When Played (Front Row): A selected front row unit and the units to its left and right deal 1 additional damage.
+Colossus|Legendary|Cabal|3|6|Sustained (Column): Grants Cabal units directly in front of or behind 1 Power.
+Drop Pod|Legendary|Cabal|3|2|When Played (2 Unit Line): Summons 1 random Line unit on the left.
 Shinka Vigile|Mythic|Cabal|4|8|When Played (3-Unit Line): Deals 4 damage to a unit in the back row.
 Shinka Scorpius|Mythic|Cabal|4|7|Sustained (3-Unit Line): At the end of your turn, deals 2 damage to a random opposing unit.
