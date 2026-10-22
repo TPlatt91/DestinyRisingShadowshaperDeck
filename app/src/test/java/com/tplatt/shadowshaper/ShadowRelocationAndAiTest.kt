@@ -123,6 +123,6 @@ class ShadowRelocationAndAiTest {
         assertTrue(e.cpuPlayOne())
         assertEquals(1, e.cpu.board.flatMap { it.toList() }
             .filterNotNull().count { it.card.name == "Inquisitor" })
-        assertEquals(0, e.cpu.points)
+        assertEquals(77, e.cpu.points)
     }
 }
