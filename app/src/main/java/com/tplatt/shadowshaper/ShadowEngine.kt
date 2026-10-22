@@ -305,9 +305,11 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         log((if (me.human) "YOU" else "CPU") + " ▶ " + card.name + " • " +
             (if (row == 0) "BACK" else "FRONT") + " " + (col + 1))
         effects.onPlayed(unit, target)
+        sweep()
         if (isPresent(unit)) effects.fireAllyPlacement(unit)
-        // Ally placement can cause buffs and lethal retaliation. A card
-        // destroyed during that event must not trigger enemy arrival effects.
+        sweep()
+        // When Played / ally-placement damage may eliminate the caster;
+        // do not dispatch an arrival trigger for a defeated card.
         if (isPresent(unit)) effects.fireEnemyPlacement(unit)
         sweep()
         expireImpossibleRelocation()
@@ -423,8 +425,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         side.board[row][col] = summoned
         log("SUMMON ▶ " + name + " at " + (if (row == 0) "back " else "front ") + (col + 1))
         effects.fireAllyPlacement(summoned)
-        // Ally-placement buffs can trigger counter-damage and destroy this
-        // summon before enemy-placement watchers are allowed to observe it.
+        // Remove a summoned 0-Power unit before its enemy-arrival watchers
+        // observe an invalid battlefield occupant.
+        sweep()
         if (isPresent(summoned)) effects.fireEnemyPlacement(summoned)
         sweep()
     }
@@ -525,10 +528,21 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     internal fun damage(source: Unit, target: Unit?, amount: Int) {
-        if (target == null || amount <= 0 || !isPresent(target)) return
-        // All outgoing bonuses, including the random Umeko addition, are
-        // part of the same damage event. Apply defender reductions AFTER
-        // collecting bonuses so protective auras cannot be bypassed.
+        resolvedDamage(source, target, amount)
+    }
+
+    /**
+     * Return the damage dealt by this hit before target-side Power-gain
+     * reactions (e.g. Saladin) alter the displayed Power total. The full
+     * hit counts even if the victim has fewer Power points remaining.
+     * Zero is returned if reduction or Overshield prevented the hit.
+     *
+     * Used by Helhest's "gain Power based on damage dealt" effect.
+     */
+    internal fun resolvedDamage(source: Unit, target: Unit?, amount: Int): Int {
+        if (target == null || amount <= 0 || !isPresent(target)) return 0
+        // Apply all outgoing bonuses, including random Umeko damage,
+        // before the target's damage-reduction auras.
         var outgoing = effects.extraDamage(source)
         if (all(source.owner).any {
                 !it.suppressed && it.card.name == "Umeko" && it.row == ShadowRules.BACK_ROW
@@ -538,12 +552,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         )
         if (actual <= 0) {
             log("DAMAGE PREVENTED ▶ " + target.card.name)
-            return
+            return 0
         }
-        // Overshield prevents the whole incoming damage event. Its hit
-        // is never "damage dealt" and must not use up Jolder's next
-        // successful-damage doubler.
-        if (shieldAbsorbs(target, "damage")) return
+        if (shieldAbsorbs(target, "damage")) return 0
         val doubler = all(source.owner).firstOrNull {
             !it.suppressed && it.card.name == "Jolder" && !it.damageDoublerConsumed
         }
@@ -553,6 +564,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             log("Jolder doubles the next damage event without becoming Suppressed.")
         }
         dealDirect(source, target, actual)
+        return actual
     }
 
     private fun shieldAbsorbs(target: Unit, effect: String): Boolean {

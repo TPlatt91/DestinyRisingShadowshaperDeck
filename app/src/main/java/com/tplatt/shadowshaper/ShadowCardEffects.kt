@@ -511,17 +511,17 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                         )
                         var totalDamage = 0
                         for (victim in targets) {
-                            if (victim.owner.board[victim.row][victim.column] !== victim) continue
-                            val before = victim.power
-                            damage(unit, victim, 1)
-                            totalDamage += (before - victim.power).coerceAtLeast(0)
+                            if (!isPresent(victim)) continue
+                            // Count the actual hit, not target Power delta:
+                            // Saladin and similar counter-buffs change that delta,
+                            // and overkill still represents the full damage hit.
+                            totalDamage += resolvedDamage(unit, victim, 1)
                         }
-                        // The video says "gaining Power based on the damage dealt"
-                        // but provides no formula. Use 1 Power per point of
-                        // observed damage, marking the gain formula as provisional.
+                        // Original-game reports support 1 Power per point of
+                        // damage dealt, including overkill (but not blocked hits).
                         if (totalDamage > 0) buff(unit, totalDamage)
                         log("Helhest: dealt " + totalDamage +
-                            " total damage; Power gain formula pending original rule verification.")
+                            " damage and gained that much Power.")
                     }
                 }
             }
