@@ -501,9 +501,15 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     if (unit.row != ShadowRules.BACK_ROW) continue
                     val targets = all(other(side))
                     Collections.shuffle(targets, rng)
-                    for (victim in targets.take(2))
-                        if (victim.owner.board[victim.row][victim.column] === victim)
-                            damage(unit, victim, 2)
+                    for (victim in targets.take(2)) {
+                        if (!isPresent(unit)) break
+                        if (!isPresent(victim)) continue
+                        damage(unit, victim, 2)
+                        // The first hit can defeat a Clone whose death splash
+                        // also removes another selected target or even Walker.
+                        // Settle that wave before the next distinct attack.
+                        sweep()
+                    }
                 }
                 "Pandora-7" -> buff(at(side, unit.row, unit.column + 1), 2)
                 "Helhest" -> if (unit.row == ShadowRules.BACK_ROW) {
@@ -516,15 +522,18 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                         )
                         var totalDamage = 0
                         for (victim in targets) {
+                            if (!isPresent(unit)) break
                             if (!isPresent(victim)) continue
-                            // Count the actual hit, not target Power delta:
-                            // Saladin and similar counter-buffs change that delta,
-                            // and overkill still represents the full damage hit.
+                            // Count successful damage even if Saladin or an
+                            // on-damage reaction subsequently raises Power.
                             totalDamage += resolvedDamage(unit, victim, 1)
+                            // Clone death splash can defeat another listed
+                            // victim: later hits must not count that unit.
+                            sweep()
                         }
                         // Original-game reports support 1 Power per point of
                         // damage dealt, including overkill (but not blocked hits).
-                        if (totalDamage > 0) buff(unit, totalDamage)
+                        if (isPresent(unit) && totalDamage > 0) buff(unit, totalDamage)
                         log("Helhest: dealt " + totalDamage +
                             " damage and gained that much Power.")
                     }
