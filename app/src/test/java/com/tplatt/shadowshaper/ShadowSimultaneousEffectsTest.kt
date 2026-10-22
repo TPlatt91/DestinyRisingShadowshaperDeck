@@ -36,6 +36,8 @@ class ShadowSimultaneousEffectsTest {
                 "Sustained: Opponent Front Row placements grant Power for 3 turns."),
             card("Gwynn", "Humans", 6, 4,
                 "When Played (Front Row): Deals 3 damage to the target and adjacent units; loses 2 Power."),
+            card("Saladin", "Humans", 6, 4,
+                "Sustained: When allied Humans take damage, they gain +3 Power."),
             card("Augmented Shank", "Fallen", 5, 5,
                 "When Played (Front Row): Deals 2 damage to a unit and units on its left and right.")
         ).associateBy { it.name }
@@ -161,6 +163,40 @@ class ShadowSimultaneousEffectsTest {
         assertEquals(2, e.journal.count {
             it.contains("Grenade Dreg +1 Power: Dreg deployed")
         })
+    }
+
+    @Test fun gwynnSelfPowerPenaltyBypassesOvershieldWithoutConsumingIt() {
+        val e = engine()
+        put(e, "Saladin", e.human, 0, 0)
+        val gwynn = put(e, "Gwynn", e.human, 1, 4)
+        gwynn.overshield = true
+        val opponent = put(e, "Dreg", e.cpu, 1, 2)
+
+        e.effects.onPlayed(gwynn, ShadowEngine.Target(e.cpu, 1, 2))
+
+        assertEquals(7, opponent.power)
+        assertEquals(4, gwynn.power)
+        assertEquals(0, gwynn.bonus)
+        assertTrue("Losing Power is not an attack on Overshield", gwynn.overshield)
+        assertFalse(e.journal.any { it == "DAMAGE 2 ▶ Gwynn" })
+        assertFalse(e.journal.any { it == "BUFF +3 ▶ Gwynn" })
+    }
+
+    @Test fun gwynnSelfPowerPenaltyDoesNotActivateSaladin() {
+        val e = engine()
+        put(e, "Saladin", e.human, 0, 0)
+        val gwynn = put(e, "Gwynn", e.human, 1, 4)
+        val opponent = put(e, "Dreg", e.cpu, 1, 2)
+
+        e.effects.onPlayed(gwynn, ShadowEngine.Target(e.cpu, 1, 2))
+        e.sweep()
+
+        assertEquals(7, opponent.power)
+        assertEquals(4, gwynn.power)
+        assertEquals(0, gwynn.bonus)
+        assertTrue(e.journal.any { it.contains("Gwynn: -2 Power") })
+        assertEquals(0, e.journal.count { it.contains("DAMAGE") && it.contains("Gwynn") })
+        assertEquals(0, e.unresolvedEffects)
     }
 
     @Test fun gwynnSplashStaysOnSelectedEnemyRowAndAppliesSelfPenalty() {
