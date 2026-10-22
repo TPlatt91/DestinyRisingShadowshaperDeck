@@ -87,6 +87,23 @@ class ShadowBuffChainResolutionTest {
         assertEquals(0, e.unresolvedEffects)
     }
 
+    @Test fun twoInspiredDisfavoredSourcesStartSeparateEndTurnChains() {
+        val e = engine()
+        val first = place(e, "The Disfavored", e.human, 1, 0)
+        val second = place(e, "The Disfavored", e.human, 1, 1)
+        first.inspired = true
+        second.inspired = true
+
+        e.effects.endSide(e.human)
+
+        // A first Inspired +1 triggers A->B->A. Later B's independent
+        // Inspired +1 triggers B->A->B. Only the recursive repeats stop.
+        assertEquals(8, first.power)
+        assertEquals(8, second.power)
+        assertEquals(6, e.journal.count { it.startsWith("BUFF +") })
+        assertEquals(0, e.unresolvedEffects)
+    }
+
     @Test fun oneDisfavoredCannotChooseItselfAsTheDifferentHiveTarget() {
         val e = engine()
         val only = place(e, "The Disfavored", e.human, 1, 0)
@@ -131,6 +148,30 @@ class ShadowBuffChainResolutionTest {
         assertNull(e.cpu.board[0][0])
         assertNull(e.cpu.board[0][1])
         assertEquals(0, e.journal.count { it == "DAMAGE 1 ▶ Dreg" })
+        assertEquals(1, e.journal.count { it == "DAMAGE 3 ▶ Dreg" })
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun tenaciousOgreSkipsDefeatedTargetsWithinFourDistinctHits() {
+        val seed = (0L..1000L).first { value ->
+            val indices = arrayListOf(0, 1, 2, 3)
+            Collections.shuffle(indices, Random(value))
+            indices.first() == 0
+        }
+        val e = engine(seed)
+        val ogre = place(e, "Tenacious Ogre", e.human, 0, 5)
+        place(e, "Clone", e.cpu, 0, 0)
+        place(e, "Dreg", e.cpu, 0, 1, power = 2)
+        val third = place(e, "Dreg", e.cpu, 0, 2)
+        val fourth = place(e, "Dreg", e.cpu, 0, 3)
+
+        e.buff(ogre, 1)
+
+        assertNull(e.cpu.board[0][0])
+        assertNull(e.cpu.board[0][1])
+        assertEquals(9, third.power)
+        assertEquals(9, fourth.power)
+        assertEquals(2, e.journal.count { it == "DAMAGE 1 ▶ Dreg" })
         assertEquals(1, e.journal.count { it == "DAMAGE 3 ▶ Dreg" })
         assertEquals(0, e.unresolvedEffects)
     }
