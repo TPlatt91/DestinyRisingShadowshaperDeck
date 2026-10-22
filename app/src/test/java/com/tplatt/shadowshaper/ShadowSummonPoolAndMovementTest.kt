@@ -165,8 +165,10 @@ class ShadowSummonPoolAndMovementTest {
         e.cpu.points = 4
         e.cpu.hand.add(e.catalog.getValue("Tomb Ship"))
         assertTrue(e.cpuPlayOne())
-        val ship = e.cpu.board.flatMap { it.toList() }.filterNotNull()
-            .single { it.card.name == "Tomb Ship" && it.card === e.catalog.getValue("Tomb Ship") }
+        // Randomly summoned Tomb Ships are valid pool members, so identify
+        // the played source by the engine's last hand-play coordinates.
+        val ship = e.cpu.board[e.lastPlacedRow][e.lastPlacedColumn]!!
+        assertEquals("Tomb Ship", ship.card.name)
         assertTrue(ship.column in 1 until ShadowRules.COLUMNS - 1)
         assertNotNull(e.cpu.board[ship.row][ship.column - 1])
         assertNotNull(e.cpu.board[ship.row][ship.column + 1])
