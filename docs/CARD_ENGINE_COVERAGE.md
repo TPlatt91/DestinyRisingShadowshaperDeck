@@ -1,3 +1,13 @@
+# Batch 12 video implementation update
+
+**8/8** cards have unique video-confirmed definitions and detailed metadata: Tenacious Ogre, Tenacious Wizard, Shinka Vigile, Shinka Scorpius, Juggernaut, Pandora-7, Harrow, Helhest. **8/8** have source-code battle handlers, and 10 local JVM regression scenarios have been added.
+
+**Unverified behaviors:** Helhest's precise Power-per-damage conversion is not numerically specified by the video. Juggernaut's Column geometry still needs an original-game behavior check. All Batch 12 regression tests and Android gameplay remain **QA pending** and have not been executed in this environment.
+
+[Batch 12 original video metadata, effects, and rules](BATCH_12_VIDEO_METADATA.md).
+
+---
+
 # Batch 11 implementation status — 21 October 2026
 
 - **8/8 original-video definitions** committed (metadata, Light costs, Power, factions, rarity, acquisitions and printed abilities)

@@ -27,3 +27,22 @@ Original recording: `batch 12.mp4`. **Power** is printed on the left and **Light
 **Juggernaut** has printed *Sustained (Column)*, but says that *Cabal units to its left and right* deal 1 additional damage; this is preserved without editing it to say “above and below.” **Helhest** states it gains Power “based on the damage dealt,” without a numerical formula; its exact gain rate is not established by this card-detail clip alone. Tests should distinguish verified printed wording from inferred engine behavior.
 
 Cards load into deck building, Card Collection, and battle from the same `verified_video_cards.tsv` and `card_details.tsv` metadata. The separately delivered ZIP includes artwork and animations; those binaries are not uploaded in these changes.
+
+## Gameplay implementation (21 October 2026)
+
+All eight Batch 12 cards now have source-code handlers in `ShadowCardEffects.kt`. Changes made in this batch:
+- **Harrow:** on play, coin flip; heads buffs itself +5 Power, tails does nothing.
+- **Helhest:** requires Back Row. At owner turn end, damages one random opposing unit and immediate same-row neighbors; applies a provisional Power increase based on observed damage dealt. The card text does not specify an exact conversion ratio, so the current one-to-one conversion remains subject to original-game verification.
+- **Juggernaut:** the damage bonus requires an occupied Column pair and only applies to Cabal units to the left or right. The original printed wording is preserved.
+- **Tenacious Ogre, Tenacious Wizard, Shinka Vigile, Shinka Scorpius, Pandora-7:** retained existing battle handlers and loaded video-verified requirements/text. Tenacious Wizard now has its recorded Back Row requirement in the catalog.
+
+**Regression source:** `app/src/test/java/com/tplatt/shadowshaper/ShadowBatch12VideoRulesTest.kt` (10 local JVM scenarios). Tests have been committed but **not run**; an Android build and actual match validation are still needed.
+
+Local verification (does not consume GitHub Actions credits):
+
+```bat
+gradlew.bat :app:testDebugUnitTest
+gradlew.bat :app:assembleDebug
+```
+
+No Batch 12 image/GIF/MP4 binaries were pushed as part of this metadata and engine implementation.
