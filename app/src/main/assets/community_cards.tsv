@@ -22,9 +22,9 @@ War Beast|Rare|Cabal|1|2|No special effects.
 Centurion|Mythic|Cabal|2|5|Sustained (4-Unit Line): Adjacent units gain +2 Power.
 Shinka Psion|Legendary|Cabal|2|3|When Played (2-Unit Line): Deals 3 damage to a unit.
 Shinka Legionary|Legendary|Cabal|2|4|Sustained (Column): Gains +2 Power.
-Shinka Phalanx|Legendary|Cabal|2|3|Sustained (Column): Units in front or behind take 1 less damage.
-Incendior|Legendary|Cabal|2|2|When Played: Deals 3 damage to an opposing front-row unit.
-Decurion|Legendary|Cabal|2|3|Sustained (Column): Grants +2 Power to units in front or behind.
+Shinka Phalanx|Legendary|Cabal|2|3|Sustained (Column): Units directly in front of or behind take 1 less damage.
+Incendior|Legendary|Cabal|2|2|When Played: Deals 3 damage to an opposing unit in the front row.
+Decurion|Legendary|Cabal|2|3|Sustained (Column): Grants +2 Power to units directly in front of or behind.
 Psion|Rare|Cabal|2|2|When Played (Back Row): Deals 2 damage to a unit.
 Scorpius|Legendary|Cabal|3|4|Sustained (Back Row): At the end of your turn, deals 1 damage each to 2 random opposing units.
 Vigile|Legendary|Cabal|3|5|When Played (Front Row): Gives a Line unit +2 Power.

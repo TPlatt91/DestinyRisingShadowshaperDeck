@@ -131,7 +131,8 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             "Finnala" -> {
                 if (actor.row == 1 && picked != null) {
                     buff(picked, 8)
-                    dealDirect(actor, actor, 3)
+                    actor.power -= 3
+                    log("Finnala: -3 Power (self penalty; not damage).")
                 }
             }
             "Attal" -> if (picked != null) buff(picked, power(picked))
