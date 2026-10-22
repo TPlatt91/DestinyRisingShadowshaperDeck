@@ -326,8 +326,19 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
                                 all(unit.owner).count { it === unit || adjacent(it, unit) } * 3.0
                             else -> 0.0
                         }
-                        unitPower + area +
-                            (if (lethal) 18.0 else effective * 0.5) -
+                        // A raw-Power reward makes a 60-Power enemy look
+                        // preferable to an immediately defeatable 2-Power
+                        // enemy for Vandal's fixed 2 damage. Value the
+                        // achievable removal first, then damage progress.
+                        // Dynamic-damage cards retain a smaller preference
+                        // for valuable opposing units when hit is unknown.
+                        val damageValue = when {
+                            hit <= 0 -> unitPower * 0.2
+                            lethal -> 25.0 + unitPower * 0.5
+                            else -> effective * 4.0 +
+                                6.0 / (unitPower - effective + 1.0)
+                        }
+                        damageValue + area -
                             (if (unit.overshield) 40.0 else 0.0)
                     }
                 }
