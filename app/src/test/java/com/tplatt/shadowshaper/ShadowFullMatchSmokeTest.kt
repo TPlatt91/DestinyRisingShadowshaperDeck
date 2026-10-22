@@ -204,6 +204,16 @@ class ShadowFullMatchSmokeTest {
                 for (turn in 0 until ShadowRules.ROUNDS * 2) {
                     if (e.humanTurn) playPlayerTurn(e) else playCpuTurn(e)
                     assertBoardInvariant(e)
+                    // A match that reaches round six while silently skipping
+                    // a printed effect is not a clean gameplay-parity pass.
+                    // This cumulative counter remains meaningful even when
+                    // older event-log entries roll off.
+                    assertEquals(
+                        "Unresolved printed card effect in faction=" + faction +
+                            " seed=" + seed + " turn=" + (turn + 1) +
+                            "\n" + e.diagnosticReport(),
+                        0, e.unresolvedEffects
+                    )
                     // Any rejected CPU move indicates a targeting/placement
                     // legality mismatch that can waste remaining Light.
                     assertFalse(
@@ -227,6 +237,7 @@ class ShadowFullMatchSmokeTest {
                 )
                 assertNull("Relocation left pending at final score", e.pendingMovedUnit)
                 assertEquals("CPU rejected a move during the match", 0, e.rejectedCpuMoves)
+                assertEquals("Unresolved gameplay effects at final score", 0, e.unresolvedEffects)
                 assertEquals(
                     "Final player score differs from visible board Power",
                     e.human.board.flatMap { it.toList() }.filterNotNull()
