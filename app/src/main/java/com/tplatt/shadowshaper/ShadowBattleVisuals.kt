@@ -92,30 +92,46 @@ internal fun DuelTableBackground(modifier: Modifier = Modifier) {
  */
 @Composable
 internal fun DuelTableEtching(modifier: Modifier = Modifier) {
+    // Procedural stone slab visual: no fake card faces or extra play zones.
+    // The four legal battle rows are laid over this texture by the engine UI.
     Canvas(modifier) {
-        val copper = Color(0xFFB28A56).copy(alpha = 0.12f)
-        val pale = Color(0xFFE8C89C).copy(alpha = 0.07f)
-        val midX = size.width / 2f
-        val midY = size.height / 2f
-        val thickness = 0.8.dp.toPx()
-        // Symmetric filigree lines follow the existing background only.
-        for (fraction in listOf(0.14f, 0.27f, 0.73f, 0.86f)) {
-            drawLine(copper,
-                Offset(size.width * fraction, 0f),
-                Offset(size.width * fraction, size.height),
-                strokeWidth = thickness)
+        val w = size.width
+        val h = size.height
+        val joint = Color(0xFFAFB0AA).copy(alpha = 0.38f)
+        val worn = Color(0xFF17191B).copy(alpha = 0.20f)
+        val scratch = Color(0xFFE0DDD2).copy(alpha = 0.14f)
+        drawRect(
+            brush = Brush.verticalGradient(
+                listOf(Color(0xFF4C4D4B), Color(0xFF676763), Color(0xFF484A48))
+            )
+        )
+        // Wide horizontal stone courses behind each opposing/friendly row.
+        for (fraction in listOf(0.25f, 0.50f, 0.75f)) {
+            val y = h * fraction
+            drawLine(joint, Offset(0f, y), Offset(w, y), 1.1.dp.toPx())
+            drawLine(worn, Offset(0f, y + 2.dp.toPx()),
+                Offset(w, y + 2.dp.toPx()), 1.dp.toPx())
         }
-        drawCircle(
-            color = pale, radius = minOf(size.width, size.height) * 0.31f,
-            center = Offset(midX, midY),
-            style = Stroke(width = thickness * 2f)
-        )
-        drawCircle(
-            color = copper, radius = minOf(size.width, size.height) * 0.22f,
-            center = Offset(midX, midY),
-            style = Stroke(width = thickness)
-        )
-        drawLine(pale, Offset(0f, midY), Offset(size.width, midY), thickness)
+        for (n in 1 until ShadowRules.COLUMNS) {
+            val x = w * n / ShadowRules.COLUMNS
+            drawLine(joint.copy(alpha = 0.19f),
+                Offset(x, h * 0.05f), Offset(x, h * 0.95f), 0.8.dp.toPx())
+        }
+        // Sparse worn slate scratches, never card or zone decorations.
+        for (j in 0..9) {
+            val x = w * ((j * 19 + 7) % 97) / 97f
+            val y = h * ((j * 31 + 5) % 89) / 89f
+            val length = w * (0.025f + (j % 4) * 0.009f)
+            drawLine(scratch, Offset(x, y), Offset(x + length, y - length * 0.21f),
+                0.8.dp.toPx())
+        }
+        // Field border: steel instead of the earlier copper filigree.
+        drawRect(color = Color(0xFFB2A89B).copy(alpha = 0.33f),
+            topLeft = Offset(1.dp.toPx(), 1.dp.toPx()),
+            size = androidx.compose.ui.geometry.Size(
+                (w - 2.dp.toPx()).coerceAtLeast(0f),
+                (h - 2.dp.toPx()).coerceAtLeast(0f)
+            ), style = Stroke(width = 1.dp.toPx()))
     }
 }
 
@@ -207,30 +223,53 @@ internal fun DuelCardBacks(count: Int, coverId: String = "default") {
 
 @Composable
 internal fun DuelScore(player: Int, cpu: Int, playerTurn: Boolean) {
-    // Only the displayed number interpolates. Engine Power remains exact and
-    // is used for all rules and victory checks.
     val displayedPlayer by animateIntAsState(
-        targetValue = player, animationSpec = tween(320), label = "player power display"
+        targetValue = player, animationSpec = tween(320), label = "player score"
     )
     val displayedCpu by animateIntAsState(
-        targetValue = cpu, animationSpec = tween(320), label = "cpu power display"
+        targetValue = cpu, animationSpec = tween(320), label = "opponent score"
     )
-    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("TOTAL POWER", color = DuelPalette.dullGold, fontSize = 10.sp,
-            letterSpacing = 1.sp, fontWeight = FontWeight.Bold)
-        Row(verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(displayedPlayer.toString(), fontSize = 28.sp, fontWeight = FontWeight.Black,
-                color = if (playerTurn) DuelPalette.cream else DuelPalette.blue)
-            Text(":", color = DuelPalette.dullGold, fontSize = 18.sp)
-            Text(displayedCpu.toString(), fontSize = 28.sp, fontWeight = FontWeight.Black,
-                color = if (playerTurn) DuelPalette.red else DuelPalette.cream)
+    Column(
+        Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        @Composable
+        fun ScoreLine(name: String, value: Int, highlight: Color) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                Text(
+                    name, color = DuelPalette.cream, fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold
+                )
+                Box(
+                    Modifier.size(36.dp)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(Color(0xFF353636), Color(0xFF191B20))
+                            ),
+                            CircleShape
+                        )
+                        .border(2.dp, highlight, CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        value.toString(), color = DuelPalette.cream,
+                        fontSize = 20.sp, fontWeight = FontWeight.Black
+                    )
+                }
+            }
         }
-        Text("YOU                 CPU", color = DuelPalette.dullGold, fontSize = 9.sp)
-        Spacer(Modifier.height(4.dp))
-        Text(if (playerTurn) "YOUR TURN" else "CPU TURN", fontSize = 10.sp,
-            color = if (playerTurn) DuelPalette.blue else DuelPalette.red,
-            fontWeight = FontWeight.Bold)
+        ScoreLine("CPU", displayedCpu, Color(0xFFBC756E))
+        ScoreLine("YOU", displayedPlayer, Color(0xFFE4B968))
+        Text(
+            if (playerTurn) "YOUR TURN" else "OPPONENT TURN",
+            color = if (playerTurn) DuelPalette.gold else DuelPalette.red,
+            fontSize = 9.sp, fontWeight = FontWeight.Bold, maxLines = 1
+        )
     }
 }
 
@@ -355,17 +394,17 @@ internal fun DuelSlotBackground(
     val line by animateColorAsState(
         targetValue = when {
             selected -> DuelPalette.gold
-            occupied -> Color(0xFF755A48)
-            friendly -> Color(0xFF6B5241)
-            else -> Color(0xFF624544)
+            occupied -> Color(0xFF948D7E)
+            friendly -> Color(0xFFB0B0A9).copy(alpha = 0.28f)
+            else -> Color(0xFFB2B7B9).copy(alpha = 0.25f)
         }, label = "slot edge"
     )
     Box(
         modifier.background(
             Brush.verticalGradient(
                 if (selected)
-                    listOf(Color(0xFF48584D), Color(0xFF26332D))
-                else listOf(Color(0xFF2D2521), Color(0xFF191617))
+                    listOf(Color(0x99627861), Color(0x99334136))
+                else listOf(Color(0x204F5354), Color(0x10313437))
             ),
             RoundedCornerShape(5.dp)
         ).border(if (selected) 2.dp else 1.dp, line, RoundedCornerShape(5.dp)),
@@ -383,7 +422,7 @@ internal fun DuelSlotBackground(
                 drawLine(color, Offset(size.width, size.height),
                     Offset(size.width, size.height - edge), 1.dp.toPx(), StrokeCap.Square)
             }
-            Text(label, color = if (selected) DuelPalette.gold else Color(0x666F6157),
+            Text(label, color = if (selected) DuelPalette.gold else Color.Transparent,
                 fontSize = if (selected) 22.sp else 15.sp)
         }
     }
