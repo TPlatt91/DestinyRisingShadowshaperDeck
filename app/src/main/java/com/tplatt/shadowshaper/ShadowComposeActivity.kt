@@ -685,13 +685,6 @@ private fun CardDetailsDialog(
                             )
                             Spacer(Modifier.height(10.dp))
                             CardMetadataLine("Printed card effect", card.effect.ifBlank { "No effect recorded." })
-                            if (card.trigger.isNotBlank()) {
-                                CardMetadataLine(
-                                    if (ShadowData.hasVideoEffectEvidence(card)) "Catalog trigger (may be older)"
-                                    else "Catalog trigger",
-                                    card.trigger
-                                )
-                            }
                             CardMetadataLine("Card number", card.cardNumber)
                             if (!card.isPlayable) {
                                 Text(
