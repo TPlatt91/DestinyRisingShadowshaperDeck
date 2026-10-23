@@ -11,6 +11,9 @@ internal data class DuelCardDimensions(val width: Float, val height: Float)
 
 internal object DuelLayoutMetrics {
     const val CARD_WIDTH_TO_HEIGHT = 0.72f
+    // Leave cliff/rubble margins visible and keep the seven playable slots
+    // on the intact central stone slab, as in the original client frame.
+    const val PORTRAIT_LANE_WIDTH_FRACTION = 0.86f
     private const val WIDTH_INSET_DP = 2f
     private const val HEIGHT_INSET_DP = 2f
 
@@ -30,7 +33,7 @@ internal object DuelLayoutMetrics {
      */
     fun portraitBoardHeight(screenWidthDp: Int, screenHeightDp: Int): Float =
         min(
-            screenWidthDp.coerceAtLeast(250) * 0.83f,
+            screenWidthDp.coerceAtLeast(250) * 0.77f,
             (screenHeightDp - portraitHandHeight(screenHeightDp) - 215f)
                 .coerceAtLeast(145f)
         )
