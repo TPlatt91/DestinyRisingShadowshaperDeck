@@ -24,17 +24,15 @@ internal object DuelLayoutMetrics {
     }
 
     /**
-     * Keep four visual rows proportionate to six portrait card columns.
-     * The previous weighted board stretched empty slots to fill the screen.
-     * This function only controls Compose dimensions, not gameplay zones.
+     * Four compact card rows, seven legal positions in each. The original
+     * client presents the rows inside a larger stone field; the surrounding
+     * space is reserved for the Power/Light emblems and End Turn control.
      */
     fun portraitBoardHeight(screenWidthDp: Int, screenHeightDp: Int): Float =
         min(
-            screenWidthDp.coerceAtLeast(250) * 0.92f,
-            // Reserve the header, opponent ribbon, score controls, hand,
-            // system bars and compact action spacing on shorter phones.
-            (screenHeightDp - portraitHandHeight(screenHeightDp) - 174f)
-                .coerceAtLeast(120f)
+            screenWidthDp.coerceAtLeast(250) * 0.83f,
+            (screenHeightDp - portraitHandHeight(screenHeightDp) - 215f)
+                .coerceAtLeast(145f)
         )
 
     /** More room for card art on phones without obscuring the board. */
