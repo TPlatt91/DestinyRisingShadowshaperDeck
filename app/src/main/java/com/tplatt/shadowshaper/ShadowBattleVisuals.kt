@@ -345,7 +345,7 @@ internal fun DuelCardFrame(
             .border(if (selected) 2.dp else 1.dp,
                 if (selected) DuelPalette.gold else rarity, RoundedCornerShape(5.dp))
     ) {
-        DuelCardArtwork(card, Modifier.fillMaxSize().padding(2.dp))
+        DuelCardArtwork(card, Modifier.fillMaxSize().padding(if (compact) 1.dp else 0.dp))
         // The source battlefield only shows the CURRENT unit Power on its
         // miniatures. Hand cards also show their printed Light cost.
         Row(
@@ -354,8 +354,13 @@ internal fun DuelCardFrame(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             DuelStatChip(
-                power.toString(), DuelPalette.cream, Color(0xD8211F22),
-                miniature = compact
+                power.toString(),
+                when {
+                    power > card.numericPower() -> DuelPalette.green
+                    power < card.numericPower() -> Color(0xFFFFA8A8)
+                    else -> DuelPalette.cream
+                },
+                Color(0xD8211F22), miniature = compact
             )
             if (!compact) {
                 DuelStatChip(
@@ -364,16 +369,15 @@ internal fun DuelCardFrame(
                 )
             }
         }
-        if (suppressed) {
-            Box(Modifier.fillMaxSize().background(Color(0x66141218)),
-                contentAlignment = Alignment.Center) {
-                Text("SUPPRESSED", fontSize = 8.sp, color = DuelPalette.cream,
-                    fontWeight = FontWeight.Bold)
-            }
-        } else if (inspired || scorched) {
-            Row(Modifier.align(Alignment.Center).padding(top = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                if (inspired) DuelStatusDot("✦", DuelPalette.gold)
+        // Status effects stay legible at miniature size without placing a
+        // full-screen tint or centered label over the original card artwork.
+        if (suppressed || inspired || scorched) {
+            Row(
+                Modifier.align(Alignment.BottomEnd).padding(1.dp),
+                horizontalArrangement = Arrangement.spacedBy(1.dp)
+            ) {
+                if (suppressed) DuelStatusDot("⊘", Color(0xFFFFC9CB))
+                if (inspired && !suppressed) DuelStatusDot("✦", DuelPalette.green)
                 if (scorched) DuelStatusDot("✹", Color(0xFFFFB37B))
             }
         }
@@ -400,7 +404,7 @@ private fun DuelStatChip(
 
 @Composable
 private fun DuelStatusDot(value: String, color: Color) {
-    Text(value, fontSize = 15.sp, color = color,
+    Text(value, fontSize = 10.sp, color = color,
         modifier = Modifier.background(Color(0xC71E1A1C), CircleShape)
             .padding(horizontal = 4.dp, vertical = 1.dp))
 }
