@@ -217,3 +217,13 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 **Catalog/dispatch audit:** A source-level name/handler inspection covered **121 catalog identities** (base, expanded, community and user-recorded video overrides). Every effect-bearing catalog name is present in a specific played-effect branch or the known Sustained resolver list. This checks dispatch *coverage only*; it does **not** establish the correctness or runtime success of any card.
 
 **Verification:** Source and test changes pushed to `main`; Gradle/JVM tests and Android builds **not run** because the user's PC is unavailable. No GitHub Actions usage consumed.
+
+## Hyssop target eligibility: active Power bonuses include Column auras
+
+**Recorded in-game printed ability:** `Hyssop — When Played: Grants +3 Power to a unit with a bonus.` The verified user-video row and detailed video note agree on the recipient requirement.
+
+**Defect corrected:** `ShadowEngine.targetOptions()` previously checked `unit.bonus <= 0` for Hyssop. That field only counts applied Power buffs, so it rejected a unit that received a valid ongoing `+2 Power` from Decurion's Column aura but had no stored buffs. The existing `powerBonus(unit)` method already computes the correct active Power bonus (stored buffs plus applicable Column/Line auras, without confusing injury with losing the buff). Hyssop now uses this method for player targeting and shared CPU target selection, keeping its printed eligibility consistent with Bazinet and Thinktank.
+
+**Four authored local regression tests** in `ShadowPrintedBonusAccountingTest.kt` cover (1) aura-only Dreg selecting and receiving +3; (2) a Suppressed Decurion removing that eligibility before committing a play, without spending Light; (3) an injured unit remaining eligible because it still holds an applied buff; (4) CPU Hyssop selecting an aura-only target without a rejected move. The per-card interaction matrix retains Hyssop's runtime-not-verified status.
+
+**Verification:** Code and JUnit test files pushed to `main`. No Android build, Gradle/JUnit test execution, or GitHub Actions workflow was run. Original client interaction still needs confirmation before full parity certification.

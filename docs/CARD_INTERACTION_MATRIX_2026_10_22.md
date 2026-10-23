@@ -50,7 +50,7 @@ Audit: **2026-10-22**, Android Kotlin `main` sources plus packaged card TSVs. Th
 | Helhest | Humans | SUSTAINED, DAMAGE, POWER, RANDOM | Y | Y | Y | A | Damage-to-Power ratio and overkill |
 | Hexguard | Hive | PLAY, STATUS | — | Y | Y | B | When active; row/target/sustained guard and nested effects |
 | High Servitor | Fallen | PLAY, DAMAGE | Y | Y | Y | C | When active; row/target/sustained guard and nested effects |
-| Hyssop | Humans | PLAY, POWER | Y | Y | Y | B | When active; row/target/sustained guard and nested effects |
+| Hyssop | Humans | PLAY, POWER | Y | Y | Y | B | Printed video: requires an active Power bonus; Column-aura, injury, suppression and CPU target regressions authored (runtime not run) |
 | Ikora | Humans | PLAY, DAMAGE | Y | Y | Y | B | Whole-row damage and deaths |
 | Incendior | Cabal | PLAY, DAMAGE | Y | Y | Y | C | When active; row/target/sustained guard and nested effects |
 | Inquisitor | Hive | PLAY, DAMAGE | Y | Y | Y | C | When active; row/target/sustained guard and nested effects |
