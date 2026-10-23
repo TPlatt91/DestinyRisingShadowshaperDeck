@@ -227,3 +227,13 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 **Four authored local regression tests** in `ShadowPrintedBonusAccountingTest.kt` cover (1) aura-only Dreg selecting and receiving +3; (2) a Suppressed Decurion removing that eligibility before committing a play, without spending Light; (3) an injured unit remaining eligible because it still holds an applied buff; (4) CPU Hyssop selecting an aura-only target without a rejected move. The per-card interaction matrix retains Hyssop's runtime-not-verified status.
 
 **Verification:** Code and JUnit test files pushed to `main`. No Android build, Gradle/JUnit test execution, or GitHub Actions workflow was run. Original client interaction still needs confirmation before full parity certification.
+
+## Video-authoritative CPU row selection and Xur/Rock ownership — 22 October 2026
+
+**Concrete CPU gameplay defect:** Before this pass, `ShadowEngine.activeInRow` preferred the recorded card-header row over historical trigger metadata, but `evaluateCpuPlacement` still scored rows using `card.trigger.ifBlank { card.effect }`. Thus the CPU could prefer to play **Jaren** in the Back Row or **Bazinet** in the Front Row when a stale community trigger contradicted the user's in-client recording. Those placements were legal but silently skipped the printed `When Played` damage. CPU scoring now uses `ShadowData.videoHasExplicitAbilityHeader` and `ShadowData.videoRequiredRow` first, consistent with card-effect activation; a recorded unqualified `When Played:` has no invented row bias. Legacy trigger preferences remain only when no video-authored header exists.
+
+**Three new local CPU tests** (`ShadowCpuVideoRowPreferenceTest.kt`) verify Jaren chooses Front Row and actually deals all six random damage, Bazinet chooses Back Row and damages only bonus-bearing enemies, and Harrow with an unrestricted recorded header is not locked to an outdated row preference across deterministic random seeds.
+
+**Xur → Rock → Zhiyao test correction:** A previous source regression incorrectly expected a Zhiyao **on the Rock recipient's own field** to trigger when Xur summoned a Rock there. The trigger requires an **opposing** Front Row arrival; the owner's Zhiyao must not react. `ShadowBuffChainResolutionTest.kt` now positions the reacting Zhiyao on Xur's side (opposite the summoned Rock), and a new regression ensures a Zhiyao already allied with the receiving side does *not* gain Power. Neither case changes the engine's existing owner-relative watcher dispatch.
+
+**Verification:** GitHub source/tests committed; all tests are unexecuted pending the user's local Gradle run. No GitHub Actions, remote CI, or usage credits were consumed.
