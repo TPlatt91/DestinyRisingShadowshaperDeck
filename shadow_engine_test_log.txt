@@ -1,5 +1,5 @@
 ==== Shadow Shaper Duels diagnostics ====
-Started: Fri 10/23/2026 16:27:58.74
+Started: Fri 10/23/2026 16:29:32.00
 JAVA_HOME=
 Java candidates on PATH:
 C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin\java.exe
@@ -55,7 +55,7 @@ Daemon will be stopped at the end of the build
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug UP-TO-DATE
 > Task :app:compileDebugUnitTestKotlin
-> Task :app:compileDebugUnitTestJavaWithJavac UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac
 > Task :app:processDebugUnitTestJavaRes UP-TO-DATE
 
 > Task :app:testDebugUnitTest FAILED
@@ -75,13 +75,7 @@ ShadowBatch0910VideoRulesTest > gladiatorGrantsAdditionalDamageNotPowerToTargetA
 ShadowBatch12VideoRulesTest > helhestBackRowDamagesTargetAndHorizontalNeighbors FAILED
     java.lang.AssertionError at ShadowBatch12VideoRulesTest.kt:157
 
-ShadowRulesTest > noIllegalTargetPromptWithoutRequiredFactionLine FAILED
-    java.lang.AssertionError at ShadowRulesTest.java:154
-
-ShadowRulesTest > projectedFactionLinesRequireAdjacentSameFactionUnits FAILED
-    java.lang.AssertionError at ShadowRulesTest.java:135
-
-336 tests completed, 7 failed
+336 tests completed, 5 failed
 
 FAILURE: Build failed with an exception.
 
@@ -251,7 +245,7 @@ Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
 
 
-BUILD FAILED in 11s
-42 actionable tasks: 2 executed, 40 up-to-date
+BUILD FAILED in 9s
+42 actionable tasks: 3 executed, 39 up-to-date
 
 Local checks exit code: 1
