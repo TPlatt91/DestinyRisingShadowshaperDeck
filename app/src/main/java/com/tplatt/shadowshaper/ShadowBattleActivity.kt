@@ -309,10 +309,26 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         val position = it.boundsInWindow().topLeft
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
     }) {
-    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF121115),Color(0xFF211A1A),Color(0xFF131217))))) {
+    Column(
+        Modifier.fillMaxSize().background(
+            Brush.verticalGradient(
+                listOf(
+                    Color(0xFF111820), Color(0xFF20242A), Color(0xFF141820)
+                )
+            )
+        )
+    ) {
         Row(Modifier.fillMaxWidth().height(29.dp)
-            .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
-            .border(width = 1.dp, color = Color(0xFF8D6748))
+            .background(
+                Brush.horizontalGradient(
+                    listOf(
+                        Color(0xFF27313C),
+                        Color(0xFF141B22),
+                        Color(0xFF242C35)
+                    )
+                )
+            )
+            .border(width = 1.dp, color = Color(0xFF807967))
             .padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
@@ -553,9 +569,16 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     .height(DuelLayoutMetrics.portraitHandHeight(
                         screenConfig.screenHeightDp
                     ).dp)
-                    .background(Brush.verticalGradient(listOf(
-                        Color(0xFF30251F), Color(0xFF1C1A1A)
-                    )))
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(
+                                Color(0xFF34373A),
+                                Color(0xFF202429),
+                                Color(0xFF171B20)
+                            )
+                        )
+                    )
+                    .border(1.dp, Color(0xFF655E54), RoundedCornerShape(3.dp))
                     .padding(horizontal = 4.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.width(51.dp), horizontalAlignment = Alignment.CenterHorizontally,
