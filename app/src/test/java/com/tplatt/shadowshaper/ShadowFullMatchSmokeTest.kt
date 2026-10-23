@@ -27,6 +27,7 @@ class ShadowFullMatchSmokeTest {
                 val existing = cards[fields[0]]
                 if (existing != null && !override) return@forEachLine
                 val card = existing ?: ShadowData.Card().apply { this.name = fields[0] }
+                if (override) card.source = ShadowData.VIDEO_SOURCE
                 if (expanded) {
                     card.rarity = fields[1]
                     card.faction = fields[2]
@@ -44,10 +45,7 @@ class ShadowFullMatchSmokeTest {
         File(root, "card_details.tsv").forEachLine { line ->
             val f = line.split('|', limit = 11)
             if (f.size != 10) return@forEachLine
-            cards[f[0]]?.apply {
-                faction = f[1]; rarity = f[2]; cost = f[3]
-                power = f[4]; classification = f[5]; trigger = f[6]
-            }
+            cards[f[0]]?.let { ShadowData.applyDetailedMetadata(it, f) }
         }
         return cards
     }
@@ -168,7 +166,11 @@ class ShadowFullMatchSmokeTest {
             e.cpu.board[0][0] = ShadowEngine.Unit(e.cpu, opponent, 0, 0)
             e.cpu.board[1][0] = ShadowEngine.Unit(e.cpu, opponent, 1, 0)
             val preferredRow =
-                if (card.trigger.contains("Back Row", ignoreCase = true) ||
+                if (ShadowData.videoHasExplicitAbilityHeader(card)) {
+                    // Match the runtime engine: newer in-game footage outranks
+                    // an obsolete row qualifier in community metadata.
+                    ShadowData.videoRequiredRow(card) ?: ShadowRules.FRONT_ROW
+                } else if (card.trigger.contains("Back Row", ignoreCase = true) ||
                     card.effect.startsWith("When Played (Back Row)", ignoreCase = true)) {
                     ShadowRules.BACK_ROW
                 } else ShadowRules.FRONT_ROW
