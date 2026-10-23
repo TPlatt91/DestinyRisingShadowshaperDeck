@@ -118,7 +118,7 @@ class ShadowBatch0108VideoRulesTest {
 
     @Test fun exploderShankTransfersAndDetonatesForTwoDamageToBothNeighbors() {
         val e = engine()
-        for (col in 0..4) {
+        for (col in 0 until ShadowRules.COLUMNS) {
             if (col != 2) set(e, "Thrall", 1, col, e.cpu)
         }
         play(e, "Exploder Shank", 0, 0)
@@ -161,7 +161,7 @@ class ShadowBatch0108VideoRulesTest {
         val source = set(e, "Decurion", 0, 1)
         val partner = set(e, "Legionary", 1, 1)
         assertEquals(3, e.power(source))
-        assertEquals(4, e.power(partner))
+        assertEquals(5, e.power(partner)) // +2 Decurion aura and +1 Legionary Column self-aura
     }
 
     @Test fun batch08PsionBackRowRequirementAndTargetedTwoDamage() {
