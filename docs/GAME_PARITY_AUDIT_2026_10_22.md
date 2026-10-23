@@ -205,3 +205,15 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 - **Correct static coverage counts:** `tools/audit_effect_coverage.py` now mirrors `ShadowData.load` by reading and applying `verified_video_cards.tsv` after the community catalogs, rather than auditing obsolete effect text for the 85 user-video-overlaid cards. The audit checks duplicate/malformed video records and numeric cost/Power, and reports the overlay total. Xur is no longer incorrectly labeled as incomplete because Rock has known 1 Power / 1 Light data and is summon-only (see `card_details.tsv`).
 - This is a **source/metadata audit**, not an assertion that all printed abilities have passed real match parity.
 - All changes are pushed to `main`; JVM tests and Android builds **have not been run**, and no GitHub Actions workflows were triggered.
+
+## Zhiyao temporary bonus attribution under reactive damage — 22 October 2026
+
+**Concrete defect:** In `ShadowCardEffects.fireEnemyPlacement`, Zhiyao's printed three-turn +1/+2 Power grant was measured as `watcher.bonus - beforeBonus` *after* resolving all on-buff reactions. When an opposing Elite Sniper Vandal damaged Zhiyao for acquiring the bonus, allied Saladin could independently award +3 Power during the nested damage event. The previous code incorrectly included that permanent +3 in Zhiyao's `TimedBonus`, silently stripping Saladin's granted Power after three turns. Multiple placements could compound the error.
+
+**Implemented:** The shared `ShadowEngine.applyPowerBonus()` now returns its *exact applied bonus amount* (including a single Tan-2 doubling) rather than only a Boolean. `buffAndReport(target, amount)` applies the bonus, dispatches regular on-buff effects, and reports the original applied amount rather than the recipient's final Power delta. Existing `buff()` delegates to it, and grouped same-hit Saladin processing treats a positive returned grant as a successful bonus. Zhiyao uses this result exclusively for its three-turn expiry record, leaving independently awarded Saladin bonuses intact.
+
+**Regression coverage:** `ShadowTurnAndTimedBonusRegressionTest.kt` adds **three** direct interaction tests: Zhiyao + Saladin + Elite Sniper Vandal; the same chain with Tan-2 doubling only the temporary grant; and two separate opposing placements with independently expiring timed grants and a retained permanent Saladin buff. The preexisting ordinary Zhiyao and timed-bonus tests are unchanged.
+
+**Catalog/dispatch audit:** A source-level name/handler inspection covered **121 catalog identities** (base, expanded, community and user-recorded video overrides). Every effect-bearing catalog name is present in a specific played-effect branch or the known Sustained resolver list. This checks dispatch *coverage only*; it does **not** establish the correctness or runtime success of any card.
+
+**Verification:** Source and test changes pushed to `main`; Gradle/JVM tests and Android builds **not run** because the user's PC is unavailable. No GitHub Actions usage consumed.
