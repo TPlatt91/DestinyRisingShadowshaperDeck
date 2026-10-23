@@ -4,7 +4,7 @@ import kotlin.math.min
 
 /**
  * Pure sizing rules used to fit actual portrait-shaped cards inside the
- * 4-row landscape game board. Inputs/outputs are logical dp values.
+ * 4-row portrait game board. Inputs/outputs are logical dp values.
  * This never changes the number of slots or their hit regions.
  */
 internal data class DuelCardDimensions(val width: Float, val height: Float)
@@ -21,6 +21,33 @@ internal object DuelLayoutMetrics {
         val availableHeight = (slotHeight - HEIGHT_INSET_DP).coerceAtLeast(0f)
         val width = min(availableWidth, availableHeight * CARD_WIDTH_TO_HEIGHT)
         return DuelCardDimensions(width, width / CARD_WIDTH_TO_HEIGHT)
+    }
+
+    /**
+     * Keep four visual rows proportionate to six portrait card columns.
+     * The previous weighted board stretched empty slots to fill the screen.
+     * This function only controls Compose dimensions, not gameplay zones.
+     */
+    fun portraitBoardHeight(screenWidthDp: Int, screenHeightDp: Int): Float =
+        min(
+            screenWidthDp.coerceAtLeast(250) * 0.92f,
+            screenHeightDp.coerceAtLeast(420) * 0.59f
+        )
+
+    /** More room for card art on phones without obscuring the board. */
+    fun portraitHandHeight(screenHeightDp: Int): Int = when {
+        screenHeightDp < 630 -> 122
+        screenHeightDp < 760 -> 144
+        else -> 156
+    }
+
+    /** Keep small hands unstacked; overlap only when there are many cards. */
+    fun portraitHandSpacing(handCount: Int, screenWidthDp: Int): Int {
+        val available = (screenWidthDp - 75).coerceAtLeast(180)
+        val width = if (screenWidthDp < 380) 70 else 76
+        if (handCount <= 1) return 0
+        return ((available - width * handCount) / (handCount - 1))
+            .coerceIn(-19, 4)
     }
 
     fun handHeight(screenHeightDp: Int): Int = when {
