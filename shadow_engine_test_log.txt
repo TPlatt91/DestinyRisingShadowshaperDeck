@@ -1,5 +1,5 @@
 ==== Shadow Shaper Duels diagnostics ====
-Started: Fri 10/23/2026 17:36:47.44
+Started: Fri 10/23/2026 17:47:26.98
 JAVA_HOME=
 Java candidates on PATH:
 C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin\java.exe
