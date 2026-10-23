@@ -1,7 +1,15 @@
 package com.tplatt.shadowshaper
 
 import android.app.Activity
+import android.content.pm.ActivityInfo
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.lazy.grid.itemsIndexed as gridItemsIndexed
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -61,6 +69,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -72,6 +81,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -133,6 +143,14 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     var page by rememberSaveable { mutableStateOf(activity.intent.getStringExtra("start_page") ?: "home") }
     var detail by remember { mutableStateOf<ShadowData.Card?>(null) }
     val state by vm.state.collectAsState()
+    // The original deck builder / card library are landscape screens.
+    // Restore the normal device orientation on Home and Rules.
+    LaunchedEffect(page) {
+        activity.requestedOrientation =
+            if (page == "deck" || page == "collection")
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
+    }
     BackHandler(page != "home") { page = "home" }
     Surface(modifier = Modifier.fillMaxSize(), color = Ink) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
@@ -300,6 +318,118 @@ private fun CardTile(card: ShadowData.Card, copies: Int, onClick: () -> Unit) {
     }
 }
 
+// Shared stone-metal library browser used by Deck Construction and Collection.
+@Composable
+private fun LibraryCardFace(
+    card: ShadowData.Card,
+    copies: Int,
+    onInspect: () -> Unit,
+    onAdd: (() -> Unit)? = null
+) {
+    Box(
+        Modifier.fillMaxWidth().aspectRatio(0.67f)
+            .background(Color(0xFF211D1D), RoundedCornerShape(3.dp))
+            .border(1.dp, if (copies > 0) Gold else Color(0xFF6F665E),
+                RoundedCornerShape(3.dp))
+            .clickable(onClick = onInspect)
+    ) {
+        CardArtPreview(card, Modifier.fillMaxSize().padding(2.dp))
+        if (copies > 0) {
+            Text(
+                "×$copies", color = Cream, fontSize = 11.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.align(Alignment.TopEnd)
+                    .background(Color(0xD7271C17), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 4.dp, vertical = 1.dp)
+            )
+        }
+        if (onAdd != null && card.isPlayable) {
+            TextButton(
+                onClick = onAdd,
+                modifier = Modifier.align(Alignment.BottomEnd).height(30.dp)
+                    .background(Color(0xDD3B2D1C), RoundedCornerShape(3.dp)),
+                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 1.dp)
+            ) {
+                Text("+", color = Gold, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibraryFilterSelector(
+    label: String,
+    selection: String,
+    choices: List<String>,
+    onSelect: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        TextButton(
+            onClick = { expanded = true },
+            modifier = Modifier.background(Color(0xFF302925),
+                RoundedCornerShape(2.dp)).border(1.dp, Color(0xFF645549))
+                .height(36.dp),
+            contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp)
+        ) {
+            Text("$label: $selection ▾", color = Cream, fontSize = 11.sp, maxLines = 1)
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            choices.forEach { option ->
+                DropdownMenuItem(text = { Text(option) }, onClick = {
+                    onSelect(option); expanded = false
+                })
+            }
+        }
+    }
+}
+
+@Composable
+private fun LibrarySearchBar(
+    query: String,
+    onQuery: (String) -> Unit,
+    faction: String,
+    onFaction: (String) -> Unit,
+    rarity: String,
+    onRarity: (String) -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Box(
+            Modifier.weight(1f).height(36.dp)
+                .background(Color(0xFF161718), RoundedCornerShape(2.dp))
+                .border(1.dp, Color(0xFF66594D), RoundedCornerShape(2.dp))
+                .padding(horizontal = 9.dp),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            BasicTextField(
+                value = query, onValueChange = onQuery,
+                singleLine = true,
+                textStyle = TextStyle(color = Cream, fontSize = 12.sp),
+                modifier = Modifier.fillMaxWidth(),
+                decorationBox = { inner ->
+                    Box {
+                        if (query.isBlank())
+                            Text("⌕  Tap to search", color = Secondary, fontSize = 12.sp)
+                        inner()
+                    }
+                }
+            )
+        }
+        LibraryFilterSelector(
+            "FACTION", faction, listOf("All", "Humans", "Fallen", "Hive", "Cabal"),
+            onFaction
+        )
+        LibraryFilterSelector(
+            "RARITY", rarity, listOf("All", "Rare", "Legendary", "Mythic", "Exotic"),
+            onRarity
+        )
+    }
+}
+
 @Composable
 private fun CollectionScreen(
     vm: ShadowDeckViewModel, state: ShadowDeckUiState,
@@ -311,42 +441,44 @@ private fun CollectionScreen(
     val filtered = remember(query, faction, rarity, vm.alphabetical) {
         vm.alphabetical.filter { card ->
             (faction == "All" || card.faction.equals(faction, true)) &&
-            (rarity == "All" || card.rarity.equals(rarity, true)) &&
-            (query.isBlank() || listOf(card.name, card.effect, card.faction, card.rarity)
-                .any { it.contains(query.trim(), ignoreCase = true) })
+                (rarity == "All" || card.rarity.equals(rarity, true)) &&
+                (query.isBlank() || listOf(card.name, card.effect, card.faction, card.rarity)
+                    .any { it.contains(query.trim(), ignoreCase = true) })
         }
     }
-    Column(Modifier.fillMaxSize()) {
-        PageHeading("CARD COLLECTION", "${filtered.size} visible of ${vm.catalog.size} cards", onBack)
-        OutlinedTextField(
-            value = query, onValueChange = { query = it },
-            label = { Text("Search name, faction or ability") },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp)
-        )
-        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            lazyRowItems(listOf("All", "Humans", "Fallen", "Hive", "Cabal")) { option ->
-                FilterChip(
-                    selected = faction == option, onClick = { faction = option },
-                    label = { Text(option) }
-                )
-            }
-        }
-        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            lazyRowItems(listOf("All", "Rare", "Legendary", "Mythic", "Exotic")) { option ->
-                FilterChip(selected = rarity == option, onClick = { rarity = option },
-                    label = { Text(option) })
-            }
-        }
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
+    Column(
+        Modifier.fillMaxSize().background(Color(0xFF141415))
+    ) {
+        Row(
+            Modifier.fillMaxWidth().height(43.dp)
+                .background(Color(0xFF221E1B))
+                .border(1.dp, Color(0xFF554636))
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            items(filtered, key = { it.name }) { card ->
-                CardTile(card, state.cards[card.name] ?: 0) { onCard(card) }
+            TextButton(onClick = onBack) { Text("‹ BACK", color = Gold, fontSize = 12.sp) }
+            Text("CARD COLLECTION", color = Cream, fontSize = 17.sp,
+                fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text("${filtered.size} / ${vm.catalog.size} CARDS",
+                color = Gold, fontSize = 12.sp)
+        }
+        LibrarySearchBar(query, { query = it }, faction, { faction = it },
+            rarity, { rarity = it })
+        Box(
+            Modifier.fillMaxSize().padding(8.dp)
+                .background(Color(0xFF272423), RoundedCornerShape(3.dp))
+                .border(1.dp, Color(0xFF806648), RoundedCornerShape(3.dp))
+        ) {
+            LazyVerticalGrid(
+                columns = GridCells.Fixed(8),
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalArrangement = Arrangement.spacedBy(7.dp)
+            ) {
+                gridItems(filtered, key = { it.name }) { card ->
+                    LibraryCardFace(card, state.cards[card.name] ?: 0, { onCard(card) })
+                }
             }
         }
     }
