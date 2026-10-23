@@ -36,8 +36,14 @@ class DuelVisualParityGuardTest {
     @Test fun fracturedRockAndFoliageRenderBehindTheRealCardLanes() {
         val stone = source("DuelStoneArena.kt")
         val environment = source("DuelArenaEnvironment.kt")
+        val trim = source("DuelArenaTrim.kt")
         val battle = source("ShadowBattleActivity.kt")
         assertTrue(stone.contains("DuelArenaEnvironment(Modifier.fillMaxSize())"))
+        assertTrue(stone.contains("DuelArenaTrim(Modifier.fillMaxSize())"))
+        assertTrue(trim.contains("cornerPaths"))
+        assertTrue(trim.contains("brass.copy(alpha"))
+        assertFalse(trim.contains("Modifier.clickable"))
+
         assertTrue(battle.contains("DuelStoneArena(Modifier.fillMaxSize())"))
         assertTrue(battle.contains("DuelArenaGrid(Modifier.fillMaxSize())"))
         assertTrue(environment.contains("private fun rock("))
