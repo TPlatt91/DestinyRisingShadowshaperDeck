@@ -505,15 +505,22 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             maxLines = 2, textAlign = TextAlign.Center
                         )
                     }
+                    // Reserve the full compact sidebar for score, End Turn
+                    // and Log; a scrolling journal previously squeezed the
+                    // actual card table and clipped actions on short phones.
                     Spacer(Modifier.weight(1f))
-                    Text(
-                        engine.journal.lastOrNull()?.take(90) ?: "DUEL READY",
-                        color = BattleFaded, fontSize = 9.sp, lineHeight = 11.sp,
-                        maxLines = 3, textAlign = TextAlign.Center
-                    )
+                    if (!compactLayout && screenConfig.screenHeightDp >= 410) {
+                        Text(
+                            engine.journal.lastOrNull()?.take(90) ?: "DUEL READY",
+                            color = BattleFaded, fontSize = 9.sp, lineHeight = 11.sp,
+                            maxLines = 2, textAlign = TextAlign.Center
+                        )
+                    }
                     TextButton(onClick = { showLog = true }) {
-                        Text("BATTLE LOG", color = BattleGold,
-                            fontSize = 10.sp, maxLines = 1)
+                        Text(
+                            if (compactLayout) "LOG" else "BATTLE LOG",
+                            color = BattleGold, fontSize = 10.sp, maxLines = 1
+                        )
                     }
                 }
             }
