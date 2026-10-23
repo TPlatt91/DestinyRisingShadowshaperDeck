@@ -270,3 +270,19 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 2. **Simultaneously defeated Clones with a shared Overshielded neighbor:** Both death effects are preserved as separate hits. The first consumes the neighbor's Overshield, and the next deals 3 damage. Same-wave destroyed Clones are never reintroduced to the board.
 
 **Verification boundary:** The new regressions are committed but have not been run on the local Gradle machine. The fixtures reflect the user's recorded card effects and established shield rules. They do not establish visual-animation timing or the original client's resolution of every unusual simultaneous effect. Today in Destiny is not used as authority.
+
+
+## Batched local certification before next run — 23 October 2026
+
+The user's most recent log before this batch showed `:app:testDebugUnitTest` and `:app:assembleDebug` passing with exit code 0. Subsequent full-match video-source parity updates were committed but had not yet been locally checked. To avoid repeated one-test-at-a-time local runs, this checkpoint consolidates the planned lifecycle and summoning regression additions into a single local test pass.
+
+**New suites and source coverage (10 new test methods):**
+- `ShadowRoundLifecycleCertificationTest.kt`: restart with a fixed RNG seed reproduces the same opening hand and clears match state; round two/three Light and draw transitions; exactly twelve turns and a draw result on an empty board; final victory computed from live Power totals.
+- `ShadowSummonAndDestructionBatchTest.kt`: full opposing Front Row blocks Common Cover without overwriting positions; Suppressed Zhiyao does not gain Power from Rock placements; chain-reaction Clone deaths resolve on successive waves; an edge-position Clone only splashes its one same-row neighbor; Rock remains impossible to play directly from hand.
+- `ShadowFullMatchSmokeTest.kt`: all direct recorded video overlays have their row restrictions applied consistently with the Android engine; the full six-round match matrix now covers **five CPU deck types × seven RNG seeds = 35** instead of 20. The prior specific Jaren/Bazinet/Harrow recorded-row regression remains included.
+
+**Estimated test inventory:** 344 passing tests in the last verified run + one video-source/full-match regression committed earlier + 10 newly added = **355 expected test methods**. The local Gradle log does not print an all-pass test count, so this remains an estimate until running the updated suite.
+
+**Important boundaries:** These tests check implementation invariants and video-derived conditions. They do **not** prove the game's original-source-unknown summon weights, obscure simultaneous timing, board dimensions, or proprietary CPU decisions. No Today in Destiny mechanics were introduced. The test suite has not yet been executed on the user's Windows machine. No GitHub Actions/workflow minutes are required.
+
+**Next command:** Pull latest `main`, run `run_local_engine_checks.bat` once, and push `shadow_engine_test_log.txt` if there are errors or to confirm a clean pass.
