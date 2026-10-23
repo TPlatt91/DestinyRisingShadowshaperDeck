@@ -273,3 +273,16 @@ The user supplied `Ancient Cracked Stone Ruins.png` (1672×941) to replace earli
 ### Verification
 
 The GitHub binary blob for the HQ WebP was created and attached to the `main` branch, and the corresponding Android source/tests were committed. **Local Gradle compilation and on-device screenshot alignment still require the user's next `run_local_engine_checks.bat` run.** Do not mistake the photo's visual fidelity for certified pixel-identical gameplay/UI behavior. GitHub Actions were not used.
+
+
+## Narrow border and card visibility correction — 23 October 2026
+
+User installed the previous 720×1280 portrait adaptation of the uploaded "Ancient Cracked Stone Ruins" backdrop. Feedback: stone rubble and foliage at both sides occupied too much battlefield width; the center looked horizontally compressed/vertically stretched; the seven card faces remained too small.
+
+**Integrated fix:**
+- Reprocessed the actual user-provided 1672×941 source photograph into `app/src/main/res/drawable-nodpi/shadow_arena_narrow_ruins_v2.webp` (720×1280, ~176 KiB WebP). The **stone center uses a narrower source crop**, preserving much more of its original horizontal scale, while distinct side-rock strips now occupy about **5% each** rather than ~16%. Border seams are locally softened. The image retains real foliage, cracks and masonry rather than synthesizing new artwork.
+- `DuelStoneArena.kt` now uses `R.drawable.shadow_arena_narrow_ruins_v2` and `ContentScale.Crop`. This **preserves the picture's aspect ratio** on differently sized phones rather than using `FillBounds`, which previously distorted the stone.
+- `DuelLayoutMetrics.kt`: the **same real hitbox/card-lane width** grows from **70% to 90%** of available arena width. The compact four-row board height increases from 70% to 82% of phone width subject to short-screen height limits, allowing roughly 28% wider cards at the same seven-column count.
+- All legal placement, targeting, relocation and drag/drop coordinates still use the actual Compose slot bounds; no separate visual hitboxes or gameplay mechanics were changed. No extra card decorations cover the artwork.
+- Updated both JVM source guards and pure dimension tests to verify the new image, aspect-preserving crop, legal seven columns, larger cards and short-screen limits. Removed the unused, older stretched WebP resource to avoid shipping both.
+- The new image/refs are pushed and resource existence has been checked through GitHub. **Still requires user's local Android compilation and screenshot verification**. No GitHub Actions used.
