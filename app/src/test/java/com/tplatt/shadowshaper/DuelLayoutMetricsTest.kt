@@ -32,9 +32,9 @@ class DuelLayoutMetricsTest {
     }
 
     @Test fun hudNarrowModeReclaimsBoardWidthWithoutChangingSlotCount() {
-        assertEquals(86, DuelLayoutMetrics.leftHudWidth(740))
+        assertEquals(80, DuelLayoutMetrics.leftHudWidth(740))
         assertEquals(112, DuelLayoutMetrics.rightHudWidth(740))
-        assertEquals(110, DuelLayoutMetrics.leftHudWidth(900))
+        assertEquals(102, DuelLayoutMetrics.leftHudWidth(900))
         assertEquals(132, DuelLayoutMetrics.rightHudWidth(900))
         assertEquals(6, ShadowRules.COLUMNS)
     }
