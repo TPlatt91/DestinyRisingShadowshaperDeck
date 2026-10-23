@@ -73,7 +73,7 @@ class DuelVisualParityGuardTest {
         assertTrue(battle.contains("DuelPowerCrest(snapshot.cpuPower, isPlayer = false)"))
         assertTrue(battle.contains("DuelPowerCrest(snapshot.playerPower, isPlayer = true)"))
         assertTrue(battle.contains("DuelGoldTurnDial("))
-        assertTrue(battle.contains("DuelCardCover(\\n                            chosenCover"))
+        assertTrue(battle.contains("chosenCover, Modifier.width(23.dp).height(34.dp)"))
         assertTrue(battle.contains("drawBehind {"))
     }
 
