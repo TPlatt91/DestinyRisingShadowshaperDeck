@@ -297,7 +297,7 @@ internal object DuelArenaScenery {
         for (k in 1..7) {
             val t = k / 8f
             val side = if (k % 2 == 0) 1 else -1
-            val bx = x + dx * extent * t + perpX * extent * .06f * sin(t * PI).toFloat()
+            val bx = x + dx * extent * t + perpX * extent * .06f * sin(t.toDouble() * PI).toFloat()
             val by = y + dy * extent * t + perpY * extent * .06f * sin(t * PI).toFloat()
             val dirX = dx * .4f + perpX * side * .91f
             val dirY = dy * .4f + perpY * side * .91f
@@ -357,8 +357,8 @@ internal object DuelArenaScenery {
                 if (rnd.nextInt(6) == 0) olive[rnd.nextInt(olive.size)]
                 else if (rnd.nextBoolean()) AColor.rgb(184, 179, 159)
                 else AColor.rgb(35, 37, 37),
-                (20 + rnd.nextInt(112)) *
-                    (if (edgeDistance > .8f) .55f else 1f).toInt()
+                ((20 + rnd.nextInt(112)) *
+                    (if (edgeDistance > .8f) .55f else 1f)).toInt()
             )
             canvas.save()
             canvas.rotate(rnd.nextFloat() * 140f, x, y)
