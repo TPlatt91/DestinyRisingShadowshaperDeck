@@ -346,25 +346,23 @@ internal fun DuelCardFrame(
                 if (selected) DuelPalette.gold else rarity, RoundedCornerShape(5.dp))
     ) {
         DuelCardArtwork(card, Modifier.fillMaxSize().padding(2.dp))
-        // Use the printed Power and blue Light positions seen on in-game cards.
+        // The source battlefield only shows the CURRENT unit Power on its
+        // miniatures. Hand cards also show their printed Light cost.
         Row(
-            Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(3.dp),
+            Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                .padding(if (compact) 1.dp else 2.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            DuelStatChip(power.toString(), DuelPalette.cream, Color(0xE12A2524))
-            DuelStatChip(card.cost.ifBlank { "?" }, Color(0xFFF5FBFF), Color(0xEE286B9C))
-        }
-        Box(
-            Modifier.align(Alignment.BottomCenter)
-                .fillMaxWidth().background(Color(0xED201A1A))
-                .padding(horizontal = 3.dp, vertical = if (compact) 1.dp else 3.dp)
-        ) {
-            Text(card.name, color = DuelPalette.cream,
-                fontSize = if (compact) 8.sp else 11.sp,
-                fontWeight = FontWeight.SemiBold,
-                maxLines = if (compact) 1 else 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+            DuelStatChip(
+                power.toString(), DuelPalette.cream, Color(0xD8211F22),
+                miniature = compact
+            )
+            if (!compact) {
+                DuelStatChip(
+                    card.cost.ifBlank { "?" }, Color(0xFFF5FBFF),
+                    Color(0xE6286B9C), miniature = false
+                )
+            }
         }
         if (suppressed) {
             Box(Modifier.fillMaxSize().background(Color(0x66141218)),
@@ -383,12 +381,21 @@ internal fun DuelCardFrame(
 }
 
 @Composable
-private fun DuelStatChip(value: String, color: Color, fill: Color) {
-    Text(value, color = color,
-        fontSize = 11.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
-        modifier = Modifier.background(fill, RoundedCornerShape(4.dp))
-            .border(1.dp, Color(0x777C6B62), RoundedCornerShape(4.dp))
-            .padding(horizontal = 4.dp, vertical = 1.dp))
+private fun DuelStatChip(
+    value: String, color: Color, fill: Color, miniature: Boolean = false
+) {
+    Text(
+        value, color = color,
+        fontSize = if (miniature) 10.sp else 11.sp,
+        fontWeight = FontWeight.Bold, textAlign = TextAlign.Center,
+        modifier = Modifier
+            .background(fill, RoundedCornerShape(3.dp))
+            .border(0.5.dp, Color(0x997C6B62), RoundedCornerShape(3.dp))
+            .padding(
+                horizontal = if (miniature) 2.dp else 3.dp,
+                vertical = if (miniature) 0.dp else 1.dp
+            )
+    )
 }
 
 @Composable
@@ -406,39 +413,23 @@ internal fun DuelSlotBackground(
     modifier: Modifier = Modifier,
     label: String = "+"
 ) {
-    val line by animateColorAsState(
-        targetValue = when {
-            selected -> DuelPalette.gold
-            occupied -> Color(0xFF948D7E).copy(alpha = 0.50f)
-            friendly -> Color(0xFFB0B0A9).copy(alpha = 0.20f)
-            else -> Color(0xFFB2B7B9).copy(alpha = 0.18f)
-        }, label = "slot edge"
-    )
-    Box(
-        modifier.background(
-            Brush.verticalGradient(
-                if (selected)
-                    listOf(Color(0x99627861), Color(0x99334136))
-                else listOf(Color(0x204F5354), Color(0x10313437))
-            ),
-            RoundedCornerShape(3.dp)
-        ).border(if (selected) 1.5.dp else 0.5.dp, line, RoundedCornerShape(3.dp)),
-        contentAlignment = Alignment.Center
-    ) {
-        if (!occupied) {
-            Canvas(Modifier.fillMaxSize().padding(4.dp)) {
-                val edge = minOf(size.width, size.height) * 0.15f
-                val color = line.copy(alpha = if (selected) 0.9f else 0.20f)
-                // Subtle engraved corner marks, not extra play zones.
-                drawLine(color, Offset(0f, edge), Offset(0f, 0f), 1.dp.toPx(), StrokeCap.Square)
-                drawLine(color, Offset(0f, 0f), Offset(edge, 0f), 1.dp.toPx(), StrokeCap.Square)
-                drawLine(color, Offset(size.width - edge, size.height),
-                    Offset(size.width, size.height), 1.dp.toPx(), StrokeCap.Square)
-                drawLine(color, Offset(size.width, size.height),
-                    Offset(size.width, size.height - edge), 1.dp.toPx(), StrokeCap.Square)
-            }
-            Text(label, color = if (selected) DuelPalette.gold else Color.Transparent,
-                fontSize = if (selected) 22.sp else 15.sp)
+    // Empty cells in the original battle are unframed stone: no tall gray
+    // cards, outlines, or corner brackets until a real card is placed.
+    // A glowing selection remains for legal placement, movement and targets.
+    Box(modifier, contentAlignment = Alignment.Center) {
+        if (selected) {
+            Box(
+                Modifier.fillMaxSize()
+                    .background(
+                        if (friendly) Color(0x5534BFA3) else Color(0x66BDA67A),
+                        RoundedCornerShape(3.dp)
+                    )
+                    .border(1.6.dp, DuelPalette.gold, RoundedCornerShape(3.dp))
+            )
+            Text(
+                label, color = DuelPalette.gold,
+                fontSize = 20.sp, fontWeight = FontWeight.Bold
+            )
         }
     }
 }
