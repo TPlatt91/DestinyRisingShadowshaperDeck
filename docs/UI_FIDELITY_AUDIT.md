@@ -256,3 +256,20 @@ The battle Activity now uses **immersive-sticky full-screen** (with swipe-to-rev
 ### Remaining boundary
 
 This is a **source-implemented visual refinement**, not a device-screenshot-verified pixel match. The original game's proprietary stone/rubble photographs, typography, sound and animated effects have not been extracted. The procedural visual source is the user's screenshots and their existing card art. The user must pull the updated GitHub sources, run `run_local_engine_checks.bat` on Windows and reinstall the APK before another side-by-side comparison. Do not run GitHub Actions or change original video-established card rules merely for visual matching.
+
+
+## User-provided stone battlefield asset integrated — 23 October 2026
+
+The user supplied `Ancient Cracked Stone Ruins.png` (1672×941) to replace earlier hand-painted procedural scenery and explicitly requested the assistant to perform the GitHub integration.
+
+### Shipped in repository
+
+- `app/src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp`: **actual user's stone ruins photograph/artwork**, portrait-adapted to 720×1280, WebP lossy quality 70 (~184 KiB). The original left and right piles, plant growth, stone wall masonry, top/bottom rubble and detailed cracked slate are all retained instead of center-cropping them off. The center was rescaled horizontally to fit a standing-phone display. The artwork is included in the offline APK with no network calls.
+- `DuelStoneArena.kt`: rewritten to render the bundled drawable using `painterResource` and `ContentScale.FillBounds`; the old generated stone grain, foliage, rock triangles, dark vignette and artificial perimeter decoration are **gone from the live renderer**. `DuelArenaGrid` now draws only very faint legal row/column separators behind the actual cards.
+- `DuelArenaEnvironment.kt`, `DuelArenaPatina.kt`, `DuelArenaTrim.kt`: removed as obsolete to prevent synthetic decoration being applied on top of the authentic asset.
+- `DuelLayoutMetrics.kt`: centers the legal seven-column/four-row board over the new photo's flat central slab. Its width is 70% of the arena and its maximum four-row height is 70% of portrait screen width; decorative rock margins remain outside the legal touch cells. Existing engine/grid count and all drag/drop hitboxes remain driven by `ShadowRules.COLUMNS`.
+- `DuelVisualParityGuardTest.kt` and `DuelLayoutMetricsTest.kt`: replaced previous procedural-art checks with validations for the bundled WebP file header and resource name, art layering, exact legal grid count, live UI controls, and portrait fit.
+
+### Verification
+
+The GitHub binary blob for the HQ WebP was created and attached to the `main` branch, and the corresponding Android source/tests were committed. **Local Gradle compilation and on-device screenshot alignment still require the user's next `run_local_engine_checks.bat` run.** Do not mistake the photo's visual fidelity for certified pixel-identical gameplay/UI behavior. GitHub Actions were not used.
