@@ -31,7 +31,10 @@ internal object DuelLayoutMetrics {
     fun portraitBoardHeight(screenWidthDp: Int, screenHeightDp: Int): Float =
         min(
             screenWidthDp.coerceAtLeast(250) * 0.92f,
-            screenHeightDp.coerceAtLeast(420) * 0.59f
+            // Reserve the header, opponent ribbon, score controls, hand,
+            // system bars and compact action spacing on shorter phones.
+            (screenHeightDp - portraitHandHeight(screenHeightDp) - 174f)
+                .coerceAtLeast(120f)
         )
 
     /** More room for card art on phones without obscuring the board. */
