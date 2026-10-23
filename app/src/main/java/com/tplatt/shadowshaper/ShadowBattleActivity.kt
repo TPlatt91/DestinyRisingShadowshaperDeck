@@ -41,8 +41,10 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -307,15 +309,19 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
     }) {
     Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF121115),Color(0xFF211A1A),Color(0xFF131217))))) {
-        Row(Modifier.fillMaxWidth().height(38.dp)
+        Row(Modifier.fillMaxWidth().height(32.dp)
             .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
             .border(width = 1.dp, color = Color(0xFF8D6748))
             .padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { settingsDialog = true }) { Text("☰ MENU", color = BattleGold) }
+            Text(
+                "☰  MENU", color = BattleGold, fontSize = 10.sp,
+                modifier = Modifier.clickable { settingsDialog = true }
+                    .padding(horizontal = 10.dp, vertical = 5.dp)
+            )
             Text("SHADOWSHAPER DUELS", color = DuelPalette.cream,
-                letterSpacing = 1.sp, fontSize = 13.sp, fontWeight = FontWeight.Black)
+                letterSpacing = 1.sp, fontSize = 11.sp, fontWeight = FontWeight.Black)
             Text(
                 when {
                     snapshot?.finished == true -> "DUEL COMPLETE"
@@ -332,33 +338,37 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             Row(Modifier.weight(1f).fillMaxWidth().padding(5.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 Column(
-                    Modifier.width(DuelLayoutMetrics.leftHudWidth(screenConfig.screenWidthDp).dp).fillMaxHeight()
-                        .background(DuelPalette.tableLow, RoundedCornerShape(8.dp))
-                        .border(1.dp, DuelPalette.rim, RoundedCornerShape(8.dp))
+                    Modifier.width(DuelLayoutMetrics.leftHudWidth(screenConfig.screenWidthDp).dp)
+                        .fillMaxHeight()
+                        .background(Color(0xFF202124), RoundedCornerShape(3.dp))
+                        .border(1.dp, Color(0xFF656463), RoundedCornerShape(3.dp))
                         .padding(4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
-                    Text("OPPONENT", color = DuelPalette.red,
-                        fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                    Text("OPPONENT", color = DuelPalette.cream,
+                        fontWeight = FontWeight.Bold, fontSize = 9.sp)
                     DuelCardBacks(snapshot.cpuHand)
-                    Text("HAND " + snapshot.cpuHand + "   •   DECK " + engine.cpu.drawPile.size,
-                        color = BattleFaded, fontSize = 9.sp)
-                    Text("ROUND " + snapshot.round + " / " + ShadowRules.ROUNDS,
-                        color = DuelPalette.gold, fontWeight = FontWeight.Black, fontSize = 13.sp)
+                    Text("HAND ${snapshot.cpuHand}", color = BattleFaded, fontSize = 9.sp)
+                    DuelCardCover("default", Modifier.width(30.dp).height(42.dp))
+                    Text("DECK ${engine.cpu.drawPile.size}", color = BattleFaded,
+                        fontSize = 9.sp)
+                    Spacer(Modifier.weight(1f))
+                    Text("ROUND ${snapshot.round}/${ShadowRules.ROUNDS}",
+                        color = DuelPalette.gold, fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold)
                     DuelRoundMarkers(snapshot.round)
                     Text(if (engine.humanFirst) "OFFENSIVE" else "DEFENSIVE",
-                        color = DuelPalette.blue, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Text("YOUR FIELD", color = DuelPalette.cream,
-                        fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+                        color = DuelPalette.blue, fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold)
                 }
                 Box(
                     Modifier.weight(1f).fillMaxHeight()
                         .background(Brush.verticalGradient(listOf(
-                            Color(0xFF332821), Color(0xFF211D1E), Color(0xFF342820)
+                            Color(0xFF353739), Color(0xFF292A2D), Color(0xFF393939)
                         )), RoundedCornerShape(10.dp))
-                        .border(2.dp, DuelPalette.rim, RoundedCornerShape(10.dp))
-                        .padding(6.dp)
+                        .border(1.dp, Color(0xFF918E84), RoundedCornerShape(8.dp))
+                        .padding(3.dp)
                 ) {
                     DuelTableEtching(Modifier.fillMaxSize())
                     Column(Modifier.fillMaxSize(),
@@ -457,15 +467,20 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     Modifier.width(DuelLayoutMetrics.rightHudWidth(screenConfig.screenWidthDp).dp)
                         .fillMaxHeight()
                         .background(
-                            Brush.verticalGradient(listOf(Color(0xFF211A1A), Color(0xFF151419))),
+                            Brush.verticalGradient(listOf(Color(0xFF262729), Color(0xFF121519))),
                             RoundedCornerShape(6.dp)
                         )
-                        .border(1.dp, DuelPalette.rim, RoundedCornerShape(6.dp))
+                        .border(1.dp, Color(0xFF686967), RoundedCornerShape(6.dp))
                         .padding(if (compactLayout) 3.dp else 6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     DuelScore(snapshot.playerPower, snapshot.cpuPower, snapshot.playerTurn)
+                    Text(
+                        "✦  ${snapshot.cpuLight} / ${snapshot.round}     ROUND ${snapshot.round}/6",
+                        color = DuelPalette.blue, fontSize = 9.sp, maxLines = 1,
+                        textAlign = TextAlign.Center
+                    )
                     Spacer(Modifier.height(2.dp))
                     // The genuine minigame positions END TURN beside the field.
                     if (pendingPosition != null &&
@@ -492,7 +507,14 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 endConfirmation = true
                             else current.endTurn()
                         },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.size(if (compactLayout) 58.dp else 66.dp)
+                            .border(2.dp, Color(0xFFCA9956), CircleShape),
+                        shape = CircleShape,
+                        contentPadding = PaddingValues(3.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Color(0xFF65471F),
+                            contentColor = DuelPalette.cream
+                        )
                     ) {
                         Text(
                             when {
@@ -500,11 +522,15 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 engine.pendingMovedUnit != null -> "MOVE UNIT"
                                 else -> "END TURN  ›"
                             },
-                            fontSize = if (compactLayout) 9.sp else 11.sp,
+                            fontSize = if (compactLayout) 8.sp else 10.sp,
                             fontWeight = FontWeight.Black,
                             maxLines = 2, textAlign = TextAlign.Center
                         )
                     }
+                    Text(
+                        "✦  ${snapshot.playerLight} / ${snapshot.round}",
+                        color = DuelPalette.blue, fontSize = 10.sp
+                    )
                     // Reserve the full compact sidebar for score, End Turn
                     // and Log; a scrolling journal previously squeezed the
                     // actual card table and clipped actions on short phones.
