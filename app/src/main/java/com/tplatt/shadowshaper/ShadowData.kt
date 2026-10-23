@@ -102,7 +102,7 @@ object ShadowData {
         if (card.source != VIDEO_SOURCE) return null
         val header = card.effect.substringBefore(':').trim()
         val match = Regex(
-            """\\b(?:when played|sustained)\\s*\\([^)]*\\b(back|front)\\s+row\\b[^)]*\\)""",
+            """\b(?:when played|sustained)\s*\([^)]*\b(back|front)\s+row\b[^)]*\)""",
             RegexOption.IGNORE_CASE
         ).find(header) ?: return null
         return if (match.groupValues[1].equals("back", true))
