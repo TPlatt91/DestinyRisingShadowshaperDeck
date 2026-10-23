@@ -952,9 +952,22 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     private fun evaluateCpuPlacement(card: ShadowData.Card, row: Int, col: Int): Double {
         var value = (max(0, card.numericPower()) + 0.5) / card.numericCost().toDouble()
-        val trigger = (card.trigger.ifBlank { card.effect }).lowercase(Locale.ROOT)
-        if (trigger.contains("front row")) value += if (row == 1) 2.2 else -2.8
-        if (trigger.contains("back row")) value += if (row == 0) 2.2 else -2.8
+        // Prefer the captured in-game ability header over older trigger
+        // metadata. Validation already uses this precedence in activeInRow;
+        // the CPU must score the same effective condition or it can place
+        // Jaren / Bazinet on the wrong row and silently miss the ability.
+        val requiredRow = if (ShadowData.videoHasExplicitAbilityHeader(card)) {
+            ShadowData.videoRequiredRow(card)
+        } else {
+            val trigger = (card.trigger.ifBlank { card.effect }).lowercase(Locale.ROOT)
+            when {
+                "front row" in trigger -> ShadowRules.FRONT_ROW
+                "back row" in trigger -> ShadowRules.BACK_ROW
+                else -> null
+            }
+        }
+        if (requiredRow != null)
+            value += if (row == requiredRow) 2.2 else -2.8
         val contiguous = projectedFactionLine(cpu, card, row, col)
         value += max(0, contiguous - 1) * 1.1
         val required = effects.requiredFactionLine(card.name)
