@@ -19,6 +19,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.PaddingValues
@@ -246,19 +247,21 @@ private fun HomeDestination(icon: String, title: String, subtitle: String, onCli
 
 @Composable
 private fun CardArtPreview(card: ShadowData.Card, modifier: Modifier = Modifier) {
-    val activity = LocalContext.current as? Activity
+    // Compose can wrap Activity in a themed Context; never skip loading because
+    // LocalContext is not literally an Activity. CardArt.bind accepts Context.
     key(card.name) {
         AndroidView(
             factory = { ctx ->
                 ImageView(ctx).apply {
                     scaleType = ImageView.ScaleType.FIT_CENTER
-                    if (activity != null) CardArt.bind(activity, card, this)
+                    adjustViewBounds = false
+                    CardArt.bind(ctx, card, this)
                 }
             },
             update = { view ->
-                if (activity != null &&
-                    view.contentDescription?.toString() != card.name + " card art"
-                ) CardArt.bind(activity, card, view)
+                if (view.contentDescription?.toString() != card.name + " card art") {
+                    CardArt.bind(view.context, card, view)
+                }
             },
             modifier = modifier
         )
@@ -650,21 +653,26 @@ private fun CardDetailsDialog(
                         .padding(horizontal = 15.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    CardArtPreview(
-                        card,
-                        Modifier.fillMaxWidth(if (enlarged) 1f else 0.77f)
-                            .aspectRatio(2.48f / 3.46f)
-                            .clickable { enlarged = !enlarged }
-                    )
-                    Spacer(Modifier.height(5.dp))
-                    TextButton(onClick = { enlarged = !enlarged }) {
-                        Text(
-                            if (enlarged) "SHOW CARD DETAILS" else "ENLARGE CARD ART",
-                            color = Gold, fontSize = 12.sp
+                    // Give AndroidView an explicit, stable viewport. A
+                    // percentage-width/ratio view in a scrolling Column could
+                    // remeasure to a thin horizontal strip when expanded.
+                    BoxWithConstraints(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val artWidth = minOf(maxWidth * 0.79f, 320.dp)
+                        CardArtPreview(
+                            card,
+                            Modifier.width(artWidth)
+                                .height(artWidth * (754f / 500f))
+                                .clickable { enlarged = true }
                         )
                     }
-                    if (!enlarged) {
-                        Column(Modifier.fillMaxWidth()) {
+                    Spacer(Modifier.height(5.dp))
+                    TextButton(onClick = { enlarged = true }) {
+                        Text("VIEW LARGE CARD ART", color = Gold, fontSize = 12.sp)
+                    }
+                    Column(Modifier.fillMaxWidth()) {
                             HorizontalDivider(color = Raised)
                             Spacer(Modifier.height(9.dp))
                             Text(
@@ -685,12 +693,6 @@ private fun CardDetailsDialog(
                                 )
                             }
                             CardMetadataLine("Card number", card.cardNumber)
-                            CardMetadataLine("Classification", card.classification.ifBlank {
-                                if (card.isPlayable) "Deck-playable" else "Summon-only / not deck-playable"
-                            })
-                            CardMetadataLine("Acquisition", card.acquisition)
-                            CardMetadataLine("Card notes", card.notes)
-                            CardMetadataLine("Metadata source", card.source)
                             if (!card.isPlayable) {
                                 Text(
                                     "This card cannot be added to a constructed deck.",
@@ -713,15 +715,7 @@ private fun CardDetailsDialog(
                                     secondary = Secondary
                                 )
                             }
-                            Spacer(Modifier.height(10.dp))
-                            Text(
-                                ShadowEffectCoverage.status(
-                                    card.name, card.effect, card.cost, card.power
-                                ),
-                                fontSize = 11.sp, color = Secondary
-                            )
                         }
-                    }
                 }
                 HorizontalDivider(color = Raised)
                 Row(
@@ -737,6 +731,45 @@ private fun CardDetailsDialog(
                     }
                     TextButton(onClick = onAdd, enabled = card.isPlayable) {
                         Text("+ ADD")
+                    }
+                }
+            }
+        }
+    }
+    if (enlarged) {
+        Dialog(
+            onDismissRequest = { enlarged = false },
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier.fillMaxWidth(0.98f).fillMaxHeight(0.96f),
+                color = Ink,
+                shape = RoundedCornerShape(10.dp),
+                border = BorderStroke(1.dp, Gold)
+            ) {
+                Column(Modifier.fillMaxSize()) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 14.dp, end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            card.name, color = Cream, fontSize = 17.sp,
+                            fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                            maxLines = 2
+                        )
+                        TextButton(onClick = { enlarged = false }) {
+                            Text("CLOSE ×", color = Gold)
+                        }
+                    }
+                    BoxWithConstraints(
+                        modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        val artWidth = minOf(maxWidth, maxHeight * (500f / 754f))
+                        CardArtPreview(
+                            card,
+                            Modifier.width(artWidth).height(artWidth * (754f / 500f))
+                        )
                     }
                 }
             }
