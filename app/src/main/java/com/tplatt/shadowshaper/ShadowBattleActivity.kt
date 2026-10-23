@@ -510,25 +510,33 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             DuelPowerCrest(snapshot.cpuPower, isPlayer = false)
                         }
                     }
+                    // The original game places card/deck utilities on the
+                    // left and its score gems on the right side of the arena.
+                    // The deck pile here reads the real player draw pile.
                     Row(
                         Modifier.align(Alignment.BottomStart)
-                            .padding(start = 7.dp, bottom = 8.dp),
+                            .padding(start = 8.dp, bottom = 11.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        DuelPowerCrest(snapshot.playerPower, isPlayer = true)
+                        DuelCardCover(
+                            chosenCover, Modifier.width(23.dp).height(34.dp)
+                        )
                         Column {
                             Text(
-                                "YOU", color = DuelPalette.gold,
-                                fontSize = 9.sp, fontWeight = FontWeight.Black
+                                "YOUR DECK", color = DuelPalette.gold,
+                                fontSize = 9.sp, fontWeight = FontWeight.Bold
                             )
-                            DuelLightOrb(snapshot.playerLight, snapshot.round)
+                            Text(
+                                "${engine.human.drawPile.size} CARDS",
+                                color = DuelPalette.cream, fontSize = 10.sp
+                            )
                         }
-                        if (pendingPosition != null &&
-                            engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
-                            TextButton(onClick = { shieldRossiSelf() }) {
-                                Text("SHIELD", color = DuelPalette.gold, fontSize = 9.sp)
-                            }
+                        TextButton(
+                            onClick = { showLog = true },
+                            contentPadding = PaddingValues(horizontal = 5.dp)
+                        ) {
+                            Text("LOG", color = BattleGold, fontSize = 10.sp)
                         }
                     }
                     Row(
@@ -537,11 +545,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
-                        TextButton(
-                            onClick = { showLog = true },
-                            contentPadding = PaddingValues(horizontal = 4.dp)
-                        ) {
-                            Text("LOG", color = BattleGold, fontSize = 10.sp)
+                        if (pendingPosition != null &&
+                            engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
+                            TextButton(onClick = { shieldRossiSelf() }) {
+                                Text("SHIELD", color = DuelPalette.gold, fontSize = 9.sp)
+                            }
                         }
                         DuelGoldTurnDial(
                             enabled = snapshot.playerTurn && !snapshot.finished,
@@ -584,17 +592,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 Column(Modifier.width(51.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     DuelLightMeter(snapshot.playerLight, snapshot.round, compact = true)
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(2.dp)
-                    ) {
-                        DuelCardCover(chosenCover, Modifier.width(16.dp).height(23.dp))
-                        Text("${engine.human.drawPile.size}",
-                            color = BattleFaded, fontSize = 10.sp,
-                            fontWeight = FontWeight.Bold)
-                    }
                     Text("HAND ${snapshot.playerHand}",
-                        color = BattleFaded, fontSize = 8.sp, maxLines = 1)
+                        color = BattleFaded, fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold, maxLines = 1)
                 }
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
