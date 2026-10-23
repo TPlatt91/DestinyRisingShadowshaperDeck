@@ -104,6 +104,8 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
         // All environmental scenery remains behind the legal lane overlay.
         // Image has no pointer handler or semantic role.
         DuelArenaEnvironment(Modifier.fillMaxSize())
+        // Bracket/rivet inlays are strictly decorative and at the perimeter.
+        DuelArenaTrim(Modifier.fillMaxSize())
     }
 }
 
