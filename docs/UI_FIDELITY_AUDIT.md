@@ -195,3 +195,19 @@ Code changes to the *active Kotlin Compose battle*, not just an illustrative pla
 6. Added two source-level JVM regressions in `DuelVisualParityGuardTest.kt` to prevent accidentally bringing back debug row labels and the obstructing name footer.
 
 **Remaining fidelity boundary:** Procedural stone grain and primitive medallion/status shapes are not pixel-identical to the proprietary Destiny: Rising UI. A fresh on-phone battle screenshot is required to evaluate real density, texture, cards and positioning. The new code has been statically source-checked for delimiter balance but **has not yet passed the user's local Android build or on-device inspection**. Run `run_local_engine_checks.bat` after pulling; do not use GitHub Actions.
+
+
+## Direct seven-column original-client correction and portrait HUD rebuild — 23 October 2026
+
+The user provided the original Destiny: Rising Shadowshaper battlefield screenshot alongside an installed Android portrait screenshot, and requested code changes directly in GitHub rather than another proposed checklist.
+
+**Verified from the provided frame:** In the original seven mini-card positions span the opposing and friendly Front Row; the prior `ShadowRules.COLUMNS=6` was incorrect. This was a functional rules/targeting problem, not merely card spacing.
+
+**Pushed implementation:**
+- `ShadowRules.COLUMNS=7` makes both `ShadowEngine.Player.board` arrays seven-wide in each of the two rows; card placement, full-board movement, adjacent effects, free-slot summoning and CPU evaluation already use this shared constant. Drag/drop hit testing uses `ShadowRules.isOnBoard` and therefore accepts new column index **6** (7th slot) and rejects index **7** (8th slot). Legacy boundary/unit geometry tests were updated; new local tests cover both board arrays, last-column card play, and dragging into the seventh slot.
+- New `DuelBattleHud.kt` draws *faceted* opponent/player Power crests (red/gold), blue circular Light counters, a circular gold End Turn dial, and deck/hand utility indicators from actual game state. These controls and medallions now overlay the arena's upper/lower **portrait margin**, replacing the old generic dark rectangular score strip. The original guarded End Turn callback, Rossi-11 Shield Self, battle Log and current score values are preserved.
+- `DuelStoneArena.kt` is reworked to use a brighter gray stone center with low-frequency eroded bands, subtle flecks, and darker side cliffs. The dark previous flat-plaque look is removed. The render is still procedural and **not** a claimed copy of the original's proprietary textures.
+- `DuelLayoutMetrics` compactly centers four rows of seven full card faces in the stone arena, reserving enough free stone above/below for medal/Light/End Turn UI. Portrait remains locked.
+- No additional overlays obscure original locally stored card art. Game rounds remain six; only **column capacity** increases to seven.
+
+**Validation limit:** Files were verified syntactically for balanced Kotlin delimiters, but Android/Gradle local compilation and on-device screenshot parity validation remain pending. This **changes gameplay board capacity**, so the complete local test suite must be rerun. No GitHub Actions or usage credits were consumed.
