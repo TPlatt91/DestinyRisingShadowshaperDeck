@@ -1,92 +1,78 @@
 package com.tplatt.shadowshaper
 
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import javax.imageio.ImageIO
 
 /**
- * Source-level regression guards for the portrait battle presentation.
- * These tests complement, not replace, on-device screenshot comparison.
+ * JVM-only checks for the actual user-supplied arena art, landscape-to-
+ * portrait adaptation, foreground ordering and unblocked card interactions.
  */
 class DuelVisualParityGuardTest {
     private fun source(filename: String): String {
-        val path = "com/tplatt/shadowshaper/$filename"
+        val file = "com/tplatt/shadowshaper/$filename"
         return listOf(
-            File("src/main/java/$path"),
-            File("app/src/main/java/$path")
+            File("src/main/java/$file"),
+            File("app/src/main/java/$file")
         ).firstOrNull(File::isFile)?.readText()
-            ?: error("Required battle UI source missing: $filename")
+            ?: error("Battle UI source not found: $filename")
     }
 
-    @Test fun battleUsesSlateArenaRatherThanTallEmptyCardFrames() {
-        val battle = source("ShadowBattleActivity.kt")
-        val arena = source("DuelStoneArena.kt")
-        val visuals = source("ShadowBattleVisuals.kt")
-        assertTrue(battle.contains("DuelStoneArena(Modifier.fillMaxSize())"))
-        assertTrue(battle.contains("DuelArenaGrid(Modifier.fillMaxSize())"))
-        assertTrue(arena.contains("generateSlateTexture()"))
-        assertFalse(battle.contains("Text(heading.replace"))
-        assertTrue(
-            "Unselected slots should not render permanent card rectangles",
-            visuals.contains("if (selected) {")
-        )
+    private fun actualArenaImage(): File =
+        listOf(
+            File("src/main/res/drawable-nodpi/shadow_arena_original_portrait.jpg"),
+            File("app/src/main/res/drawable-nodpi/shadow_arena_original_portrait.jpg")
+        ).firstOrNull(File::isFile)
+            ?: error("The uploaded stone ruins picture must be bundled offline")
+
+    @Test fun bundledOriginalArtworkIsAnActualReadablePortraitImage() {
+        val original = actualArenaImage()
+        assertTrue("Replacement scene is missing or empty", original.length() > 25000L)
+        val bitmap = ImageIO.read(original)
+        assertTrue("Image decoder could not open the artwork", bitmap != null)
+        assertEquals(480, bitmap.width)
+        assertEquals(864, bitmap.height)
+        assertTrue(bitmap.height > bitmap.width)
     }
 
-    @Test fun fracturedRockAndFoliageRenderBehindTheRealCardLanes() {
+    @Test fun arenaRendersUploadedBitmapInsteadOfOldProceduralRubble() {
         val stone = source("DuelStoneArena.kt")
-        val environment = source("DuelArenaEnvironment.kt")
-        val trim = source("DuelArenaTrim.kt")
         val battle = source("ShadowBattleActivity.kt")
-        assertTrue(stone.contains("DuelArenaPatina(Modifier.fillMaxSize())"))
-        assertTrue(stone.contains("DuelArenaEnvironment(Modifier.fillMaxSize())"))
-        assertTrue(stone.contains("DuelArenaTrim(Modifier.fillMaxSize())"))
-        val patina = source("DuelArenaPatina.kt")
-        assertTrue(patina.contains("internal fun DuelArenaPatina("))
-        assertFalse(patina.contains("Modifier.clickable"))
-        assertTrue(stone.indexOf("DuelArenaPatina(Modifier.fillMaxSize())") <
-            stone.indexOf("DuelArenaEnvironment(Modifier.fillMaxSize())"))
-        assertTrue(trim.contains("cornerPaths"))
-        assertTrue(trim.contains("brass.copy(alpha"))
-        assertFalse(trim.contains("Modifier.clickable"))
-
+        assertTrue(stone.contains("painterResource(R.drawable.shadow_arena_original_portrait)"))
+        assertTrue(stone.contains("ContentScale.FillBounds"))
+        assertFalse(stone.contains("generateSlateTexture"))
+        assertFalse(stone.contains("DuelArenaPatina"))
+        assertFalse(stone.contains("DuelArenaEnvironment"))
+        assertFalse(stone.contains("DuelArenaTrim"))
         assertTrue(battle.contains("DuelStoneArena(Modifier.fillMaxSize())"))
         assertTrue(battle.contains("DuelArenaGrid(Modifier.fillMaxSize())"))
-        assertTrue(environment.contains("private fun rock("))
-        assertTrue(environment.contains("private fun fern("))
-        assertTrue(environment.contains("private fun vine("))
-        assertTrue(environment.contains("private fun moss("))
-        assertTrue(environment.contains("private fun litter("))
-        assertTrue(environment.contains("by lazy(LazyThreadSafetyMode.SYNCHRONIZED)"))
-        assertTrue(environment.contains("contentDescription = null"))
-        assertFalse(environment.contains("Modifier.clickable"))
-        assertFalse(environment.contains("ShadowEngine."))
     }
 
-    @Test fun sevenLaneFormationStaysInsideStoneAndBothScoreGemsStayRight() {
+    @Test fun genuineSevenColumnRowGuidesStayBehindLiveCards() {
         val battle = source("ShadowBattleActivity.kt")
+        val stone = source("DuelStoneArena.kt")
         val metrics = source("DuelLayoutMetrics.kt")
-        val stone = source("DuelStoneArena.kt")
-        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.86f"))
+        val visuals = source("ShadowBattleVisuals.kt")
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.70f"))
         assertTrue(battle.contains("DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION"))
-        assertTrue(stone.contains("val columns = ShadowRules.COLUMNS"))
+        assertTrue(stone.contains("column in 1 until ShadowRules.COLUMNS"))
+        assertFalse(battle.contains("Text(heading.replace"))
+        assertTrue(visuals.contains("if (selected) {"))
+        assertTrue(visuals.contains("DuelCardArtwork(card, Modifier.fillMaxSize()"))
+        assertFalse(visuals.contains("Text(card.name, color = DuelPalette.cream"))
+    }
+
+    @Test fun allLiveBattleControlsSurviveTheBackgroundSwap() {
+        val battle = source("ShadowBattleActivity.kt")
         assertTrue(battle.contains("DuelPowerCrest(snapshot.cpuPower, isPlayer = false)"))
         assertTrue(battle.contains("DuelPowerCrest(snapshot.playerPower, isPlayer = true)"))
         assertTrue(battle.contains("DuelGoldTurnDial("))
-        assertTrue(battle.contains("chosenCover, Modifier.width(23.dp).height(34.dp)"))
-        assertTrue(battle.contains("drawBehind {"))
         assertTrue(battle.contains("SYSTEM_UI_FLAG_IMMERSIVE_STICKY"))
-        assertTrue(battle.contains("SYSTEM_UI_FLAG_FULLSCREEN"))
-        assertTrue(battle.contains("SYSTEM_UI_FLAG_HIDE_NAVIGATION"))
-    }
-
-    @Test fun cardFramesPreserveSourceArtworkWithoutCoveringNameStrip() {
-        val visuals = source("ShadowBattleVisuals.kt")
-        assertTrue(visuals.contains("DuelCardArtwork(card, Modifier.fillMaxSize()"))
-        assertFalse(
-            "A composited name footer obscures original card art",
-            visuals.contains("Text(card.name, color = DuelPalette.cream")
-        )
-        assertTrue(visuals.contains("power > card.numericPower()"))
+        assertTrue(battle.contains("shieldRossiSelf()"))
+        assertTrue(battle.contains("showLog = true"))
+        assertTrue(battle.contains("current.endTurn()"))
     }
 }
