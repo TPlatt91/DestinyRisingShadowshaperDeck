@@ -286,3 +286,15 @@ The user's most recent log before this batch showed `:app:testDebugUnitTest` and
 **Important boundaries:** These tests check implementation invariants and video-derived conditions. They do **not** prove the game's original-source-unknown summon weights, obscure simultaneous timing, board dimensions, or proprietary CPU decisions. No Today in Destiny mechanics were introduced. The test suite has not yet been executed on the user's Windows machine. No GitHub Actions/workflow minutes are required.
 
 **Next command:** Pull latest `main`, run `run_local_engine_checks.bat` once, and push `shadow_engine_test_log.txt` if there are errors or to confirm a clean pass.
+
+
+## Final pre-run regression bundle — 23 October 2026
+
+Following the 355-test estimated checkpoint, a review of existing Scorched, bonus-expiry, damage-chain, Captain, summoning, and detonation test suites found those mechanism families already substantially covered. Rather than adding duplicate expectations, `ShadowBattleTransactionCertificationTest.kt` adds **four distinct transaction invariants**:
+
+1. Unresolved relocation prevents a new card play from spending Light or removing a card from hand; legal resolution permits the play.
+2. A wrong-side movement attempt does not mutate the board or end the turn; unresolved human relocation prevents turn advancement.
+3. Completed matches reject further plays and CPU actions while preserving the final board, score, and round.
+4. Exhausted draw piles do not create phantom cards or block a round transition.
+
+**Estimated new total:** 359 regression methods. These and the earlier newly added 11 tests await the user's *single* local run. Other audit uncertainties (original-game random summon weighting, exact simultaneous trigger timing, board size, original NPC behavior) cannot be certified from current footage/metadata alone and are not solved by inventing tests with guessed expected outcomes. Video evidence remains authoritative, never Today in Destiny. No GitHub Actions or workflow minutes are used.
