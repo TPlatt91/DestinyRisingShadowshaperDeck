@@ -365,27 +365,27 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             color = DuelPalette.blue, fontSize = 9.sp)
                     }
                 }
-                // Leave dark space around a consistently proportioned stone
-                // board instead of stretching its empty slots to the viewport.
+                // Stone fills the entire arena, including the space above
+                // and below the tightly grouped card rows. No black gutters.
                 Box(
-                    Modifier.weight(1f).fillMaxWidth(),
+                    Modifier.weight(1f).fillMaxWidth()
+                        .border(1.dp, Color(0xFF817D75), RoundedCornerShape(5.dp))
+                        .padding(2.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                Box(
-                    Modifier.fillMaxWidth()
-                        .height(DuelLayoutMetrics.portraitBoardHeight(
-                            screenConfig.screenWidthDp,
-                            screenConfig.screenHeightDp
-                        ).dp)
-                        .background(Brush.verticalGradient(listOf(
-                            Color(0xFF353739), Color(0xFF292A2D), Color(0xFF393939)
-                        )), RoundedCornerShape(10.dp))
-                        .border(1.dp, Color(0xFF918E84), RoundedCornerShape(8.dp))
-                        .padding(3.dp)
-                ) {
-                    DuelTableEtching(Modifier.fillMaxSize())
-                    Column(Modifier.fillMaxSize(),
-                        verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                    DuelStoneArena(Modifier.fillMaxSize())
+                    Box(
+                        Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                    Column(
+                        Modifier.fillMaxWidth()
+                            .height(DuelLayoutMetrics.portraitBoardHeight(
+                                screenConfig.screenWidthDp,
+                                screenConfig.screenHeightDp
+                            ).dp),
+                        verticalArrangement = Arrangement.spacedBy(1.dp)
+                    ) {
                     val targets = if (pendingPosition != null && selectedIndex in engine.human.hand.indices)
                         engine.targetOptions(engine.human, engine.human.hand[selectedIndex],
                             pendingPosition!!.first, pendingPosition!!.second)
@@ -399,22 +399,20 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         Triple("YOUR BACK", engine.human, 0)
                     ).forEach { (heading, owner, row) ->
                         if (heading == "YOUR FRONT") {
-                            Box(Modifier.fillMaxWidth().height(2.dp)
-                                .background(Brush.horizontalGradient(
-                                    listOf(Color.Transparent, DuelPalette.gold, Color.Transparent)
-                                )))
-                        }
-                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(
-                                if (row == ShadowRules.BACK_ROW) "B" else "F",
-                                fontSize = 9.sp, fontWeight = FontWeight.Black,
-                                color = if (owner === engine.human)
-                                    DuelPalette.blue else DuelPalette.red,
-                                modifier = Modifier.width(13.dp)
-                                    .align(Alignment.CenterVertically),
-                                textAlign = TextAlign.Center,
-                                maxLines = 1
+                            Box(
+                                Modifier.fillMaxWidth().height(1.dp)
+                                    .background(
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                Color.Transparent,
+                                                Color(0x99C8C3B4),
+                                                Color.Transparent
+                                            )
+                                        )
+                                    )
                             )
+                        }
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
                             for (col in 0 until ShadowRules.COLUMNS) {
                                 val unit = owner.board[row][col]
                                 val targeting = targets.any {
@@ -479,7 +477,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             }
                         }
                     }
-                }
+                    }
                 }
                 }
                 // Portrait: the score and action medallions sit below the
