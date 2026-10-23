@@ -122,7 +122,7 @@ internal fun DuelTableEtching(modifier: Modifier = Modifier) {
 
 @Composable
 internal fun DuelRoundMarkers(round: Int) {
-    Row(horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.CenterVertically) {
         for (n in 1..ShadowRules.ROUNDS) {
             val selected = n == round
             val color by animateColorAsState(
@@ -130,14 +130,14 @@ internal fun DuelRoundMarkers(round: Int) {
                 label = "round marker"
             )
             Box(
-                Modifier.size(if (selected) 15.dp else 12.dp)
+                Modifier.size(if (selected) 12.dp else 9.dp)
                     .background(Color(0xFF211A16), CircleShape)
                     .border(1.dp, color, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                if (selected) Text(n.toString(), fontSize = 9.sp, color = DuelPalette.gold,
+                if (selected) Text(n.toString(), fontSize = 8.sp, color = DuelPalette.gold,
                     fontWeight = FontWeight.Bold)
-                else Box(Modifier.size(4.dp).background(color, CircleShape))
+                else Box(Modifier.size(3.dp).background(color, CircleShape))
             }
         }
     }
