@@ -8,7 +8,7 @@ object ShadowRules {
     const val MYTHIC_LIMIT = 5
     const val ROUNDS = 6
     const val ROWS = 2
-    const val COLUMNS = 6  // Board width remains provisional until direct client verification.
+    const val COLUMNS = 7  // Seven positions per row, matching the user-provided Destiny: Rising battlefield.
     const val OFFENSIVE_OPENING_HAND = 5
     const val DEFENSIVE_OPENING_HAND = 4
     const val NEW_ROUND_DRAW = 1  // Later-round draw timing remains provisional.
