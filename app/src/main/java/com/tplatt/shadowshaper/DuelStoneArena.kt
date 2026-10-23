@@ -101,6 +101,9 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
                 style = Stroke(width = 1.2.dp.toPx())
             )
         }
+        // Subsurface age marks are kept beneath the actual rock rubble
+        // and plants rather than overlaying card art or interaction targets.
+        DuelArenaPatina(Modifier.fillMaxSize())
         // All environmental scenery remains behind the legal lane overlay.
         // Image has no pointer handler or semantic role.
         DuelArenaEnvironment(Modifier.fillMaxSize())
