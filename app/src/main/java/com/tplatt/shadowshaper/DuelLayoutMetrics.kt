@@ -11,9 +11,10 @@ internal data class DuelCardDimensions(val width: Float, val height: Float)
 
 internal object DuelLayoutMetrics {
     const val CARD_WIDTH_TO_HEIGHT = 0.72f
-    // Keep all seven playable columns on the actual flat stone center
-    // of the user's image; the genuine rubble margins remain exposed.
-    const val PORTRAIT_LANE_WIDTH_FRACTION = 0.70f
+    // V2 background reduces rock borders to about 5% on each edge;
+    // use the newly available central slate for seven larger card faces.
+    // Grid and hit targets must use this SAME physical width.
+    const val PORTRAIT_LANE_WIDTH_FRACTION = 0.90f
     private const val WIDTH_INSET_DP = 2f
     private const val HEIGHT_INSET_DP = 2f
 
@@ -27,13 +28,13 @@ internal object DuelLayoutMetrics {
     }
 
     /**
-     * Four compact card rows, seven legal positions in each. The original
+     * Four card rows, seven legal positions in each. The original
      * client presents the rows inside a larger stone field; the surrounding
      * space is reserved for the Power/Light emblems and End Turn control.
      */
     fun portraitBoardHeight(screenWidthDp: Int, screenHeightDp: Int): Float =
         min(
-            screenWidthDp.coerceAtLeast(250) * 0.70f,
+            screenWidthDp.coerceAtLeast(250) * 0.82f,
             (screenHeightDp - portraitHandHeight(screenHeightDp) - 215f)
                 .coerceAtLeast(145f)
         )
