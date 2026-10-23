@@ -255,7 +255,7 @@ class ShadowBatch0910VideoRulesTest {
         set(e, "Colossus", 0, 2)
         val cabal = set(e, "Legionary", 1, 2)
         val nonCabal = set(e, "Dreg", 1, 3)
-        assertEquals(11, e.power(cabal))
+        assertEquals(12, e.power(cabal)) // +1 Colossus and +1 Legionary Column self-aura
         assertEquals(10, e.power(nonCabal))
     }
 
@@ -309,7 +309,7 @@ class ShadowBatch0910VideoRulesTest {
         assertEquals(1, target.damageBonus)
         assertEquals(1, right.damageBonus)
         assertEquals(0, other.damageBonus)
-        assertEquals(10, e.power(target))
+        assertEquals(11, e.power(target)) // Gladiator changes damage only; paired Legionary retains +1 Column aura
         val foe = set(e, "Dreg", 0, 0, e.cpu)
         e.damage(target, foe, 1)
         assertEquals(8, foe.power)
