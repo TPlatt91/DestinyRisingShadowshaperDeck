@@ -258,3 +258,15 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 **Three new local JVM regressions** in `ShadowBazinetTargetSnapshotTest.kt` cover (1) Saladin → Xur → Rock → Zhiyao newly granting a bonus during Bazinet's effect, (2) another Bazinet played later seeing that legitimately eligible Zhiyao, and (3) two initially buffed enemies both taking exactly one 3-damage hit while an unbuffed enemy is untouched.
 
 **Parity note:** Activation-time membership follows the plain meaning of Bazinet's user-recorded printed text; the original client may use a different simultaneous-trigger window. This code and the tests are committed but **not runtime-tested**. Do not claim a passed build or exact original-game parity until `run_local_engine_checks.bat` is run on the user's workstation; no GitHub Actions were invoked.
+
+
+## Clone chain coverage — 23 October 2026
+
+**Local validation achieved beforehand:** User pushed `shadow_engine_test_log.txt` showing `:app:testDebugUnitTest` and `:app:assembleDebug` both completed with `BUILD SUCCESSFUL` and exit code 0. The known 339 prior regressions plus three summoning tests (342 expected) have no reported failure. This confirms automated scenarios, not total original-client gameplay parity.
+
+**Two additional local JVM regressions** were added to `ShadowSummonChainCertificationTest.kt`:
+
+1. **Ning Fei → enemy Clone → Clone defeat:** A single available opposing Front Row location forces Clone between two live units. It registers exactly one opposing Front Row arrival for Zhiyao; destroying the Clone splashes 3 damage onto its host-row left/right neighbors but not its same-column back-row neighbor, and does not cause a second Zhiyao placement trigger.
+2. **Simultaneously defeated Clones with a shared Overshielded neighbor:** Both death effects are preserved as separate hits. The first consumes the neighbor's Overshield, and the next deals 3 damage. Same-wave destroyed Clones are never reintroduced to the board.
+
+**Verification boundary:** The new regressions are committed but have not been run on the local Gradle machine. The fixtures reflect the user's recorded card effects and established shield rules. They do not establish visual-animation timing or the original client's resolution of every unusual simultaneous effect. Today in Destiny is not used as authority.
