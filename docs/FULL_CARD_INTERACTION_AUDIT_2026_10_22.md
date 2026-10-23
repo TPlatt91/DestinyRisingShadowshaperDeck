@@ -78,3 +78,9 @@ The previously authored tests cover **parts** of many of these cases; the missin
 A card can be marked **fully verified** only after (a) exact current printed effect/source established, (b) correct active-state condition verified, (c) its protected/blocked/suppressed/edge case tested, (d) its interactions with same-event watchers tested, (e) local JVM regression actually **passed**, and (f) a representative original-client trace matches for game-specific timing. Until then: **SOURCE REFERENCED — GAMEPLAY QA PENDING**.
 
 **Summary:** No known missing named handler references. The immediate work is not bulk adding cards; it is resolving **two metadata gaps**, **specific unproven rule behaviors**, and **conditional activation / chain / temporary-status runtime validation** across the 107 non-basic cards. The companion per-card matrix gives a priority for every one of the 121 catalog entries.
+
+## Original-game video authority implementation — after complete static audit
+
+**Updated evidence tiers:** 85 direct original-video overlays; an additional **19** original-game **effect** notes without complete video-stat overlays; **17** cards with neither. The older statement that "36 names lack direct overlays" is still true but **does not imply all 36 lack original-game footage**. Details: [Original video evidence implementation](ORIGINAL_VIDEO_EVIDENCE_IMPLEMENTATION_2026_10_22.md).
+
+The runtime catalog loader and both static audit scripts now preserve user-video authority over TodayInDestiny/community metadata, and 20 local tests cover precedence plus representative active conditions. The suite has not been run. No card was declared fully verified merely because it has a literal source handler.
