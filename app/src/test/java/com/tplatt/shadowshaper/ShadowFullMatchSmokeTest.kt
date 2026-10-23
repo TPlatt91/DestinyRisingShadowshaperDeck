@@ -161,6 +161,28 @@ class ShadowFullMatchSmokeTest {
         assertTrue(engine.activeInRow(harrow, ShadowRules.FRONT_ROW))
     }
 
+    @Test fun everyVideoVerifiedCardUsesRecordedRowHeaderNotLegacyMetadata() {
+        val catalog = liveCatalog()
+        val evidence = catalog.values.filter { it.source == ShadowData.VIDEO_SOURCE }
+        assertTrue("Recorded video overlay unexpectedly missing", evidence.size >= 80)
+        val e = ShadowEngine(catalog, 600L)
+        for (card in evidence) {
+            if (!ShadowData.videoHasExplicitAbilityHeader(card)) continue
+            val required = ShadowData.videoRequiredRow(card)
+            if (required == null) {
+                assertTrue("Invented Back Row restriction: " + card.name,
+                    e.activeInRow(card, ShadowRules.BACK_ROW))
+                assertTrue("Invented Front Row restriction: " + card.name,
+                    e.activeInRow(card, ShadowRules.FRONT_ROW))
+            } else {
+                assertTrue("Recorded required row rejected: " + card.name,
+                    e.activeInRow(card, required))
+                assertFalse("Out-of-row effect incorrectly active: " + card.name,
+                    e.activeInRow(card, 1 - required))
+            }
+        }
+    }
+
     @Test fun everyPrintedVideoCardHasValidNumericStatsAndSourceName() {
         val catalog = liveCatalog()
         assertTrue("Unexpectedly short card catalog", catalog.size >= 121)
@@ -227,7 +249,7 @@ class ShadowFullMatchSmokeTest {
             val enemyDeck = ShadowData.opponentDeck(catalog, faction)
             assertEquals("Bad CPU deck for " + faction,
                 "", ShadowDeckRules.validate(enemyDeck, catalog))
-            for (seed in listOf(0L, 1L, 13L, 49L)) {
+            for (seed in listOf(0L, 1L, 7L, 13L, 31L, 49L, 1024L)) {
                 val e = ShadowEngine(catalog, seed)
                 e.start(deck, enemyDeck)
                 for (turn in 0 until ShadowRules.ROUNDS * 2) {
