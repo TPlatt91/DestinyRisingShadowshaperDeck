@@ -120,7 +120,7 @@ public class ShadowRulesTest {
         assertEquals(3,game.human.points);
     }
 
-    @Test public void projectedFactionLinesRequireAdjacentSameFactionUnits(){
+    @Test public void projectedFactionLinesRequireAdjacentPrintedLineUnits(){
         ShadowEngine game=humanFirst();
         ShadowData.Card cabal=new ShadowData.Card();
         cabal.name="Shinka Psion";cabal.cost="2";cabal.power="3";
@@ -129,7 +129,7 @@ public class ShadowRulesTest {
         game.catalog.put(cabal.name,cabal);
         ShadowData.Card ally=new ShadowData.Card();
         ally.name="Cabal Ally";ally.faction="Cabal";ally.cost="1";ally.power="2";
-        ally.rarity="Rare";ally.effect="No special effects.";
+        ally.rarity="Rare";ally.effect="Sustained (2-Unit Line): No additional effect.";
         game.catalog.put(ally.name,ally);
         game.human.board[0][0]=new ShadowEngine.Unit(game.human,ally,0,0);
         assertEquals(2,game.projectedFactionLine(game.human,cabal,0,1));
@@ -150,6 +150,7 @@ public class ShadowRulesTest {
         assertTrue(game.targetOptions(game.human,cabal,1,3).isEmpty());
         ShadowData.Card partner=new ShadowData.Card();
         partner.name="Cabal";partner.cost="1";partner.power="1";partner.faction="Cabal";
+        partner.effect="Sustained (2-Unit Line): No additional effect.";
         game.human.board[1][2]=new ShadowEngine.Unit(game.human,partner,1,2);
         assertEquals(1,game.targetOptions(game.human,cabal,1,3).size());
     }
