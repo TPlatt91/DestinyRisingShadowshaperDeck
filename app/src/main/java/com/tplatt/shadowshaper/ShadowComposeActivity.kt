@@ -102,6 +102,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 class ShadowComposeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         @Suppress("DEPRECATION")
         window.statusBarColor = android.graphics.Color.rgb(23, 18, 16)
         @Suppress("DEPRECATION")
@@ -143,14 +144,6 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     var page by rememberSaveable { mutableStateOf(activity.intent.getStringExtra("start_page") ?: "home") }
     var detail by remember { mutableStateOf<ShadowData.Card?>(null) }
     val state by vm.state.collectAsState()
-    // The original deck builder / card library are landscape screens.
-    // Restore the normal device orientation on Home and Rules.
-    LaunchedEffect(page) {
-        activity.requestedOrientation =
-            if (page == "deck" || page == "collection")
-                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-            else ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-    }
     BackHandler(page != "home") { page = "home" }
     Surface(modifier = Modifier.fillMaxSize(), color = Ink) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
