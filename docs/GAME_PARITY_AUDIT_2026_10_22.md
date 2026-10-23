@@ -248,3 +248,13 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 - **Six new local JVM scenarios** in `ShadowCpuOpponentCapacityTest.kt` verify blocked/open enemy Front Row preference for the two transfer cards, Common Cover preference and Front Row location, Ning Fei's conditional Clone creation, and no phantom placement revisions for unmade summons.
 
 **Verification:** Changes pushed to GitHub `main`, not run through Gradle or on a device. No GitHub Actions were used. These improvements make the AI less wasteful without claiming equivalence with Destiny: Rising's original opponent AI.
+
+## Bazinet activation-time targets versus reactive Power grants
+
+**Confirmed source mismatch:** Original in-game video text for Bazinet reads: `When Played (Back Row): Deals 3 damage to all opposing units with a bonus.` The previous engine evaluated `powerBonus(unit) > 0` **inside** its per-target damage loop. However, damage to an initially bonus-bearing Human Xur causes allied Saladin to grant a new bonus, Xur to summon a Rock on the opponent's field, and that Rock's arrival to grant the original side's Zhiyao a new Power bonus. Since the Zhiyao could be later in the row snapshot, the previous code could add it to Bazinet's already-started damage effect even though Zhiyao had **no bonus when the effect was activated**.
+
+**Fix:** `ShadowCardEffects.onPlayed("Bazinet")` now snapshots bonus-bearing enemies at effect activation and then resolves the 3-damage events against that stable initial set, checking board membership before each damage. This preserves existing active-bonus/Column aura eligibility and does not damage later newly eligible units. A **separate later Bazinet play** does see those newly granted bonuses normally.
+
+**Three new local JVM regressions** in `ShadowBazinetTargetSnapshotTest.kt` cover (1) Saladin → Xur → Rock → Zhiyao newly granting a bonus during Bazinet's effect, (2) another Bazinet played later seeing that legitimately eligible Zhiyao, and (3) two initially buffed enemies both taking exactly one 3-damage hit while an unbuffed enemy is untouched.
+
+**Parity note:** Activation-time membership follows the plain meaning of Bazinet's user-recorded printed text; the original client may use a different simultaneous-trigger window. This code and the tests are committed but **not runtime-tested**. Do not claim a passed build or exact original-game parity until `run_local_engine_checks.bat` is run on the user's workstation; no GitHub Actions were invoked.
