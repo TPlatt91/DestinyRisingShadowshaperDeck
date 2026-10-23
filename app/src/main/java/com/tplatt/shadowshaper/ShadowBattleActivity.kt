@@ -68,6 +68,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.drawBehind
 import kotlin.math.roundToInt
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Brush
@@ -606,6 +607,38 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         )
                     )
                     .border(1.dp, Color(0xFF655E54), RoundedCornerShape(3.dp))
+                    .drawBehind {
+                        val line = Color(0x23C2BBA7)
+                        val pitch = 24.dp.toPx()
+                        val h = size.height
+                        val w = size.width
+                        // Subtle original-style triangle/diamond etching in
+                        // the recessed card tray, not behind the card artwork.
+                        var x = -pitch
+                        while (x < w + pitch) {
+                            drawLine(
+                                line,
+                                Offset(x, h), Offset(x + pitch * 1.35f, 0f),
+                                .65.dp.toPx()
+                            )
+                            drawLine(
+                                line.copy(alpha = .11f),
+                                Offset(x, 0f), Offset(x + pitch * 1.35f, h),
+                                .65.dp.toPx()
+                            )
+                            x += pitch * 1.7f
+                        }
+                        drawLine(
+                            Color(0xB99C8157),
+                            Offset(0f, 1.dp.toPx()), Offset(w, 1.dp.toPx()),
+                            1.1.dp.toPx()
+                        )
+                        drawLine(
+                            Color(0x6A111A24),
+                            Offset(0f, 3.dp.toPx()), Offset(w, 3.dp.toPx()),
+                            1.dp.toPx()
+                        )
+                    }
                     .padding(horizontal = 4.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.width(51.dp), horizontalAlignment = Alignment.CenterHorizontally,
