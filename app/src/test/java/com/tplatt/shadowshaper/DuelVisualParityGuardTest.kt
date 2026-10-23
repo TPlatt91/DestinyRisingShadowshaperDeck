@@ -1,6 +1,5 @@
 package com.tplatt.shadowshaper
 
-import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -23,7 +22,7 @@ class DuelVisualParityGuardTest {
     private fun actualArenaImage(): File =
         listOf(
             File("src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp"),
-            File("app/src/main/res/drawable-nodpi/shadow_arena_original_portrait.jpg")
+            File("app/src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp")
         ).firstOrNull(File::isFile)
             ?: error("The uploaded stone ruins picture must be bundled offline")
 
