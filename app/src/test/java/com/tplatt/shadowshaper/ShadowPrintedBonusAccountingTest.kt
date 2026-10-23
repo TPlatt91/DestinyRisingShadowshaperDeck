@@ -25,6 +25,8 @@ class ShadowPrintedBonusAccountingTest {
             "When Played (Back Row): Deals 3 damage to all opposing units with a bonus."),
         card("Thinktank", "Humans", 7,
             "When Played: Deals damage to a unit equal to your highest Power bonus."),
+        card("Hyssop", "Humans", 2,
+            "When Played: Grants +3 Power to a unit with a bonus."),
         card("Decurion", "Cabal", 3,
             "Sustained (Column): Grants +2 Power to a unit directly in front of or behind.")
     ).associateBy { it.name }, 28L).apply {
@@ -113,4 +115,79 @@ class ShadowPrintedBonusAccountingTest {
         assertEquals(0, e.powerBonus(ally))
         assertEquals(10, ally.power)
     }
+    @Test fun hyssopCanTargetAllyWithOnlyAnActiveColumnBonus() {
+        val e = engine()
+        put(e, "Decurion", e.human, 0, 1)
+        val ally = put(e, "Dreg", e.human, 1, 1)
+        val hyssop = e.catalog.getValue("Hyssop")
+        assertEquals(0, ally.bonus)
+        assertEquals(2, e.powerBonus(ally))
+        val candidates = e.targetOptions(e.human, hyssop, 0, 3)
+        assertEquals(1, candidates.size)
+        assertEquals(1, candidates.single().column)
+        assertEquals(1, candidates.single().row)
+
+        e.human.hand.add(hyssop)
+        assertTrue(e.lastActionError, e.play(e.human, 0, 0, 3,
+            ShadowEngine.Target(e.human, 1, 1)))
+        assertEquals(13, ally.power)
+        assertEquals(3, ally.bonus)
+        assertEquals(5, e.powerBonus(ally))
+        assertEquals(15, e.power(ally))
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun hyssopCannotTargetAuraOnlyAllyAfterSourceIsSuppressed() {
+        val e = engine()
+        val decurion = put(e, "Decurion", e.human, 0, 1)
+        put(e, "Dreg", e.human, 1, 1)
+        val hyssop = e.catalog.getValue("Hyssop")
+        val selection = ShadowEngine.Target(e.human, 1, 1)
+        e.human.hand.add(hyssop)
+        assertTrue(e.validatePlay(e.human, 0, 0, 3, selection).isEmpty())
+
+        e.suppress(decurion)
+        assertEquals(0, e.powerBonus(selection.unit()!!))
+        assertTrue(e.targetOptions(e.human, hyssop, 0, 3).isEmpty())
+        val beforeLight = e.human.points
+        assertFalse(e.play(e.human, 0, 0, 3, selection))
+        assertEquals(beforeLight, e.human.points)
+        assertEquals(1, e.human.hand.size)
+        assertNull(e.human.board[0][3])
+    }
+
+    @Test fun hyssopAcceptsDamagedRecipientStillCarryingStoredBonus() {
+        val e = engine()
+        val ally = put(e, "Dreg", e.human, 1, 1)
+        val attacker = put(e, "Dreg", e.cpu, 1, 5)
+        e.buff(ally, 3)
+        e.damage(attacker, ally, 5)
+        assertEquals(8, ally.power)
+        assertEquals(3, e.powerBonus(ally))
+
+        e.human.hand.add(e.catalog.getValue("Hyssop"))
+        assertTrue(e.lastActionError, e.play(e.human, 0, 0, 3,
+            ShadowEngine.Target(e.human, 1, 1)))
+        assertEquals(11, ally.power)
+        assertEquals(6, ally.bonus)
+        assertEquals(6, e.powerBonus(ally))
+    }
+
+    @Test fun cpuHyssopAlsoRecognizesAnActiveAuraOnlyTarget() {
+        val e = engine()
+        e.humanTurn = false
+        e.cpu.points = 1
+        put(e, "Decurion", e.cpu, 0, 1)
+        val ally = put(e, "Dreg", e.cpu, 1, 1)
+        assertEquals(0, ally.bonus)
+        assertEquals(2, e.powerBonus(ally))
+        e.cpu.hand.add(e.catalog.getValue("Hyssop"))
+        assertTrue(e.cpuPlayOne())
+        assertEquals(13, ally.power)
+        assertEquals(5, e.powerBonus(ally))
+        assertTrue(e.cpu.hand.isEmpty())
+        assertEquals(0, e.rejectedCpuMoves)
+        assertEquals(0, e.unresolvedEffects)
+    }
+
 }
