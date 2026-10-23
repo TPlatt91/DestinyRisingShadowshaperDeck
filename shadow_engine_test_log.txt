@@ -1,3 +1,3 @@
-'C:\Program' is not recognized as an internal or external command,
-operable program or batch file.
-The syntax of the command is incorrect.
+ERROR: This project requires JDK 17 or 21 to run Gradle 8.11.1. 
+Current Java may be 25, which fails with IllegalArgumentException: 25.0.2. 
+Install JDK 21 and set JAVA_HOME to its root, or configure Android Studio's Gradle JDK to 21. 
