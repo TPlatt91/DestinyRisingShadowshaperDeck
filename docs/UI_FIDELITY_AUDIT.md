@@ -233,3 +233,22 @@ The user provided the original Destiny: Rising Shadowshaper battlefield screensh
 - The user's screenshots guided placement, silhouette and color. Procedural art is an **original recreation**, not a false claim to possess the exact Destiny: Rising texture files or photo-real original background.
 - This pass modifies **battle presentation only**. Portrait orientation, 7 legal columns per row, gameplay rules, card artwork, CPU decisions, placement, movement, targeting, drag/drop and actual action callbacks were left untouched.
 - Source files were checked for balanced Kotlin delimiters and verified decoration order; **Android/Gradle compilation and phone screenshot comparison still require the user's next `run_local_engine_checks.bat`**. No GitHub Actions or usage credits were used.
+
+
+## Original battle screenshot comparison — visual refinement 24 October 2026 (conversation continuation)
+
+The latest user-installed screenshot confirmed that the cache-based rubble/fern scene appears correctly, but its boulders resemble large low-polygon models, the stone in the center looks relatively plain, and the seven-slot card area extends almost all the way into the surrounding ruined walls. The original-game frame shows a well-defined, moderately compact central gray battle slab, worn paving, softer rubble, subtle gridded masonry, and right-hand red/gold Power crests.
+
+### Implementation pushed in this pass
+
+1. **Weathered stone geometry** (`DuelArenaEnvironment.kt`): large rocks now have 16–20 smaller irregular outline points rather than 8–11 giant facets. Triangular facets are reduced to **13–22% opacity**, with fine abrasions, mineral deposits and fractures clipped to each rock silhouette. This directly addresses the overly conspicuous flat low-poly triangles without removing the existing terrain composition or foliage.
+2. **Playable slate inset** (`DuelStoneArena.kt` / `DuelArenaGrid`): a translucent stone inlay now sits beneath the four actual game rows; horizontal paving joints are redrawn with a slightly stronger opposing/player dividing seam, very faint seven-column incisions, small alignment marks and recessed edges. The actual card hit regions remain computed by the normal Compose row/grid; the inlay is purely visual.
+3. **Seven-column width budgeting** (`DuelLayoutMetrics.kt` / `ShadowBattleActivity.kt`): the legal seven-column grid now occupies **86% of the arena width**, centered inside the brighter inner slab. Rows are slightly more compact (maximum height ≈77% of portrait screen width), leaving space for rubble at both edges. The slot bounding rectangles are captured after this resizing, preserving drag/drop alignment. There are **no changes** to `ShadowRules.COLUMNS=7`, the engine board arrays or printed effects.
+4. **Original-like HUD distribution** (`ShadowBattleActivity.kt`): opponent red Power stays at upper right; player gold Power + blue Light move to lower right above the gold End Turn dial. A card-back representation and **actual player draw-pile size** join the functional battle-log control at lower left, while the hand-tray duplicate deck counter is eliminated. Rossi-11 Shield Self and the guarded End Turn behavior remain available.
+5. **Hand-tray detail** (`ShadowBattleActivity.kt`): dark steel card tray now has a light engraved diamond/diagonal pattern, worn gold top divider and recessed lower accent.
+6. **Subtle stone age/weathering** (`DuelArenaPatina.kt`): a noninteractive layer adds a few incomplete worn circular seals, masonry scratches, chipped stone seams, small old heraldic diamond stamps and edge abrasion below the cached rubble bitmap. Never draws false unit positions or sits on top of the cards.
+7. **Guardrails** (`DuelVisualParityGuardTest.kt`, `DuelLayoutMetricsTest.kt`): layout checks assert centered 86% seven-column grid, intact user/CPU Power medallions, noninteractive patina, proper layer order, deck/log utility positioning, and responsive compact board dimensions.
+
+### Remaining boundary
+
+This is a **source-implemented visual refinement**, not a device-screenshot-verified pixel match. The original game's proprietary stone/rubble photographs, typography, sound and animated effects have not been extracted. The procedural visual source is the user's screenshots and their existing card art. The user must pull the updated GitHub sources, run `run_local_engine_checks.bat` on Windows and reinstall the APK before another side-by-side comparison. Do not run GitHub Actions or change original video-established card rules merely for visual matching.
