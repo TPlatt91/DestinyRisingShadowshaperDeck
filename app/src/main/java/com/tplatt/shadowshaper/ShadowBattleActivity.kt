@@ -87,11 +87,11 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
 
-/** Compose landscape battle UI. Rules and AI are resolved by the shared engine. */
+/** Compose portrait battle UI. Rules and AI are resolved by the shared engine. */
 class ShadowBattleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         setContent {
             MaterialTheme(colorScheme = darkColorScheme(
                 primary = BattleGold, onPrimary = BattleInk,
