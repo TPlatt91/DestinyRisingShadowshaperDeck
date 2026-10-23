@@ -26,6 +26,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 private val metallicGold = Color(0xFFF0D095)
 private val hostileRed = Color(0xFFE9B9AE)
@@ -132,17 +135,59 @@ internal fun DuelGoldTurnDial(
     onClick: () -> Unit
 ) {
     Box(
-        Modifier.size(58.dp)
-            .border(2.dp, Color(0xFFAF8F50), CircleShape)
-            .padding(3.dp),
+        Modifier.size(62.dp),
         contentAlignment = Alignment.Center
     ) {
+        // Etched rotating-mechanism style bezel: gold teeth, inner black
+        // recess, a polished top highlight and an amber outer circumference.
+        Canvas(Modifier.size(62.dp)) {
+            val center = Offset(size.width / 2f, size.height / 2f)
+            val outer = size.minDimension * .475f
+            drawCircle(Color(0xA5101115), outer)
+            drawCircle(
+                brush = Brush.radialGradient(
+                    listOf(
+                        Color(0x005B3B1B), Color(0xB844311D),
+                        Color(0xFFB88B42), Color(0xFF32281E)
+                    )
+                ),
+                radius = outer
+            )
+            drawCircle(
+                Color(0xFFDEB66B), radius = outer * .91f,
+                style = Stroke(1.2.dp.toPx())
+            )
+            for (index in 0 until 16) {
+                val a = 2.0 * PI * index / 16.0 - PI / 2.0
+                val direction = Offset(
+                    cos(a).toFloat(), sin(a).toFloat()
+                )
+                val from = center + direction * (outer * .88f)
+                val to = center + direction * (outer * if (index % 4 == 0) 1.02f else .97f)
+                drawLine(
+                    if (index % 4 == 0) Color(0xFFF4D48E)
+                    else Color(0xFF8B6938),
+                    from, to,
+                    if (index % 4 == 0) 1.3.dp.toPx() else .8.dp.toPx()
+                )
+            }
+            drawCircle(
+                Color(0xFF261D1A), radius = outer * .70f,
+                style = Stroke(1.7.dp.toPx())
+            )
+            drawLine(
+                Color(0xAFFFDE9D),
+                Offset(center.x - outer * .26f, center.y - outer * .69f),
+                Offset(center.x + outer * .15f, center.y - outer * .69f),
+                1.1.dp.toPx()
+            )
+        }
         Button(
             onClick = onClick, enabled = enabled,
             shape = CircleShape,
-            modifier = Modifier.size(51.dp),
+            modifier = Modifier.size(47.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF865D28),
+                containerColor = Color(0xFF765022),
                 contentColor = Color.White,
                 disabledContainerColor = Color(0xFF555046)
             ),
