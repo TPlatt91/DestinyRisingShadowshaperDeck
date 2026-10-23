@@ -75,6 +75,9 @@ class DuelVisualParityGuardTest {
         assertTrue(battle.contains("DuelGoldTurnDial("))
         assertTrue(battle.contains("chosenCover, Modifier.width(23.dp).height(34.dp)"))
         assertTrue(battle.contains("drawBehind {"))
+        assertTrue(battle.contains("SYSTEM_UI_FLAG_IMMERSIVE_STICKY"))
+        assertTrue(battle.contains("SYSTEM_UI_FLAG_FULLSCREEN"))
+        assertTrue(battle.contains("SYSTEM_UI_FLAG_HIDE_NAVIGATION"))
     }
 
     @Test fun cardFramesPreserveSourceArtworkWithoutCoveringNameStrip() {
