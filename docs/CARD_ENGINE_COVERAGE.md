@@ -1,3 +1,15 @@
+# Latest audit — 22 October 2026 (supersedes older inventory counts)
+
+The current project has **121 unique cards: 14 basic, 107 with non-basic printed effects**. All 107 names have battle-engine/effect-source references, but **no claim of fully verified gameplay** is warranted until conditional ability and cross-effect tests actually run.
+
+- [Complete card-by-card interaction matrix (all 121)](CARD_INTERACTION_MATRIX_2026_10_22.md): video evidence, metadata coverage, effect family, source reference and A/B/C audit priority
+- [Full interaction audit and ordered gameplay validation backlog](FULL_CARD_INTERACTION_AUDIT_2026_10_22.md): 28 highest-priority, 64 next-priority, 29 routine; remaining exact-rule questions and suggested chained-effect tests
+- [Prior individual gameplay corrections and regression test notes](GAME_PARITY_AUDIT_2026_10_22.md)
+
+**Older 110/114-card figures and earlier QA estimates below are historical and superseded.** The current 121-card audit is source-inspection only: **no local Gradle build, JUnit suite, emulator or original-client parity run was performed.** No GitHub Actions credits were used.
+
+---
+
 # Current rule fidelity update — 21 October 2026
 
 **Shared keyword resolution advanced:** Only numbered Line-affix cards count in contiguous Line formations. A plain adjacent Cabal unit now interrupts the Line. Target selection, ongoing 3/4-unit auras, damage bonuses, Drop Pod, and CPU projected formations use the same helper. **Scorched** keeps the inflicting caster as damage source; **Zhiyao** triggers shared Power-bonus resolution, including Tan-2 doubling, with a three-turn expiration. In-app Rules reflect these definitions.
