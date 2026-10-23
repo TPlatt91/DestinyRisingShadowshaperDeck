@@ -22,7 +22,11 @@ class ShadowTurnAndTimedBonusRegressionTest {
                 "Sustained: When the opponent deploys a Front Row unit, gain +1 Power for 3 turns."),
             card("Dreg", "Fallen"),
             card("Elite Sniper Vandal", "Fallen", 4,
-                "Sustained (Back Row): Opponent's Power bonuses trigger 1 damage once per target per turn.")
+                "Sustained (Back Row): Opponent's Power bonuses trigger 1 damage once per target per turn."),
+            card("Saladin", "Humans", 6,
+                "Sustained: When a Human ally takes damage, grants +3 Power."),
+            card("Tan-2", "Humans", 2,
+                "Sustained: Doubles the next acquired Power bonus.")
         )
         return ShadowEngine(cards.associateBy { it.name }, 73L)
     }
@@ -102,6 +106,72 @@ class ShadowTurnAndTimedBonusRegressionTest {
         e.endTurn()
         e.buff(target, 1)
         assertEquals(11, target.power)
+    }
+
+    @Test fun zhiyaoTemporaryBonusExcludesSaladinTriggeredBySniperDamage() {
+        val e = fixture()
+        val zhiyao = put(e, "Zhiyao", e.human, 0, 0)
+        put(e, "Saladin", e.human, 0, 1)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 0)
+        e.effects.fireEnemyPlacement(put(e, "Dreg", e.cpu, 1, 2))
+
+        // Zhiyao's +1 triggers the sniper. That 1 damage triggers
+        // Saladin's separate, permanent +3 bonus.
+        assertEquals(13, zhiyao.power) // 10 + 1 - 1 + 3
+        assertEquals(4, zhiyao.bonus)
+        assertEquals(listOf(1), zhiyao.timedBonuses.map { it.value })
+        assertEquals(listOf(3), zhiyao.timedBonuses.map { it.turns })
+
+        repeat(3) { e.effects.endSide(e.human) }
+        assertEquals(12, zhiyao.power) // Saladin's +3 never expires
+        assertEquals(3, zhiyao.bonus)
+        assertTrue(zhiyao.timedBonuses.isEmpty())
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun zhiyaoTan2TemporaryBonusStillExcludesSaladinRetaliation() {
+        val e = fixture()
+        val zhiyao = put(e, "Zhiyao", e.human, 0, 0)
+        val tan2 = put(e, "Tan-2", e.human, 1, 3)
+        put(e, "Saladin", e.human, 0, 1)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 0)
+        e.effects.fireEnemyPlacement(put(e, "Dreg", e.cpu, 1, 2))
+
+        assertTrue(tan2.bonusDoublerConsumed)
+        assertEquals(14, zhiyao.power) // 10 + doubled 2 - 1 + Saladin 3
+        assertEquals(5, zhiyao.bonus)
+        assertEquals(listOf(2), zhiyao.timedBonuses.map { it.value })
+        repeat(3) { e.effects.endSide(e.human) }
+        assertEquals(12, zhiyao.power)
+        assertEquals(3, zhiyao.bonus)
+        assertTrue(zhiyao.timedBonuses.isEmpty())
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun secondZhiyaoPlacementHasOwnExpirationWithoutRecountingSaladin() {
+        val e = fixture()
+        val zhiyao = put(e, "Zhiyao", e.human, 0, 0)
+        put(e, "Saladin", e.human, 0, 1)
+        put(e, "Elite Sniper Vandal", e.cpu, 0, 0)
+        e.effects.fireEnemyPlacement(put(e, "Dreg", e.cpu, 1, 2))
+        e.effects.endSide(e.human) // First Zhiyao stack: 2 turns remain
+        e.effects.fireEnemyPlacement(put(e, "Dreg", e.cpu, 1, 3))
+
+        // Once-per-target sniper cannot trigger again this turn (the
+        // fixture did not advance the turn ID), but the new Zhiyao
+        // placement should still award a separate +1.
+        assertEquals(14, zhiyao.power)
+        assertEquals(5, zhiyao.bonus)
+        assertEquals(listOf(2, 3), zhiyao.timedBonuses.map { it.turns })
+        assertEquals(listOf(1, 1), zhiyao.timedBonuses.map { it.value })
+
+        e.effects.endSide(e.human)
+        e.effects.endSide(e.human)
+        assertEquals(13, zhiyao.power) // first temporary +1 expired
+        assertEquals(4, zhiyao.bonus)
+        e.effects.endSide(e.human)
+        assertEquals(12, zhiyao.power) // only Saladin's +3 remains
+        assertEquals(3, zhiyao.bonus)
     }
 
     private fun cardsAndDeck(): Pair<Map<String, ShadowData.Card>, Map<String, Int>> {
