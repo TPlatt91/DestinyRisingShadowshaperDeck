@@ -20,7 +20,8 @@ public class ShadowRulesTest {
         assertTrue(ShadowRules.isOnBoard(0,0));
         assertTrue(ShadowRules.isOnBoard(1,5));
         assertFalse(ShadowRules.isOnBoard(-1,0));
-        assertFalse(ShadowRules.isOnBoard(0,6));
+        assertTrue(ShadowRules.isOnBoard(0,6));
+        assertFalse(ShadowRules.isOnBoard(0,7));
         assertEquals("DRAW",ShadowRules.result(8,8));
         assertEquals("VICTORY",ShadowRules.result(9,8));
         assertEquals("DEFEAT",ShadowRules.result(7,8));
