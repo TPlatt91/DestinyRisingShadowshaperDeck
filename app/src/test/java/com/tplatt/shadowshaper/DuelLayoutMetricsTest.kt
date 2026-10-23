@@ -38,4 +38,24 @@ class DuelLayoutMetricsTest {
         assertEquals(132, DuelLayoutMetrics.rightHudWidth(900))
         assertEquals(6, ShadowRules.COLUMNS)
     }
+    @Test fun portraitBoardHeightUsesPhoneWidthInsteadOfStretchingAllRows() {
+        assertEquals(358.8f, DuelLayoutMetrics.portraitBoardHeight(390, 820), 0.01f)
+        assertEquals(294.4f, DuelLayoutMetrics.portraitBoardHeight(320, 630), 0.01f)
+        assertEquals(247.8f, DuelLayoutMetrics.portraitBoardHeight(520, 420), 0.01f)
+    }
+
+    @Test fun portraitHandDockIsRoomierOnTallPhonesButBounded() {
+        assertEquals(122, DuelLayoutMetrics.portraitHandHeight(610))
+        assertEquals(144, DuelLayoutMetrics.portraitHandHeight(680))
+        assertEquals(156, DuelLayoutMetrics.portraitHandHeight(820))
+    }
+
+    @Test fun handCardsOnlyOverlapWhenThePhoneCannotFitThemSideBySide() {
+        assertEquals(0, DuelLayoutMetrics.portraitHandSpacing(1, 390))
+        assertEquals(3, DuelLayoutMetrics.portraitHandSpacing(4, 390))
+        assertEquals(-16, DuelLayoutMetrics.portraitHandSpacing(5, 390))
+        assertEquals(-19, DuelLayoutMetrics.portraitHandSpacing(8, 390))
+    }
+
+
 }
