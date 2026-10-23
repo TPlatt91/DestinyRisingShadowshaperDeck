@@ -30,7 +30,7 @@ internal object DuelLayoutMetrics {
     }
 
     fun leftHudWidth(screenWidthDp: Int): Int =
-        if (screenWidthDp < 790) 86 else 110
+        if (screenWidthDp < 790) 80 else 102
 
     fun rightHudWidth(screenWidthDp: Int): Int =
         if (screenWidthDp < 790) 112 else 132
