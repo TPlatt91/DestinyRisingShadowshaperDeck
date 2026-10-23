@@ -41,7 +41,8 @@ class DuelLayoutMetricsTest {
     @Test fun portraitBoardHeightUsesPhoneWidthInsteadOfStretchingAllRows() {
         assertEquals(358.8f, DuelLayoutMetrics.portraitBoardHeight(390, 820), 0.01f)
         assertEquals(294.4f, DuelLayoutMetrics.portraitBoardHeight(320, 630), 0.01f)
-        assertEquals(247.8f, DuelLayoutMetrics.portraitBoardHeight(520, 420), 0.01f)
+        assertEquals(124f, DuelLayoutMetrics.portraitBoardHeight(520, 420), 0.01f)
+        assertEquals(322f, DuelLayoutMetrics.portraitBoardHeight(390, 640), 0.01f)
     }
 
     @Test fun portraitHandDockIsRoomierOnTallPhonesButBounded() {
