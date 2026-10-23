@@ -486,7 +486,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 }
                 }
                 // Portrait: the score and action medallions sit below the
-                // full-width stone field, never shrink the six card columns.
+                // full-width stone field, never shrink the seven card columns.
                 Row(
                     Modifier.fillMaxWidth().height(59.dp)
                         .background(Color(0xFF1A1B1D), RoundedCornerShape(4.dp))
