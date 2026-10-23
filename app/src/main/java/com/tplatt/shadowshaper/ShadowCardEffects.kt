@@ -173,8 +173,16 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             }
             "Vanok" -> faction(me, "Fallen").forEach { buff(it, 2) }
             "Kabr" -> all(me).filter { it.card.name == "Guerrilla" }.forEach { buff(it, 3) }
-            "Bazinet" -> if (actor.row == 0) {
-                for (unit in all(foe)) if (powerBonus(unit) > 0) damage(actor, unit, 3)
+            "Bazinet" -> if (actor.row == ShadowRules.BACK_ROW) {
+                // "All opposing units with a bonus" is selected at
+                // activation, not re-evaluated after each hit. Saladin,
+                // Xur and Zhiyao can create NEW bonuses during damage
+                // reactions; they do not retroactively add new victims.
+                val eligible = all(foe).filter { powerBonus(it) > 0 }
+                for (victim in eligible) {
+                    if (!isPresent(actor)) break
+                    if (isPresent(victim)) damage(actor, victim, 3)
+                }
             }
             "Radegast" -> if (hasFaction(foe, "Fallen")) {
                 for (unit in all(me)) if (unit.row == actor.row &&
