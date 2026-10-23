@@ -17,10 +17,11 @@ MAIN=ASSETS/"cards.tsv"
 TABLES=[MAIN,ASSETS/"community_cards.tsv",ASSETS/"expanded_cards.tsv"]
 DETAILS=ASSETS/"card_details.tsv"
 BLOCKED_BY_RULES={
-    "Xur":"Rock token Power unknown",
-    "Tomb Ship":"Random Hive summon pool not verified",
-    "Drop Pod":"Random Cabal Line summon pool not verified",
-    "Xuan Wei":"Damage and relocation scripted; exact destination rules need verification",
+    # All Rock token stats have now been extracted from original footage:
+    # Xur is SCRIPTED / UNVERIFIED, no longer DATA BLOCKED or incomplete.
+    "Tomb Ship":"Random Hive summon pool and weighting not verified",
+    "Drop Pod":"Random printed Line summon pool and weighting not verified",
+    "Xuan Wei":"Damage and relocation scripted; full-board destination rules need verification",
 }
 cards={}
 errors=[]
@@ -38,6 +39,26 @@ for path in TABLES:
             cards[name]={"name":name,"cost":"" if expected==2 else row[3],
                          "power":"" if expected==2 else row[4],
                          "text":row[-1],"source":path.name,"class":""}
+# Match ShadowData.load(): the user's captured card-detail text overrides
+# community/wiki text, BEFORE details add the printed stats and categories.
+# Without this overlay, the audit classifies some fully printed abilities
+# based on obsolete web descriptions rather than the actual in-app effects.
+video_overlaid=set()
+with (ASSETS/"verified_video_cards.tsv").open(newline="",encoding="utf-8") as handle:
+    for line_number,row in enumerate(csv.reader(handle,delimiter="|"),1):
+        if not row: continue
+        if len(row)!=6:
+            errors.append(f"Malformed verified_video_cards.tsv line {line_number}: {row}")
+            continue
+        name,rarity,faction,cost,power,effect=row
+        if name in video_overlaid:
+            errors.append(f"Duplicate verified video card: {name}")
+        video_overlaid.add(name)
+        if name not in cards:
+            cards[name]={"name":name,"class":""}
+        cards[name].update(cost=cost,power=power,text=effect,
+                           source="verified_video_cards.tsv")
+
 with DETAILS.open(newline="",encoding="utf-8") as handle:
     for row in csv.reader(handle,delimiter="|"):
         if not row: continue
@@ -47,9 +68,9 @@ with DETAILS.open(newline="",encoding="utf-8") as handle:
 
 counts=Counter()
 for name,card in cards.items():
-    if not card["power"] or not card["cost"]:
+    if not str(card["power"]).isdigit() or not str(card["cost"]).isdigit():
         status="DATA BLOCKED"
-        note="Cost and/or Power still unknown"
+        note="Cost and/or Power missing or not numeric"
     elif "no special effects" in card["text"].lower():
         status="BASIC"
         note="No-effect card: ordinary placement, cost and Power"
@@ -69,6 +90,7 @@ for name,card in cards.items():
 print("SHADOWSHAPER EFFECT COVERAGE AUDIT")
 print("=================================")
 print("Unique records:",len(cards))
+print("Verified-video effect overlays:",len(video_overlaid))
 for k,v in counts.most_common():print(f"{k}: {v}")
 print("IMPORTANT: SCRIPTED / UNVERIFIED is NOT a completed or validated card.")
 print()
