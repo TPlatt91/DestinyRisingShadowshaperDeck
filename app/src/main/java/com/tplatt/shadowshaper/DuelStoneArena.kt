@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.dp
 internal fun DuelStoneArena(modifier: Modifier = Modifier) {
     Box(modifier) {
         Image(
-            painter = painterResource(R.drawable.shadow_arena_original_portrait),
+            painter = painterResource(R.drawable.shadow_arena_original_portrait_hq),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
             // Asset already adapted to portrait: preserve every edge detail.
