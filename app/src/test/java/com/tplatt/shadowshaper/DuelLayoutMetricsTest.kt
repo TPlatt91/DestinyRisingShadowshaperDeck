@@ -39,7 +39,7 @@ class DuelLayoutMetricsTest {
         assertEquals(7, ShadowRules.COLUMNS)
     }
     @Test fun portraitLaneWidthLeavesBothRubbleMarginsVisible() {
-        assertEquals(0.90f, DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION, 0.001f)
+        assertEquals(0.80f, DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION, 0.001f)
         assertEquals(ShadowRules.COLUMNS, 7)
     }
 
@@ -50,18 +50,18 @@ class DuelLayoutMetricsTest {
         assertEquals(281f, DuelLayoutMetrics.portraitBoardHeight(390, 640), 0.01f)
     }
 
-    @Test fun sevenColumnCardsAreLargerAfterNarrowingRockBorder() {
+    @Test fun sevenColumnCardsAreLargerWithoutReplacingOriginalRubble() {
         val phoneWidth = 390f
         val oldSlotWidth = phoneWidth * 0.70f / ShadowRules.COLUMNS
         val newSlotWidth = phoneWidth * DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION /
             ShadowRules.COLUMNS
-        assertTrue("New slate inset must provide at least 25% more width per card",
-            newSlotWidth / oldSlotWidth >= 1.25f)
+        assertTrue("Slightly wider card slots must stay within preserved rock margins",
+            newSlotWidth / oldSlotWidth >= 1.12f)
 
         val dimensions = DuelLayoutMetrics.fittingCard(
             newSlotWidth, DuelLayoutMetrics.portraitBoardHeight(390, 820) / 4f
         )
-        assertTrue(dimensions.width >= 46f)
+        assertTrue(dimensions.width >= 40f)
         assertEquals(0.72f, dimensions.width / dimensions.height, 0.001f)
     }
 

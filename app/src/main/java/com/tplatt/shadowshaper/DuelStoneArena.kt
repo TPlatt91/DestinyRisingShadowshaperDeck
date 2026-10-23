@@ -4,6 +4,8 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -15,21 +17,26 @@ import androidx.compose.ui.unit.dp
 /**
  * Uses the actual cracked-stone and foliage artwork supplied by the user.
  *
- * The 720x1280 portrait derivative has approximately 5% narrow edge
- * borders, keeping natural cracks and nearly all width for the seven cards.
- * It is bundled offline at drawable-nodpi without density scaling. This is NOT the former generated masonry/noise
- * scene: it contains the user's real cracks, carved stones, moss and foliage.
+ * Exactly restores the user's previous 720x1280 original portrait asset,
+ * with its full natural rock borders, real cracks, moss, and foliage.
+ * It is bundled offline at drawable-nodpi, not redrawn or substituted.
+ * A modest UNIFORM view-only zoom reveals slightly more central slab.
  * No overlay in this composable intercepts any touch or drag event.
  */
 @Composable
 internal fun DuelStoneArena(modifier: Modifier = Modifier) {
-    Box(modifier) {
+    Box(modifier.clipToBounds()) {
         Image(
-            painter = painterResource(R.drawable.shadow_arena_narrow_ruins_v2),
+            painter = painterResource(R.drawable.shadow_arena_original_portrait_hq),
             contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            // Crops a few top/bottom pixels rather than stretching the
-            // stone, preserving cracks, rocks, and foliage proportions.
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    // Equal X/Y scale only: artwork pixel proportions remain
+                    // unchanged. No recropping, recompositing, or new scenery.
+                    scaleX = 1.12f
+                    scaleY = 1.12f
+                },
             contentScale = ContentScale.Crop
         )
     }

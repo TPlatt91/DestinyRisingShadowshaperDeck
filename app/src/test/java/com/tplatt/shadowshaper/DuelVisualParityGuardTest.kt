@@ -21,8 +21,8 @@ class DuelVisualParityGuardTest {
 
     private fun actualArenaImage(): File =
         listOf(
-            File("src/main/res/drawable-nodpi/shadow_arena_narrow_ruins_v2.webp"),
-            File("app/src/main/res/drawable-nodpi/shadow_arena_narrow_ruins_v2.webp")
+            File("src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp"),
+            File("app/src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp")
         ).firstOrNull(File::isFile)
             ?: error("The uploaded stone ruins picture must be bundled offline")
 
@@ -35,19 +35,21 @@ class DuelVisualParityGuardTest {
         assertTrue(String(original.readBytes(), 8, 4) == "WEBP")
     }
 
-    @Test fun backgroundPreservesAspectRatioAndKeepsRockBordersNarrow() {
+    @Test fun backgroundRestoresOriginalArtworkWithoutDistortingImage() {
         val stone = source("DuelStoneArena.kt")
         val metrics = source("DuelLayoutMetrics.kt")
         assertTrue(stone.contains("ContentScale.Crop"))
         assertFalse(stone.contains("ContentScale.FillBounds"))
-        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.90f"))
+        assertTrue(stone.contains("scaleX = 1.12f"))
+        assertTrue(stone.contains("scaleY = 1.12f"))
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.80f"))
         assertTrue(metrics.contains("screenWidthDp.coerceAtLeast(250) * 0.82f"))
     }
 
     @Test fun arenaRendersUploadedBitmapInsteadOfOldProceduralRubble() {
         val stone = source("DuelStoneArena.kt")
         val battle = source("ShadowBattleActivity.kt")
-        assertTrue(stone.contains("painterResource(R.drawable.shadow_arena_narrow_ruins_v2)"))
+        assertTrue(stone.contains("painterResource(R.drawable.shadow_arena_original_portrait_hq)"))
         assertTrue(stone.contains("ContentScale.Crop"))
         assertFalse(stone.contains("generateSlateTexture"))
         assertFalse(stone.contains("DuelArenaPatina"))
@@ -57,12 +59,12 @@ class DuelVisualParityGuardTest {
         assertTrue(battle.contains("DuelArenaGrid(Modifier.fillMaxSize())"))
     }
 
-    @Test fun genuineSevenColumnRowGuidesStayBehindLiveCards() {
+    @Test fun originalSevenColumnRowGuidesStayBehindLiveCards() {
         val battle = source("ShadowBattleActivity.kt")
         val stone = source("DuelStoneArena.kt")
         val metrics = source("DuelLayoutMetrics.kt")
         val visuals = source("ShadowBattleVisuals.kt")
-        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.90f"))
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.80f"))
         assertTrue(battle.contains("DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION"))
         assertTrue(stone.contains("column in 1 until ShadowRules.COLUMNS"))
         assertFalse(battle.contains("Text(heading.replace"))

@@ -286,3 +286,8 @@ User installed the previous 720×1280 portrait adaptation of the uploaded "Ancie
 - All legal placement, targeting, relocation and drag/drop coordinates still use the actual Compose slot bounds; no separate visual hitboxes or gameplay mechanics were changed. No extra card decorations cover the artwork.
 - Updated both JVM source guards and pure dimension tests to verify the new image, aspect-preserving crop, legal seven columns, larger cards and short-screen limits. Removed the unused, older stretched WebP resource to avoid shipping both.
 - The new image/refs are pushed and resource existence has been checked through GitHub. **Still requires user's local Android compilation and screenshot verification**. No GitHub Actions used.
+
+
+## Original user artwork restored after rejected v2 reinterpretation
+
+The narrow-border v2 asset unexpectedly changed the source imagery, which the user rejected. Restored the **exact original portrait WebP blob from commit `096588c`**, removed the substitute v2 asset, and pointed `DuelStoneArena` back to `shadow_arena_original_portrait_hq` with `ContentScale.Crop` (no stretching) and an equal X/Y 1.12× view-only zoom. The original asset bytes were not altered. The existing seven-column row grid, hit testing and gameplay remain intact; adjusted only the layout's `PORTRAIT_LANE_WIDTH_FRACTION` from 0.90 to 0.80 (still larger than the earlier 0.70) to keep natural rock borders readable. Source-level tests now require the original resource, not the substituted image. Pending user-local Android build and phone screenshot verification. No GitHub Actions used.
