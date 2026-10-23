@@ -306,16 +306,16 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         val position = it.boundsInWindow().topLeft
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
     }) {
-    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF17110E),Color(0xFF302018),Color(0xFF19151A))))) {
-        Row(Modifier.fillMaxWidth().height(44.dp)
+    Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF121115),Color(0xFF211A1A),Color(0xFF131217))))) {
+        Row(Modifier.fillMaxWidth().height(38.dp)
             .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
             .border(width = 1.dp, color = Color(0xFF8D6748))
             .padding(horizontal = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             TextButton(onClick = { settingsDialog = true }) { Text("☰ MENU", color = BattleGold) }
-            Text("SHADOW SHAPER  •  DUELS", color = DuelPalette.cream,
-                letterSpacing = 2.sp, fontSize = 14.sp, fontWeight = FontWeight.Black)
+            Text("SHADOWSHAPER DUELS", color = DuelPalette.cream,
+                letterSpacing = 1.sp, fontSize = 13.sp, fontWeight = FontWeight.Black)
             Text(
                 when {
                     snapshot?.finished == true -> "DUEL COMPLETE"
@@ -355,7 +355,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 Box(
                     Modifier.weight(1f).fillMaxHeight()
                         .background(Brush.verticalGradient(listOf(
-                            Color(0xFF37271F), Color(0xFF28221F), Color(0xFF3B2A21)
+                            Color(0xFF332821), Color(0xFF211D1E), Color(0xFF342820)
                         )), RoundedCornerShape(10.dp))
                         .border(2.dp, DuelPalette.rim, RoundedCornerShape(10.dp))
                         .padding(6.dp)
@@ -385,7 +385,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             Text(heading.replace(" ", "\n"), fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = if (owner === engine.human) DuelPalette.blue else DuelPalette.red,
-                                modifier = Modifier.width(45.dp).align(Alignment.CenterVertically),
+                                modifier = Modifier.width(34.dp).align(Alignment.CenterVertically),
                                 lineHeight = 10.sp, textAlign = TextAlign.Center)
                             for (col in 0 until ShadowRules.COLUMNS) {
                                 val unit = owner.board[row][col]
@@ -427,7 +427,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                         friendly = owner === engine.human,
                                         occupied = unit != null,
                                         modifier = Modifier.fillMaxSize(),
-                                        label = if (legal || relocating || targeting) "+" else "·"
+                                        label = if (legal || relocating || targeting) "+" else ""
                                     )
                                     if (unit != null) {
                                         val fit = DuelLayoutMetrics.fittingCard(maxWidth.value, maxHeight.value)
@@ -454,18 +454,66 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 }
                 }
                 Column(
-                    Modifier.width(DuelLayoutMetrics.rightHudWidth(screenConfig.screenWidthDp).dp).fillMaxHeight().background(BattleBrown).padding(if (compactLayout) 2.dp else 5.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    Modifier.width(DuelLayoutMetrics.rightHudWidth(screenConfig.screenWidthDp).dp)
+                        .fillMaxHeight()
+                        .background(
+                            Brush.verticalGradient(listOf(Color(0xFF211A1A), Color(0xFF151419))),
+                            RoundedCornerShape(6.dp)
+                        )
+                        .border(1.dp, DuelPalette.rim, RoundedCornerShape(6.dp))
+                        .padding(if (compactLayout) 3.dp else 6.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(3.dp)
                 ) {
                     DuelScore(snapshot.playerPower, snapshot.cpuPower, snapshot.playerTurn)
-                    Spacer(Modifier.height(6.dp))
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-                        engine.journal.takeLast(8).forEach {
-                            Text(it, color = BattleCream, fontSize = 10.sp, lineHeight = 12.sp)
+                    Spacer(Modifier.height(2.dp))
+                    // The genuine minigame positions END TURN beside the field.
+                    if (pendingPosition != null &&
+                        engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
+                        Button(
+                            onClick = { shieldRossiSelf() },
+                            enabled = snapshot.playerTurn && !snapshot.finished,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("SHIELD SELF", fontSize = 9.sp,
+                                fontWeight = FontWeight.Black, maxLines = 2)
                         }
                     }
+                    Button(
+                        enabled = snapshot.playerTurn && !snapshot.finished,
+                        onClick = {
+                            if (pendingPosition != null) pendingPosition = null
+                            else if (engine.pendingMovedUnit != null)
+                                message = "Choose a relocation slot first."
+                            else if (engine.human.points > 0 &&
+                                engine.human.hand.indices.any {
+                                    engine.affordable(engine.human, it)
+                                })
+                                endConfirmation = true
+                            else current.endTurn()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            when {
+                                pendingPosition != null -> "CANCEL TARGET"
+                                engine.pendingMovedUnit != null -> "MOVE UNIT"
+                                else -> "END TURN  ›"
+                            },
+                            fontSize = if (compactLayout) 9.sp else 11.sp,
+                            fontWeight = FontWeight.Black,
+                            maxLines = 2, textAlign = TextAlign.Center
+                        )
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Text(
+                        engine.journal.lastOrNull()?.take(90) ?: "DUEL READY",
+                        color = BattleFaded, fontSize = 9.sp, lineHeight = 11.sp,
+                        maxLines = 3, textAlign = TextAlign.Center
+                    )
                     TextButton(onClick = { showLog = true }) {
-                        Text("MATCH LOG", color = BattleGold, fontSize = 11.sp)
+                        Text("BATTLE LOG", color = BattleGold,
+                            fontSize = 10.sp, maxLines = 1)
                     }
                 }
             }
@@ -553,40 +601,25 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         }
                     }
                 }
-                Column(Modifier.width(if (compactLayout) 106.dp else 120.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (pendingPosition != null &&
-                        engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
-                        Button(
-                            onClick = { shieldRossiSelf() },
-                            enabled = snapshot.playerTurn && !snapshot.finished,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("SHIELD SELF", fontSize = 10.sp,
-                                fontWeight = FontWeight.Black)
-                        }
-                    }
-                    Button(
-                        enabled = snapshot.playerTurn && !snapshot.finished,
-                        onClick = {
-                            if (pendingPosition != null) pendingPosition = null
-                            else if (engine.pendingMovedUnit != null)
-                                message = "Choose a relocation slot first."
-                            else if (engine.human.points > 0 &&
-                                engine.human.hand.indices.any { engine.affordable(engine.human, it) })
-                                endConfirmation = true
-                            else current.endTurn()
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(when {
-                            pendingPosition != null -> "CANCEL TARGET"
-                            engine.pendingMovedUnit != null -> "MOVE UNIT"
-                            else -> "END TURN  ›"
-                        }, fontSize = 11.sp,
-                            fontWeight = FontWeight.Black)
-                    }
-                    Text(message, color = BattleFaded, fontSize = 9.sp,
-                        lineHeight = 11.sp, maxLines = 3, textAlign = TextAlign.Center)
+                Column(
+                    Modifier.width(if (compactLayout) 82.dp else 94.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        if (selectedIndex >= 0 &&
+                            selectedIndex in engine.human.hand.indices)
+                            engine.human.hand[selectedIndex].name.uppercase()
+                        else "YOUR HAND",
+                        color = DuelPalette.gold, fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2, textAlign = TextAlign.Center
+                    )
+                    Text(
+                        message, color = BattleFaded, fontSize = 9.sp,
+                        lineHeight = 11.sp, maxLines = 4,
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         } else {
