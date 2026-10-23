@@ -365,8 +365,18 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             color = DuelPalette.blue, fontSize = 9.sp)
                     }
                 }
+                // Leave dark space around a consistently proportioned stone
+                // board instead of stretching its empty slots to the viewport.
                 Box(
-                    Modifier.weight(1f).fillMaxWidth()
+                    Modifier.weight(1f).fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                Box(
+                    Modifier.fillMaxWidth()
+                        .height(DuelLayoutMetrics.portraitBoardHeight(
+                            screenConfig.screenWidthDp,
+                            screenConfig.screenHeightDp
+                        ).dp)
                         .background(Brush.verticalGradient(listOf(
                             Color(0xFF353739), Color(0xFF292A2D), Color(0xFF393939)
                         )), RoundedCornerShape(10.dp))
@@ -395,11 +405,16 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 )))
                         }
                         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(heading.replace(" ", "\n"), fontSize = 9.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (owner === engine.human) DuelPalette.blue else DuelPalette.red,
-                                modifier = Modifier.width(34.dp).align(Alignment.CenterVertically),
-                                lineHeight = 10.sp, textAlign = TextAlign.Center)
+                            Text(
+                                if (row == ShadowRules.BACK_ROW) "B" else "F",
+                                fontSize = 9.sp, fontWeight = FontWeight.Black,
+                                color = if (owner === engine.human)
+                                    DuelPalette.blue else DuelPalette.red,
+                                modifier = Modifier.width(13.dp)
+                                    .align(Alignment.CenterVertically),
+                                textAlign = TextAlign.Center,
+                                maxLines = 1
+                            )
                             for (col in 0 until ShadowRules.COLUMNS) {
                                 val unit = owner.board[row][col]
                                 val targeting = targets.any {
@@ -466,35 +481,44 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     }
                 }
                 }
+                }
                 // Portrait: the score and action medallions sit below the
                 // full-width stone field, never shrink the six card columns.
                 Row(
-                    Modifier.fillMaxWidth().height(72.dp)
+                    Modifier.fillMaxWidth().height(59.dp)
                         .background(Color(0xFF1A1B1D), RoundedCornerShape(4.dp))
                         .border(1.dp, Color(0xFF66615B), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 5.dp, vertical = 3.dp),
+                        .padding(horizontal = 5.dp, vertical = 1.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
                     Column(
                         Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        Text("CPU", color = DuelPalette.red, fontSize = 9.sp)
+                        Text("CPU", color = DuelPalette.red, fontSize = 9.sp,
+                            maxLines = 1)
                         Text("${snapshot.cpuPower}", color = DuelPalette.cream,
-                            fontWeight = FontWeight.Black, fontSize = 22.sp)
-                        Text("LIGHT ${snapshot.cpuLight}", color = DuelPalette.blue,
-                            fontSize = 9.sp)
+                            fontWeight = FontWeight.Black, fontSize = 19.sp,
+                            lineHeight = 20.sp)
+                        Text("✦ ${snapshot.cpuLight}/${snapshot.round}",
+                            color = DuelPalette.blue, fontSize = 9.sp,
+                            maxLines = 1)
                     }
                     Column(
                         Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(0.dp)
                     ) {
-                        Text("YOU", color = DuelPalette.gold, fontSize = 9.sp)
+                        Text("YOU", color = DuelPalette.gold, fontSize = 9.sp,
+                            maxLines = 1)
                         Text("${snapshot.playerPower}", color = DuelPalette.cream,
-                            fontWeight = FontWeight.Black, fontSize = 22.sp)
-                        Text("LIGHT ${snapshot.playerLight}", color = DuelPalette.blue,
-                            fontSize = 9.sp)
+                            fontWeight = FontWeight.Black, fontSize = 19.sp,
+                            lineHeight = 20.sp)
+                        Text("✦ ${snapshot.playerLight}/${snapshot.round}",
+                            color = DuelPalette.blue, fontSize = 9.sp,
+                            maxLines = 1)
                     }
                     if (pendingPosition != null &&
                         engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
@@ -514,7 +538,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 }) endConfirmation = true
                             else current.endTurn()
                         },
-                        modifier = Modifier.size(62.dp)
+                        modifier = Modifier.size(50.dp)
                             .border(2.dp, Color(0xFFCA9956), CircleShape),
                         shape = CircleShape,
                         contentPadding = PaddingValues(3.dp),
@@ -529,8 +553,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 engine.pendingMovedUnit != null -> "MOVE"
                                 else -> "END\nTURN"
                             },
-                            fontSize = 10.sp, fontWeight = FontWeight.Black,
-                            maxLines = 2, lineHeight = 11.sp,
+                            fontSize = 9.sp, fontWeight = FontWeight.Black,
+                            maxLines = 2, lineHeight = 10.sp,
                             textAlign = TextAlign.Center
                         )
                     }
@@ -540,11 +564,19 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     }
                 }
             }
-            Row(Modifier.fillMaxWidth().height(120.dp).background(BattleBrown).padding(5.dp),
+            Row(
+                Modifier.fillMaxWidth()
+                    .height(DuelLayoutMetrics.portraitHandHeight(
+                        screenConfig.screenHeightDp
+                    ).dp)
+                    .background(Brush.verticalGradient(listOf(
+                        Color(0xFF30251F), Color(0xFF1C1A1A)
+                    )))
+                    .padding(horizontal = 4.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.width(59.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                Column(Modifier.width(51.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                    DuelLightMeter(snapshot.playerLight, snapshot.round)
+                    DuelLightMeter(snapshot.playerLight, snapshot.round, compact = true)
                     Row(verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                         DuelCardCover(chosenCover, Modifier.width(19.dp).height(28.dp))
@@ -555,12 +587,18 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 }
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
-                    contentPadding = PaddingValues(horizontal = 5.dp, vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy((-11).dp)
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        DuelLayoutMetrics.portraitHandSpacing(
+                            engine.human.hand.size,
+                            screenConfig.screenWidthDp
+                        ).dp
+                    )
                 ) {
                     itemsIndexed(engine.human.hand.toList()) { index, card ->
                         Card(
-                            modifier = Modifier.width(77.dp).fillMaxHeight()
+                            modifier = Modifier.width(if (screenConfig.screenWidthDp < 380) 70.dp else 76.dp)
+                                .fillMaxHeight()
                                 .zIndex(if (selectedIndex == index || draggedIndex == index) 5f else index.toFloat() / 100f)
                                 .graphicsLayer {
                                     val midpoint = (engine.human.hand.size - 1) / 2f
