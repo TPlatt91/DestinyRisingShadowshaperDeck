@@ -240,19 +240,21 @@ internal fun DuelScore(player: Int, cpu: Int, playerTurn: Boolean) {
 
 @Composable
 internal fun DuelCardArtwork(card: ShadowData.Card, modifier: Modifier = Modifier) {
-    val activity = LocalContext.current as? Activity
+    // Compose uses Context wrappers for themed windows. CardArt.bind accepts
+    // any Context, so every card must load even without a direct Activity cast.
     key(card.name) {
         AndroidView(
             modifier = modifier,
             factory = { context ->
                 ImageView(context).apply {
                     scaleType = ImageView.ScaleType.FIT_CENTER
-                    if (activity != null) CardArt.bind(activity, card, this)
+                    CardArt.bind(context, card, this)
                 }
             },
-            update = {
-                if (activity != null && it.contentDescription != card.name + " card art")
-                    CardArt.bind(activity, card, it)
+            update = { image ->
+                if (image.contentDescription != card.name + " card art") {
+                    CardArt.bind(image.context, card, image)
+                }
             }
         )
     }
