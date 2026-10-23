@@ -159,21 +159,37 @@ internal fun DuelRoundMarkers(round: Int) {
 }
 
 @Composable
-internal fun DuelLightMeter(light: Int, round: Int) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp)) {
-        Text("LIGHT", fontSize = 10.sp, letterSpacing = 1.sp,
-            color = DuelPalette.dullGold, fontWeight = FontWeight.Bold)
-        Text(light.toString() + " / " + round,
-            color = DuelPalette.blue, fontSize = 22.sp, fontWeight = FontWeight.Black)
-        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+internal fun DuelLightMeter(light: Int, round: Int, compact: Boolean = false) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(if (compact) 1.dp else 3.dp)
+    ) {
+        Text(
+            "LIGHT", fontSize = if (compact) 9.sp else 10.sp,
+            letterSpacing = if (compact) 0.sp else 1.sp,
+            color = DuelPalette.dullGold, fontWeight = FontWeight.Bold
+        )
+        Text(
+            "$light / $round", color = DuelPalette.blue,
+            fontSize = if (compact) 17.sp else 22.sp,
+            lineHeight = if (compact) 19.sp else 25.sp,
+            fontWeight = FontWeight.Black, maxLines = 1
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(if (compact) 2.dp else 4.dp)) {
             for (i in 0 until ShadowRules.ROUNDS) {
                 val active = i < light
-                Box(Modifier.size(9.dp)
-                    .background(if (active) DuelPalette.blue else Color(0xFF463C3C),
-                        RoundedCornerShape(3.dp))
-                    .border(1.dp, if (active) Color(0xFFCAE9FB) else DuelPalette.rim,
-                        RoundedCornerShape(3.dp)))
+                Box(
+                    Modifier.size(if (compact) 5.dp else 9.dp)
+                        .background(
+                            if (active) DuelPalette.blue else Color(0xFF463C3C),
+                            RoundedCornerShape(2.dp)
+                        )
+                        .border(
+                            0.6.dp,
+                            if (active) Color(0xFFCAE9FB) else DuelPalette.rim,
+                            RoundedCornerShape(2.dp)
+                        )
+                )
             }
         }
     }
@@ -393,9 +409,9 @@ internal fun DuelSlotBackground(
     val line by animateColorAsState(
         targetValue = when {
             selected -> DuelPalette.gold
-            occupied -> Color(0xFF948D7E)
-            friendly -> Color(0xFFB0B0A9).copy(alpha = 0.28f)
-            else -> Color(0xFFB2B7B9).copy(alpha = 0.25f)
+            occupied -> Color(0xFF948D7E).copy(alpha = 0.50f)
+            friendly -> Color(0xFFB0B0A9).copy(alpha = 0.20f)
+            else -> Color(0xFFB2B7B9).copy(alpha = 0.18f)
         }, label = "slot edge"
     )
     Box(
@@ -405,14 +421,14 @@ internal fun DuelSlotBackground(
                     listOf(Color(0x99627861), Color(0x99334136))
                 else listOf(Color(0x204F5354), Color(0x10313437))
             ),
-            RoundedCornerShape(5.dp)
-        ).border(if (selected) 2.dp else 1.dp, line, RoundedCornerShape(5.dp)),
+            RoundedCornerShape(3.dp)
+        ).border(if (selected) 1.5.dp else 0.5.dp, line, RoundedCornerShape(3.dp)),
         contentAlignment = Alignment.Center
     ) {
         if (!occupied) {
             Canvas(Modifier.fillMaxSize().padding(4.dp)) {
                 val edge = minOf(size.width, size.height) * 0.15f
-                val color = line.copy(alpha = if (selected) 0.9f else 0.35f)
+                val color = line.copy(alpha = if (selected) 0.9f else 0.20f)
                 // Subtle engraved corner marks, not extra play zones.
                 drawLine(color, Offset(0f, edge), Offset(0f, 0f), 1.dp.toPx(), StrokeCap.Square)
                 drawLine(color, Offset(0f, 0f), Offset(edge, 0f), 1.dp.toPx(), StrokeCap.Square)
