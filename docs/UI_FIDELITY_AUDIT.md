@@ -163,3 +163,19 @@ A [Shadowshaper community discussion](https://www.reddit.com/r/destinyrisingmobi
 - Added `ShadowPortraitOrientationTest.kt` to catch accidental activity landscape locks and runtime orientation regressions in future local checks.
 
 **Verification:** Latest user-pushed local build **before** these portrait edits was successful. The new portrait code still requires `run_local_engine_checks.bat` and a fresh on-phone screenshot/layout inspection. These are layout fixes, not new card rules. Zero GitHub Actions usage.
+
+
+## Portrait battle proportion correction — 23 October 2026
+
+**Motivated by the user's actual installed-app screenshot** (portrait battlefield with excessively tall empty slots, wrapping CPU/Your Back/Front labels, clipped Light line in the score bar, cramped overlapping hand cards, and large surrounding panels).
+
+Code changes to the *active Kotlin Compose battle*, not just an illustrative plan:
+
+- `DuelLayoutMetrics.portraitBoardHeight(width,height)` now bounds the four-row stone field by phone width and reserves vertical space for the round ribbon, scores, status bar and hand. The stone field is **centered inside its remaining viewport**, instead of forcing all four rows to stretch to the bottom. It also contracts gracefully on shorter screens. Gameplay row and column counts stay untouched.
+- Long wrapping row labels are replaced with tiny color-coded **B / F** markers (Back/Front). Accessibility descriptions still include the full side/row/slot and targeting state; no hit-target semantics were removed.
+- Score/action strip reduced to 59dp; CPU/You Power and Light use compact line heights; the circular End Turn shrinks to 50dp. End Turn confirmations, pending-target cancel and Rossi-11 shield actions retain their engine callbacks.
+- Opponent ribbon and top title strip are thinner. The left-side Light/Deck/Hand dock is now narrow enough for portrait; the Light gem display has a compact mode and actual deck cover/count stack instead of overflowing a horizontal row.
+- The hand height and spacing adapt to device dimensions and number of held cards; four cards can lay side-by-side, while larger hands overlap minimally before scrolling. Card panels use their actual **0.72 portrait aspect ratio** rather than filling an arbitrary taller hand dock. Tap, drag/drop, long-press inspect, and legal-target highlights remain connected to the same engine and hit-testing.
+- Reduced ordinary slot outline weight and corner engraving intensity. Selected legal placements and effect targets still glow.
+
+**Verification:** Added three pure Kotlin/JUnit regression cases to `DuelLayoutMetricsTest.kt` for board sizing, hand height, and overlap budget, including short-screen layouts. Source files passed a bracket/quote lexical scan. Android compilation and on-phone screenshot review still require the user's next local `run_local_engine_checks.bat` run. No GitHub Actions credits were used.
