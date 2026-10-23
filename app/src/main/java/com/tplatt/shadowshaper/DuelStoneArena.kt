@@ -141,36 +141,46 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
                     style = Stroke(width = hairline)
                 )
             }
-            // Hairline stone courses where the actual battle rows meet.
-            for (row in 1..3) {
-                val y = h * row / 4f
-                drawLine(
-                    Color(0x7CC7C6BF),
-                    Offset(w * 0.055f, y),
-                    Offset(w * 0.945f, y),
-                    hairline
-                )
-                drawLine(
-                    Color(0x55404040),
-                    Offset(w * 0.055f, y + hairline * 2),
-                    Offset(w * 0.945f, y + hairline * 2),
-                    hairline
-                )
-            }
-            // Column registration marks, deliberately much fainter than a
-            // box around every empty slot.
-            for (column in 1 until ShadowRules.COLUMNS) {
-                val x = w * (column + 0.2f) / (ShadowRules.COLUMNS + 0.4f)
-                drawLine(
-                    Color(0x2CCBCBC6),
-                    Offset(x, h * 0.23f),
-                    Offset(x, h * 0.77f),
-                    hairline
-                )
-            }
             drawRect(
                 color = Color(0xAA929492),
                 style = Stroke(width = 1.2.dp.toPx())
+            )
+        }
+    }
+}
+
+/**
+ * Lines live in the card-lane coordinate system, not the larger stone floor,
+ * so the courses match the four actual Engine row hit rectangles.
+ */
+@Composable
+internal fun DuelArenaGrid(modifier: Modifier = Modifier) {
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val stroke = 0.8.dp.toPx()
+        for (row in 1..3) {
+            val y = h * row / 4f
+            drawLine(
+                Color(0x96E1DED5),
+                Offset(w * 0.015f, y),
+                Offset(w * 0.985f, y),
+                stroke
+            )
+            drawLine(
+                Color(0x5D343635),
+                Offset(w * 0.015f, y + stroke * 1.8f),
+                Offset(w * 0.985f, y + stroke * 1.8f),
+                stroke
+            )
+        }
+        for (col in 1 until ShadowRules.COLUMNS) {
+            val x = w * col / ShadowRules.COLUMNS
+            drawLine(
+                Color(0x2FCDCDC5),
+                Offset(x, h * 0.25f),
+                Offset(x, h * 0.75f),
+                stroke
             )
         }
     }
