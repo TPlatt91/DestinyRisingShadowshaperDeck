@@ -72,9 +72,6 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
             contentScale = ContentScale.FillBounds
         )
         Canvas(Modifier.fillMaxSize()) {
-            val w = size.width
-            val h = size.height
-            val hairline = 0.9.dp.toPx()
             // Original-like atmospheric edge shading over the stone surface.
             drawRect(
                 brush = Brush.horizontalGradient(
