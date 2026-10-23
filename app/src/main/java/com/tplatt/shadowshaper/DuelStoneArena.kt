@@ -118,29 +118,81 @@ internal fun DuelArenaGrid(modifier: Modifier = Modifier) {
     Canvas(modifier) {
         val w = size.width
         val h = size.height
-        val stroke = 0.8.dp.toPx()
-        for (row in 1..3) {
-            val y = h * row / 4f
+        val stroke = .85.dp.toPx()
+        val inset = 2.dp.toPx()
+
+        // A shallow inset slate panel under the four actual rows, in the
+        // original game's lightly chiseled stone style. It's deliberately
+        // translucent so the masonry grain survives the overlay.
+        drawRoundRect(
+            brush = Brush.verticalGradient(
+                listOf(
+                    Color(0x245E6261),
+                    Color(0x129FA19A),
+                    Color(0x20D5D4CA),
+                    Color(0x28505352)
+                )
+            ),
+            topLeft = Offset(inset, inset),
+            size = androidx.compose.ui.geometry.Size(
+                (w - inset * 2f).coerceAtLeast(0f),
+                (h - inset * 2f).coerceAtLeast(0f)
+            ),
+            cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx())
+        )
+        // Top and bottom slab courses provide definition without making
+        // permanent outlined empty card rectangles.
+        for (y in listOf(inset, h - inset)) {
             drawLine(
-                Color(0x96E1DED5),
-                Offset(w * 0.015f, y),
-                Offset(w * 0.985f, y),
-                stroke
-            )
-            drawLine(
-                Color(0x5D343635),
-                Offset(w * 0.015f, y + stroke * 1.8f),
-                Offset(w * 0.985f, y + stroke * 1.8f),
-                stroke
+                Color(0x88D7D6D0),
+                Offset(w * .018f, y),
+                Offset(w * .982f, y), stroke
             )
         }
-        for (col in 1 until ShadowRules.COLUMNS) {
-            val x = w * col / ShadowRules.COLUMNS
+        for (row in 1..3) {
+            val y = h * row / 4f
+            val centerSeam = row == 2
             drawLine(
-                Color(0x2FCDCDC5),
-                Offset(x, h * 0.25f),
-                Offset(x, h * 0.75f),
-                stroke
+                if (centerSeam) Color(0xBBD9D2B9) else Color(0x8FD8D8D1),
+                Offset(w * .018f, y),
+                Offset(w * .982f, y),
+                if (centerSeam) stroke * 1.7f else stroke
+            )
+            drawLine(
+                Color(0x66424748),
+                Offset(w * .018f, y + stroke * 1.8f),
+                Offset(w * .982f, y + stroke * 1.8f), stroke
+            )
+        }
+
+        // Light vertical joinery and tiny registration nicks between
+        // positions, not full-size empty-card placeholders.
+        val columns = ShadowRules.COLUMNS
+        for (col in 1 until columns) {
+            val x = w * col / columns
+            for (row in 0 until 4) {
+                val y0 = h * row / 4f
+                val y1 = h * (row + 1) / 4f
+                drawLine(
+                    Color(0x36DCDDD3),
+                    Offset(x, y0 + h * .012f),
+                    Offset(x, y1 - h * .012f),
+                    stroke * .60f
+                )
+                drawLine(
+                    Color(0x76E0DED5),
+                    Offset(x, y0 + h * .007f),
+                    Offset(x, y0 + h * .027f),
+                    stroke * .90f
+                )
+            }
+        }
+        // Recessed stone side seams: thin, faint and separate from touch.
+        for (x in listOf(inset, w - inset)) {
+            drawLine(
+                Color(0x6A666A69),
+                Offset(x, inset),
+                Offset(x, h - inset), stroke
             )
         }
     }
