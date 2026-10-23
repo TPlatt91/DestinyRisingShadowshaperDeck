@@ -539,6 +539,23 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                             Text("LOG", color = BattleGold, fontSize = 10.sp)
                         }
                     }
+                    // Player Power and its blue Light orb echo the two
+                    // original right-side jewels, below the opposing score.
+                    Row(
+                        Modifier.align(Alignment.BottomEnd)
+                            .padding(end = 12.dp, bottom = 78.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text(
+                                "YOU", color = DuelPalette.gold,
+                                fontSize = 9.sp, fontWeight = FontWeight.Black
+                            )
+                            DuelLightOrb(snapshot.playerLight, snapshot.round)
+                        }
+                        DuelPowerCrest(snapshot.playerPower, isPlayer = true)
+                    }
                     Row(
                         Modifier.align(Alignment.BottomEnd)
                             .padding(end = 7.dp, bottom = 7.dp),
