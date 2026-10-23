@@ -33,6 +33,24 @@ class DuelVisualParityGuardTest {
         )
     }
 
+    @Test fun fracturedRockAndFoliageRenderBehindTheRealCardLanes() {
+        val stone = source("DuelStoneArena.kt")
+        val environment = source("DuelArenaEnvironment.kt")
+        val battle = source("ShadowBattleActivity.kt")
+        assertTrue(stone.contains("DuelArenaEnvironment(Modifier.fillMaxSize())"))
+        assertTrue(battle.contains("DuelStoneArena(Modifier.fillMaxSize())"))
+        assertTrue(battle.contains("DuelArenaGrid(Modifier.fillMaxSize())"))
+        assertTrue(environment.contains("private fun rock("))
+        assertTrue(environment.contains("private fun fern("))
+        assertTrue(environment.contains("private fun vine("))
+        assertTrue(environment.contains("private fun moss("))
+        assertTrue(environment.contains("private fun litter("))
+        assertTrue(environment.contains("by lazy(LazyThreadSafetyMode.SYNCHRONIZED)"))
+        assertTrue(environment.contains("contentDescription = null"))
+        assertFalse(environment.contains("Modifier.clickable"))
+        assertFalse(environment.contains("ShadowEngine."))
+    }
+
     @Test fun cardFramesPreserveSourceArtworkWithoutCoveringNameStrip() {
         val visuals = source("ShadowBattleVisuals.kt")
         assertTrue(visuals.contains("DuelCardArtwork(card, Modifier.fillMaxSize()"))
