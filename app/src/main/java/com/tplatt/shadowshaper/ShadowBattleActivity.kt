@@ -35,6 +35,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -304,7 +305,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
-    Box(Modifier.fillMaxSize().onGloballyPositioned {
+    Box(Modifier.fillMaxSize().safeDrawingPadding().onGloballyPositioned {
         val position = it.boundsInWindow().topLeft
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
     }) {
@@ -326,12 +327,12 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 when {
                     snapshot?.finished == true -> "DUEL COMPLETE"
                     engine?.pendingMovedUnit != null && engine.pendingMoveCaster === engine.human ->
-                        "CHOOSE DESTINATION"
-                    pendingPosition != null -> "SELECT EFFECT TARGET"
+                        "MOVE UNIT"
+                    pendingPosition != null -> "TARGET"
                     snapshot?.playerTurn == true -> "YOUR TURN"
                     snapshot != null -> "CPU TURN"
                     else -> "SINGLE PLAYER"
-                }, color = BattleGold, fontSize = 11.sp
+                }, color = BattleGold, fontSize = 9.sp
             )
         }
         if (engine != null && snapshot != null) {
