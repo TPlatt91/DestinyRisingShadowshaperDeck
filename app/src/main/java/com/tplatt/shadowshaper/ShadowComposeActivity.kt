@@ -28,6 +28,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.width
@@ -75,6 +77,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
@@ -601,45 +605,149 @@ private fun DeckScreen(
 }
 
 @Composable
+private fun CardMetadataLine(label: String, value: String) {
+    if (value.isBlank()) return
+    Column(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
+        Text(label.uppercase(), fontSize = 10.sp, color = Gold, fontWeight = FontWeight.Bold)
+        Text(value, fontSize = 13.sp, color = Cream, lineHeight = 18.sp)
+    }
+}
+
+@Composable
 private fun CardDetailsDialog(
     card: ShadowData.Card, copies: Int,
     onDismiss: () -> Unit, onAdd: () -> Unit, onRemove: () -> Unit
 ) {
-    AlertDialog(
+    var enlarged by remember(card.name) { mutableStateOf(false) }
+    val context = LocalContext.current
+    val keywords = remember(card.name) {
+        ShadowKeywordGlossary.onCard(card, ShadowKeywordGlossary.all(context))
+    }
+    Dialog(
         onDismissRequest = onDismiss,
-        title = { Text(card.name, fontWeight = FontWeight.Bold) },
-        text = {
+        properties = DialogProperties(usePlatformDefaultWidth = false)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.94f).widthIn(max = 540.dp),
+            color = Panel,
+            shape = RoundedCornerShape(16.dp),
+            border = BorderStroke(1.dp, Gold)
+        ) {
             Column {
-                CardArtPreview(card, Modifier.fillMaxWidth().height(225.dp))
-                Spacer(Modifier.height(8.dp))
-                Text("${card.rarity}  •  ${card.faction}", color = Gold, fontWeight = FontWeight.Bold)
-                Text("POWER: ${card.power.ifBlank { "Unknown" }}     LIGHT: ${card.cost.ifBlank { "Unknown" }}",
-                    color = CoolBlue, fontWeight = FontWeight.Bold)
-                if (card.cardNumber.isNotBlank()) Text("Card number: ${card.cardNumber}", color = Secondary)
-                if (card.trigger.isNotBlank()) Text(card.trigger, fontSize = 12.sp, color = Gold)
-                Spacer(Modifier.height(5.dp))
-                Text(card.effect, color = Cream, maxLines = 7)
-                if (card.acquisition.isNotBlank()) Text("Obtain: ${card.acquisition}",
-                    fontSize = 11.sp, color = Secondary)
-                Text(ShadowEffectCoverage.status(card.name, card.effect, card.cost, card.power),
-                    fontSize = 11.sp, color = Secondary, modifier = Modifier.padding(top = 7.dp))
-                Text("In current deck: $copies", color = Gold, fontSize = 12.sp)
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onAdd, enabled = card.isPlayable) { Text("+ ADD") }
-        },
-        dismissButton = {
-            Row {
-                TextButton(onClick = onRemove, enabled = copies > 0) { Text("− REMOVE") }
-                TextButton(onClick = onDismiss) { Text("CLOSE") }
+                Row(
+                    Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        card.name, color = Cream, fontWeight = FontWeight.Bold,
+                        fontSize = 19.sp, modifier = Modifier.weight(1f),
+                        maxLines = 2, overflow = TextOverflow.Ellipsis
+                    )
+                    TextButton(onClick = onDismiss) { Text("CLOSE ×", color = Gold) }
+                }
+                Column(
+                    modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                        .padding(horizontal = 15.dp, vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    CardArtPreview(
+                        card,
+                        Modifier.fillMaxWidth(if (enlarged) 1f else 0.77f)
+                            .aspectRatio(2.48f / 3.46f)
+                            .clickable { enlarged = !enlarged }
+                    )
+                    Spacer(Modifier.height(5.dp))
+                    TextButton(onClick = { enlarged = !enlarged }) {
+                        Text(
+                            if (enlarged) "SHOW CARD DETAILS" else "ENLARGE CARD ART",
+                            color = Gold, fontSize = 12.sp
+                        )
+                    }
+                    if (!enlarged) {
+                        Column(Modifier.fillMaxWidth()) {
+                            HorizontalDivider(color = Raised)
+                            Spacer(Modifier.height(9.dp))
+                            Text(
+                                "${card.rarity.ifBlank { "Unknown rarity" }}  •  ${card.faction.ifBlank { "Unknown faction" }}",
+                                color = Gold, fontSize = 15.sp, fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                "POWER ${card.power.ifBlank { "?" }}   •   LIGHT ${card.cost.ifBlank { "?" }}",
+                                color = CoolBlue, fontSize = 16.sp, fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(10.dp))
+                            CardMetadataLine("Printed card effect", card.effect.ifBlank { "No effect recorded." })
+                            if (card.trigger.isNotBlank()) {
+                                CardMetadataLine(
+                                    if (ShadowData.hasVideoEffectEvidence(card)) "Catalog trigger (may be older)"
+                                    else "Catalog trigger",
+                                    card.trigger
+                                )
+                            }
+                            CardMetadataLine("Card number", card.cardNumber)
+                            CardMetadataLine("Classification", card.classification.ifBlank {
+                                if (card.isPlayable) "Deck-playable" else "Summon-only / not deck-playable"
+                            })
+                            CardMetadataLine("Acquisition", card.acquisition)
+                            CardMetadataLine("Card notes", card.notes)
+                            CardMetadataLine("Metadata source", card.source)
+                            if (!card.isPlayable) {
+                                Text(
+                                    "This card cannot be added to a constructed deck.",
+                                    color = Warn, fontSize = 12.sp
+                                )
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                "KEYWORDS ON THIS CARD", color = Gold,
+                                fontSize = 13.sp, fontWeight = FontWeight.Bold
+                            )
+                            if (keywords.isEmpty()) {
+                                Text(
+                                    "No defined keywords appear in this card's recorded ability.",
+                                    color = Secondary, fontSize = 12.sp
+                                )
+                            } else {
+                                ShadowKeywordDefinitions(
+                                    keywords, accent = Gold, foreground = Cream,
+                                    secondary = Secondary
+                                )
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                ShadowEffectCoverage.status(
+                                    card.name, card.effect, card.cost, card.power
+                                ),
+                                fontSize = 11.sp, color = Secondary
+                            )
+                        }
+                    }
+                }
+                HorizontalDivider(color = Raised)
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "IN DECK: $copies", color = Gold, fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                    TextButton(onClick = onRemove, enabled = copies > 0) {
+                        Text("− REMOVE")
+                    }
+                    TextButton(onClick = onAdd, enabled = card.isPlayable) {
+                        Text("+ ADD")
+                    }
+                }
             }
         }
-    )
+    }
 }
 
 @Composable
 private fun RulesScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val keywords = remember(context) { ShadowKeywordGlossary.all(context) }
     val sections = listOf(
         "OBJECTIVE" to "Finish round 6 with more total surviving Power than your opponent. Ties are draws.",
         "DECK LEGALITY" to "Construct exactly 15 cards. No more than 2 of a name, 3 Exotic, or 5 Mythic. Generated tokens cannot be placed directly into a constructed deck.",
@@ -665,6 +773,31 @@ private fun RulesScreen(onBack: () -> Unit) {
                         Text(heading, fontSize = 15.sp, fontWeight = FontWeight.Bold, color = Gold)
                         Spacer(Modifier.height(5.dp))
                         Text(body, fontSize = 13.sp, lineHeight = 19.sp, color = Cream)
+                    }
+                }
+            }
+            item {
+                Text(
+                    "KEYWORD GLOSSARY", color = Gold, fontWeight = FontWeight.Bold,
+                    fontSize = 18.sp, modifier = Modifier.padding(top = 10.dp, bottom = 4.dp)
+                )
+            }
+            items(keywords, key = { it.name }) { keyword ->
+                Card(colors = CardDefaults.cardColors(containerColor = Panel)) {
+                    Column(Modifier.fillMaxWidth().padding(14.dp)) {
+                        Text(
+                            keyword.name.uppercase(), color = Gold,
+                            fontWeight = FontWeight.Bold, fontSize = 15.sp
+                        )
+                        Spacer(Modifier.height(5.dp))
+                        Text(keyword.definition, color = Cream, fontSize = 13.sp, lineHeight = 19.sp)
+                        if (!keyword.recordedTooltip) {
+                            Text(
+                                "Simulator mechanic explanation",
+                                color = Secondary, fontSize = 11.sp,
+                                modifier = Modifier.padding(top = 5.dp)
+                            )
+                        }
                     }
                 }
             }
