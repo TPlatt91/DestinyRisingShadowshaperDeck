@@ -134,6 +134,33 @@ class ShadowFullMatchSmokeTest {
         }
     }
 
+    @Test fun liveFullMatchCatalogPreservesRecordedRowRequirements() {
+        // These are printed in the user's card-detail recordings; an old
+        // card_details.tsv trigger must not silently override the footage.
+        val catalog = liveCatalog()
+        val engine = ShadowEngine(catalog, 123L)
+        for ((name, row) in listOf(
+            "Jaren" to ShadowRules.FRONT_ROW,
+            "Bazinet" to ShadowRules.BACK_ROW
+        )) {
+            val card = catalog.getValue(name)
+            assertEquals("Missing direct video source for $name",
+                ShadowData.VIDEO_SOURCE, card.source)
+            assertEquals("Recorded row lost for $name",
+                row, ShadowData.videoRequiredRow(card))
+            assertTrue("$name should activate in recorded row",
+                engine.activeInRow(card, row))
+            assertFalse("$name should not activate in opposite row",
+                engine.activeInRow(card, 1 - row))
+        }
+        val harrow = catalog.getValue("Harrow")
+        assertEquals(ShadowData.VIDEO_SOURCE, harrow.source)
+        assertNull("Harrow's recorded effect has no row restriction",
+            ShadowData.videoRequiredRow(harrow))
+        assertTrue(engine.activeInRow(harrow, ShadowRules.BACK_ROW))
+        assertTrue(engine.activeInRow(harrow, ShadowRules.FRONT_ROW))
+    }
+
     @Test fun everyPrintedVideoCardHasValidNumericStatsAndSourceName() {
         val catalog = liveCatalog()
         assertTrue("Unexpectedly short card catalog", catalog.size >= 121)
