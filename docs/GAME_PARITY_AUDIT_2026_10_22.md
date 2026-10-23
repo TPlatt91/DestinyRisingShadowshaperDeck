@@ -298,3 +298,14 @@ Following the 355-test estimated checkpoint, a review of existing Scorched, bonu
 4. Exhausted draw piles do not create phantom cards or block a round transition.
 
 **Estimated new total:** 359 regression methods. These and the earlier newly added 11 tests await the user's *single* local run. Other audit uncertainties (original-game random summon weighting, exact simultaneous trigger timing, board size, original NPC behavior) cannot be certified from current footage/metadata alone and are not solved by inventing tests with guessed expected outcomes. Video evidence remains authoritative, never Today in Destiny. No GitHub Actions or workflow minutes are used.
+
+
+## Large card viewer and keyword reference — 23 October 2026
+
+**Collection/deck card detail screen:** Replaced the 225dp-high thumbnail dialog with a large scrollable card-inspection window, preserving full card-frame aspect ratio and animated local GIF playback through the existing `CardArt.bind` implementation. The artwork can be tapped or enlarged with a button for a larger, full-width art view; deck +ADD/-REMOVE controls remain fixed and visible. The detail panel shows printed effect, rarity, faction, Power, Light, card number, classification/deck eligibility, acquisition, notes, catalog trigger and provenance. Recorded in-game effects take precedence; potentially stale catalog-trigger fields are identified as such.
+
+**In-match inspection:** Enlarged the displayed card frame and appended classification, acquisition, original card notes, provenance, and on-card keyword definitions without changing battle state.
+
+**Single glossary:** `ShadowKeywordGlossary.kt` reads the **eight original-video tooltip records** from `app/src/main/assets/video_keyword_rules_01_14.tsv`. Both card viewers and Rules consume the same definitions. The supplemental Scorched/Overshield explanations are labeled as simulator mechanics, not falsely presented as captured tooltip quotations. A keyword appears in a card's information only if its effect/trigger actually mentions that term. Rules now presents all available definitions, including those supplemental entries.
+
+**Local validation:** Five JVM keyword parsing/selection tests were added in `ShadowKeywordGlossaryTest.kt`. The Android UI and these tests have **not** been run locally yet. No GitHub Actions were run. The last user-pushed BAT result predating this viewer update was successful.
