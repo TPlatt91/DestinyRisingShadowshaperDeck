@@ -310,7 +310,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
     }) {
     Column(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0xFF121115),Color(0xFF211A1A),Color(0xFF131217))))) {
-        Row(Modifier.fillMaxWidth().height(32.dp)
+        Row(Modifier.fillMaxWidth().height(29.dp)
             .background(Brush.horizontalGradient(listOf(Color(0xFF32241C),Color(0xFF221B1B),Color(0xFF32251E))))
             .border(width = 1.dp, color = Color(0xFF8D6748))
             .padding(horizontal = 10.dp),
@@ -341,7 +341,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 Row(
-                    Modifier.fillMaxWidth().height(50.dp)
+                    Modifier.fillMaxWidth().height(44.dp)
                         .background(Color(0xFF202124), RoundedCornerShape(3.dp))
                         .border(1.dp, Color(0xFF686967), RoundedCornerShape(3.dp))
                         .padding(horizontal = 6.dp),
@@ -577,17 +577,22 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 Column(Modifier.width(51.dp), horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(3.dp)) {
                     DuelLightMeter(snapshot.playerLight, snapshot.round, compact = true)
-                    Row(verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        DuelCardCover(chosenCover, Modifier.width(19.dp).height(28.dp))
-                        Text("DECK " + engine.human.drawPile.size +
-                            "\nHAND " + snapshot.playerHand,
-                            color = BattleFaded, fontSize = 9.sp, lineHeight = 10.sp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        DuelCardCover(chosenCover, Modifier.width(16.dp).height(23.dp))
+                        Text("${engine.human.drawPile.size}",
+                            color = BattleFaded, fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold)
                     }
+                    Text("HAND ${snapshot.playerHand}",
+                        color = BattleFaded, fontSize = 8.sp, maxLines = 1)
                 }
                 LazyRow(
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(
                         DuelLayoutMetrics.portraitHandSpacing(
                             engine.human.hand.size,
@@ -598,7 +603,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     itemsIndexed(engine.human.hand.toList()) { index, card ->
                         Card(
                             modifier = Modifier.width(if (screenConfig.screenWidthDp < 380) 70.dp else 76.dp)
-                                .fillMaxHeight()
+                                .aspectRatio(DuelLayoutMetrics.CARD_WIDTH_TO_HEIGHT)
                                 .zIndex(if (selectedIndex == index || draggedIndex == index) 5f else index.toFloat() / 100f)
                                 .graphicsLayer {
                                     val midpoint = (engine.human.hand.size - 1) / 2f
