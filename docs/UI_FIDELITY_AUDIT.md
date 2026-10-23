@@ -118,3 +118,18 @@ This pass implements the next Kotlin/Compose battle presentation milestones:
 ## Card-text correction documented
 
 A [Shadowshaper community discussion](https://www.reddit.com/r/destinyrisingmobile/comments/1nk0bde/shadowshaper_duel_4unit_line_how_does_it_work/) reports a correction to **Scorpius**: a Back Row sustained ability dealing 1 damage to two random opposing cards at end of turn. The catalog, runtime, and two local regression tests now use that reading. This should still be checked against the user's current game client.
+
+
+## Battle UI authenticity pass 01 — 23 October 2026
+
+**Scope:** Live landscape `ShadowBattleActivity.kt`, reusable visuals and layout sizing; no game-engine/card-mechanic edits.
+
+- **Gameplay controls:** Moved End Turn/Cancel Target and conditional Rossi-11 Shield Self next to the right-side scoreboard (matching the documented in-game control region), retaining the existing Light-spending confirmation and pending-relocation guards. The bottom dock remains dedicated to playable hand cards, the Light meter, chosen cover/deck count, and concise guidance.
+- **More readable field:** Shortened the top header; reduced left HUD width and horizontal row-label footprint; compacted all six round pips so they fit short landscape phones; removed placeholder middle dots from unoccupied card slots. Board width remains the same six legal columns and row ordering remains CPU Back/Front then Player Front/Back.
+- **Visual hierarchy:** Darkened the central board and surrounding backdrop; retained bronze/gold and the mirrored position semantics. Removed the large default match-event transcript from the right sidebar; latest event appears only with enough room, with the full event log still accessible from its dedicated button.
+- **Card art reliability:** Eliminated `LocalContext.current as? Activity` assumptions in both battlefield card-face and card-back composables. The underlying `CardArt` loaders now accept ordinary Android Context instances and post decoded bitmap/GIF results back onto each target ImageView. That fixes a cause of art silently failing to load under Compose context wrappers. The full original card-image assets are still used unmodified.
+- **Regression expectations:** Updated `DuelLayoutMetricsTest.kt` to reflect narrowed left HUD sizes without changing playmat slot count.
+
+**Reference scope and limitations:** The right-side End Turn location and scoring concepts are supported by the Game8 Destiny: Rising Shadowshaper Duels gameplay guide, and the use of original card art is supported by the user's existing assets. This is **the first fidelity pass**, not a claim of identical texture art, exact typography, unit animations, original audio, or proprietary visual assets. The exact screen geometry still requires comparison with user-recorded original-client battle footage on matching landscape dimensions.
+
+**Verification:** Changes have been pushed to GitHub but no Android device run or Gradle compilation was performed for this UI pass. Run `run_local_engine_checks.bat` locally after pulling, install the new APK, and compare the same battlefield state against the game's recorded screenshots. No GitHub Actions are needed.
