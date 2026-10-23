@@ -118,11 +118,6 @@ internal fun DuelCardInspection(
                             card.effect.ifBlank { "No special effect." },
                             color = DuelPalette.cream, fontSize = 14.sp, lineHeight = 19.sp
                         )
-                        if (card.trigger.isNotBlank()) {
-                            Spacer(Modifier.height(8.dp))
-                            Text("ACTIVATES: " + card.trigger,
-                                color = DuelPalette.dullGold, fontSize = 11.sp)
-                        }
                         if (card.cardNumber.isNotBlank()) {
                             Text("CARD ID: " + card.cardNumber,
                                 color = DuelPalette.dullGold, fontSize = 11.sp)
