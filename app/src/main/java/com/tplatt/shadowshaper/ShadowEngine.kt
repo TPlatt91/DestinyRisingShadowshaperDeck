@@ -235,6 +235,12 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     fun isTargeted(card: ShadowData.Card): Boolean = effects.isTargeted(card.name)
 
     internal fun activeInRow(card: ShadowData.Card, row: Int): Boolean {
+        // Recorded in-client wording is authoritative; metadata rows can
+        // contain earlier community/TodayInDestiny trigger restrictions.
+        if (ShadowData.videoHasExplicitAbilityHeader(card)) {
+            val required = ShadowData.videoRequiredRow(card)
+            return required == null || row == required
+        }
         var requirement = card.trigger.lowercase(Locale.ROOT)
         if (requirement.isEmpty()) {
             val text = card.effect.lowercase(Locale.ROOT)

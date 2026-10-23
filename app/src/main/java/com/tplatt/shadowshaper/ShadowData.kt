@@ -12,6 +12,8 @@ import java.util.LinkedHashMap
  * The three on-device catalog TSV files and original saved-deck JSON remain intact.
  */
 object ShadowData {
+    /** Direct in-game card-detail captures outrank community/site metadata. */
+    const val VIDEO_SOURCE = "User-supplied Shadowshaper card-detail video"
     const val DECK_SIZE = ShadowRules.DECK_SIZE
     const val COPIES_LIMIT = ShadowRules.COPY_LIMIT
     const val EXOTIC_LIMIT = ShadowRules.EXOTIC_LIMIT
@@ -57,21 +59,62 @@ object ShadowData {
                     val fields = line.split('|', limit = 11)
                     if (fields.size != 10) return@forEachLine
                     val card = result[fields[0]] ?: return@forEachLine
-                    card.faction = fields[1]
-                    card.rarity = fields[2]
-                    card.cost = fields[3]
-                    card.power = fields[4]
-                    card.classification = fields[5]
-                    card.trigger = fields[6]
-                    card.acquisition = fields[7]
-                    card.notes = fields[8]
-                    card.cardNumber = fields[9]
+                    applyDetailedMetadata(card, fields)
                 }
             }
         } catch (_: Exception) {
             // Missing optional metadata never removes the base card catalog.
         }
         return LinkedHashMap(result)
+    }
+
+    /**
+     * Applies acquisition/classification fields without allowing old metadata
+     * to overwrite a verified in-game card's rarity, faction, Light or Power.
+     *
+     * Card-detail videos supply the printed effect in verified_video_cards.tsv;
+     * card_details.tsv is a separate annotation layer, not a source override.
+     */
+    internal fun applyDetailedMetadata(card: Card, fields: List<String>) {
+        if (fields.size != 10) return
+        if (card.source != VIDEO_SOURCE) {
+            card.faction = fields[1]
+            card.rarity = fields[2]
+            card.cost = fields[3]
+            card.power = fields[4]
+        }
+        card.classification = fields[5]
+        card.trigger = fields[6]
+        card.acquisition = fields[7]
+        card.notes = fields[8]
+        card.cardNumber = fields[9]
+    }
+
+    /**
+     * Only the recorded effect text may introduce a row restriction for
+     * video-verified cards. When the recorded card says "When Played:" with
+     * no row condition, older community trigger metadata must not invent one.
+     *
+     * Returns the required row, or null when there is no printed requirement
+     * or this entry has no verified video effect.
+     */
+    internal fun videoRequiredRow(card: Card): Int? {
+        if (card.source != VIDEO_SOURCE) return null
+        val header = card.effect.substringBefore(':').trim()
+        val match = Regex(
+            """\\b(?:when played|sustained)\\s*\\([^)]*\\b(back|front)\\s+row\\b[^)]*\\)""",
+            RegexOption.IGNORE_CASE
+        ).find(header) ?: return null
+        return if (match.groupValues[1].equals("back", true))
+            ShadowRules.BACK_ROW else ShadowRules.FRONT_ROW
+    }
+
+    internal fun videoHasExplicitAbilityHeader(card: Card): Boolean {
+        if (card.source != VIDEO_SOURCE) return false
+        val header = card.effect.substringBefore(':').trim()
+        return header.startsWith("When Played", true) ||
+            header.startsWith("Sustained", true) ||
+            card.effect.contains("no special effects", true)
     }
 
     private fun readCatalog(
@@ -95,7 +138,7 @@ object ShadowData {
                             existing.cost = fields[3]
                             existing.power = fields[4]
                             existing.effect = fields[5]
-                            existing.source = "User-supplied Shadowshaper card-detail video"
+                            existing.source = VIDEO_SOURCE
                         }
                         return@forEachLine
                     }
@@ -103,7 +146,7 @@ object ShadowData {
                     card.name = fields[0]
                     card.onlineArt = !expanded
                     card.source = when (file) {
-                        "verified_video_cards.tsv" -> "User-supplied Shadowshaper card-detail video"
+                        "verified_video_cards.tsv" -> VIDEO_SOURCE
                         "cards.tsv" -> "https://www.todayindestiny.com/rising/shadowshaper_duels/cards"
                         else -> "https://www.reddit.com/r/ShadowshaperDuels/comments/1nklv84/"
                     }
