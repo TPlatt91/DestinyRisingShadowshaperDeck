@@ -44,10 +44,12 @@ public class ShadowEffectFamiliesTest {
         assertEquals(6,g.power(targetUnit)); // second buff is only +1
         assertFalse(tanUnit.suppressed);
     }
-    @Test public void unrelentingCaptainSummonsDregWhenCaptainItselfGetsBonus(){
+    // User-recorded text: Unrelenting Captain buffs newly deployed Dregs;
+    // acquiring a bonus itself is NOT a Dreg summoning ability.
+    @Test public void unrelentingCaptainBuffsNewDregsButDoesNotSummonOnSelfBuff(){
         ShadowEngine g=game();
         ShadowData.Card captain=make("Unrelenting Captain","Fallen",1,1,
-            "When acquiring a Power bonus, summons a Fallen Dreg on the left.");
+            "Sustained: Each Dreg deployed gains +1 Power.");
         ShadowData.Card dreg=make("Dreg","Fallen",1,1,"No special effects.");
         ShadowData.Card mor=make("Morgran","Humans",3,6,"Grants +1 Power to a unit.");
         ShadowEngine.Unit captainUnit=new ShadowEngine.Unit(g.human,captain,0,2);
@@ -55,9 +57,7 @@ public class ShadowEffectFamiliesTest {
         g.human.hand.clear();g.human.hand.add(mor);g.human.points=3;
         assertTrue(g.play(g.human,0,1,3,new ShadowEngine.Target(g.human,0,2)));
         assertEquals(2,g.power(captainUnit));
-        assertNotNull(g.human.board[0][1]);
-        assertEquals("Dreg",g.human.board[0][1].card.name);
-        assertEquals(1,g.power(g.human.board[0][1]));
+        assertNull(g.human.board[0][1]);
     }
     @Test public void cursedThrallTransfersAndDetonatesOnOriginalPlayersNextTurn(){
         ShadowEngine g=game();
@@ -204,12 +204,12 @@ public class ShadowEffectFamiliesTest {
     @Test public void xuanWeiRequiresAndResolvesSurvivingTargetRelocation(){
         ShadowEngine g=game();
         ShadowData.Card xuan=make("Xuan Wei","Humans",3,6,
-            "When Played (Back Row): Deals 5 damage to an enemy and moves it.");
+            "When Played (Front Row): Deals 5 damage to an enemy and moves it.");
         ShadowData.Card victim=cards.get("Filler 0");
         ShadowEngine.Unit unit=new ShadowEngine.Unit(g.cpu,victim,1,0);
         unit.power=10;g.cpu.board[1][0]=unit;
         g.human.hand.clear();g.human.hand.add(xuan);g.human.points=3;
-        assertTrue(g.play(g.human,0,0,2,new ShadowEngine.Target(g.cpu,1,0)));
+        assertTrue(g.play(g.human,0,1,2,new ShadowEngine.Target(g.cpu,1,0)));
         assertEquals(5,unit.power);
         assertSame(unit,g.pendingMovedUnit);
         assertSame(g.human,g.pendingMoveCaster);
