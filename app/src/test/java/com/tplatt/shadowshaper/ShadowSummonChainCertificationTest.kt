@@ -82,4 +82,54 @@ class ShadowSummonChainCertificationTest {
         })
         assertEquals(2, zhiyao.bonus)
     }
+    @Test fun ningFeiCloneDestructionDamagesHostRowNeighborsOnly() {
+        val e = game()
+        // Leave one enemy Front Row opening so Ning Fei's summoned Clone has
+        // an unambiguous position between two surviving enemy units.
+        val left = put(e, e.cpu, "Blocker", 0)
+        val right = put(e, e.cpu, "Blocker", 2)
+        for (col in 3 until ShadowRules.COLUMNS) put(e, e.cpu, "Blocker", col)
+        val otherRow = ShadowEngine.Unit(e.cpu, e.catalog.getValue("Blocker"), 0, 1)
+        e.cpu.board[0][1] = otherRow
+        val zhiyao = ShadowEngine.Unit(e.human, e.catalog.getValue("Zhiyao"), 0, 5)
+        e.human.board[0][5] = zhiyao
+
+        play(e, "Ning Fei", 0)
+        val clone = e.cpu.board[1][1]!!
+        assertEquals("Clone", clone.card.name)
+        assertEquals(1, zhiyao.bonus) // Enemy Front Row arrival happened once.
+
+        val attacker = put(e, e.human, "Blocker", 4)
+        e.dealDirect(attacker, clone, 1)
+        e.sweep()
+
+        assertNull(e.cpu.board[1][1])
+        assertEquals(7, left.power)
+        assertEquals(7, right.power)
+        assertEquals(10, otherRow.power) // Left/right does not cross rows.
+        assertEquals(1, zhiyao.bonus) // A destruction is not a new placement.
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun twoSimultaneousCloneSplashesConsumeShieldThenDamageSharedNeighbor() {
+        val e = game()
+        val first = put(e, e.cpu, "Clone", 1)
+        val second = put(e, e.cpu, "Clone", 3)
+        val middle = put(e, e.cpu, "Blocker", 2)
+        middle.overshield = true
+        val attacker = put(e, e.human, "Blocker", 4)
+
+        // Both Clone deaths belong to the same sweep; the first splash
+        // spends Overshield and the second is an independent damaging event.
+        e.dealDirect(attacker, first, 1)
+        e.dealDirect(attacker, second, 1)
+        e.sweep()
+
+        assertNull(e.cpu.board[1][1])
+        assertNull(e.cpu.board[1][3])
+        assertFalse(middle.overshield)
+        assertEquals(7, middle.power)
+        assertEquals(0, e.unresolvedEffects)
+    }
+
 }
