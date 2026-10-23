@@ -39,15 +39,15 @@ class DuelLayoutMetricsTest {
         assertEquals(7, ShadowRules.COLUMNS)
     }
     @Test fun portraitLaneWidthLeavesBothRubbleMarginsVisible() {
-        assertEquals(0.86f, DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION, 0.001f)
+        assertEquals(0.70f, DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION, 0.001f)
         assertEquals(ShadowRules.COLUMNS, 7)
     }
 
     @Test fun portraitBoardHeightUsesPhoneWidthInsteadOfStretchingAllRows() {
-        assertEquals(300.3f, DuelLayoutMetrics.portraitBoardHeight(390, 820), 0.01f)
-        assertEquals(246.4f, DuelLayoutMetrics.portraitBoardHeight(320, 630), 0.01f)
+        assertEquals(273f, DuelLayoutMetrics.portraitBoardHeight(390, 820), 0.01f)
+        assertEquals(224f, DuelLayoutMetrics.portraitBoardHeight(320, 630), 0.01f)
         assertEquals(145f, DuelLayoutMetrics.portraitBoardHeight(520, 420), 0.01f)
-        assertEquals(281f, DuelLayoutMetrics.portraitBoardHeight(390, 640), 0.01f)
+        assertEquals(273f, DuelLayoutMetrics.portraitBoardHeight(390, 640), 0.01f)
     }
 
     @Test fun portraitHandDockIsRoomierOnTallPhonesButBounded() {
