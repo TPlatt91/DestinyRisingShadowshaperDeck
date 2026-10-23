@@ -149,3 +149,17 @@ A [Shadowshaper community discussion](https://www.reddit.com/r/destinyrisingmobi
 4. Card gallery artwork loads from the same local PNG/WebP/GIF files already used elsewhere. No changes to the verified card metadata or printed effects.
 
 **Verification boundary:** Repository edits were made directly; a device screenshot comparison and `run_local_engine_checks.bat` execution are still required. These are **reference-matched layouts and custom-drawn materials**, not the proprietary game's original texture/image resources. Exact pixel parity, fonts, HUD ornaments, animation frames, and sound effects remain further fidelity work. Do not use Today in Destiny as gameplay effect authority. No GitHub Actions/credits have been used.
+
+
+## Portrait orientation restoration — 23 October 2026
+
+**Explicit user correction:** The app must remain **upright (portrait)** on the phone. The preceding screenshot-driven landscape UI work should not turn the device sideways, even though source Destiny: Rising screenshots were landscape.
+
+- `AndroidManifest.xml` now locks both the Compose launcher and live battle activity to `portrait`; the runtime activities explicitly request `SCREEN_ORIENTATION_PORTRAIT`. The earlier navigation effect that rotated Deck Construction and Card Collection to landscape has been removed.
+- **Battle:** left utility and right scoreboard sidebars were rearranged into a compact opponent/round header above the board and a horizontal score, Light, End Turn, Shield Self (if relevant), and Log strip below it. All six columns now use the available portrait width. The hand still fans and supports drag/drop, long-press inspection and target prompts; system status/navigation bars are respected.
+- **Deck Construction:** replaced narrow side-by-side panels with **CARD GALLERY / MY DECK** tabs, preserving the card filters, 15-card deck, cost distribution, save/play, import/export, covers and deck management. The gallery and deck each use a portrait three-column card grid.
+- **Card Collection:** the same visual library shell uses a three-column full-width grid and two-row search/filter controls, without a deck panel.
+- **In-battle inspection:** card artwork is above its stats, original printed effect, and keyword explanations in a scrollable portrait dialog, rather than squeezed alongside them.
+- Added `ShadowPortraitOrientationTest.kt` to catch accidental activity landscape locks and runtime orientation regressions in future local checks.
+
+**Verification:** Latest user-pushed local build **before** these portrait edits was successful. The new portrait code still requires `run_local_engine_checks.bat` and a fresh on-phone screenshot/layout inspection. These are layout fixes, not new card rules. Zero GitHub Actions usage.
