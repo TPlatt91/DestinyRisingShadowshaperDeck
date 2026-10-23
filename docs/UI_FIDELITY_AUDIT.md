@@ -249,6 +249,10 @@ The latest user-installed screenshot confirmed that the cache-based rubble/fern 
 6. **Subtle stone age/weathering** (`DuelArenaPatina.kt`): a noninteractive layer adds a few incomplete worn circular seals, masonry scratches, chipped stone seams, small old heraldic diamond stamps and edge abrasion below the cached rubble bitmap. Never draws false unit positions or sits on top of the cards.
 7. **Guardrails** (`DuelVisualParityGuardTest.kt`, `DuelLayoutMetricsTest.kt`): layout checks assert centered 86% seven-column grid, intact user/CPU Power medallions, noninteractive patina, proper layer order, deck/log utility positioning, and responsive compact board dimensions.
 
+### Additional battle-only presentation
+
+The battle Activity now uses **immersive-sticky full-screen** (with swipe-to-reveal Android bars), while keeping its portrait orientation. This removes the large Android status/navigation margins visible in the user's phone screenshot, bringing the HUD layout closer to the original game's immersive presentation. Home, Collection and Deck Construction are not changed by this battle-only setting. The local regression guard checks the fullscreen intent.
+
 ### Remaining boundary
 
 This is a **source-implemented visual refinement**, not a device-screenshot-verified pixel match. The original game's proprietary stone/rubble photographs, typography, sound and animated effects have not been extracted. The procedural visual source is the user's screenshots and their existing card art. The user must pull the updated GitHub sources, run `run_local_engine_checks.bat` on Windows and reinstall the APK before another side-by-side comparison. Do not run GitHub Actions or change original video-established card rules merely for visual matching.
