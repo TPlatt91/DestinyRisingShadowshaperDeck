@@ -340,31 +340,6 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 Modifier.weight(1f).fillMaxWidth().padding(3.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                Row(
-                    Modifier.fillMaxWidth().height(44.dp)
-                        .background(Color(0xFF202124), RoundedCornerShape(3.dp))
-                        .border(1.dp, Color(0xFF686967), RoundedCornerShape(3.dp))
-                        .padding(horizontal = 6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("OPPONENT", color = DuelPalette.red, fontSize = 9.sp)
-                        DuelCardBacks(snapshot.cpuHand)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("ROUND ${snapshot.round} / ${ShadowRules.ROUNDS}",
-                            color = DuelPalette.gold, fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold)
-                        DuelRoundMarkers(snapshot.round)
-                    }
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("CPU DECK ${engine.cpu.drawPile.size}",
-                            color = BattleFaded, fontSize = 9.sp)
-                        Text(if (engine.humanFirst) "OFFENSIVE" else "DEFENSIVE",
-                            color = DuelPalette.blue, fontSize = 9.sp)
-                    }
-                }
                 // Stone fills the entire arena, including the space above
                 // and below the tightly grouped card rows. No black gutters.
                 Box(
@@ -484,86 +459,92 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     }
                     }
                 }
-                }
-                // Portrait: the score and action medallions sit below the
-                // full-width stone field, never shrink the seven card columns.
-                Row(
-                    Modifier.fillMaxWidth().height(59.dp)
-                        .background(Color(0xFF1A1B1D), RoundedCornerShape(4.dp))
-                        .border(1.dp, Color(0xFF66615B), RoundedCornerShape(4.dp))
-                        .padding(horizontal = 5.dp, vertical = 1.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp)
-                ) {
-                    Column(
-                        Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
+                    // In the original game the deck stack and score/light
+                    // ornaments surround the centered card lanes on stone.
+                    Row(
+                        Modifier.align(Alignment.TopStart)
+                            .padding(start = 8.dp, top = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("CPU", color = DuelPalette.red, fontSize = 9.sp,
-                            maxLines = 1)
-                        Text("${snapshot.cpuPower}", color = DuelPalette.cream,
-                            fontWeight = FontWeight.Black, fontSize = 19.sp,
-                            lineHeight = 20.sp)
-                        Text("✦ ${snapshot.cpuLight}/${snapshot.round}",
-                            color = DuelPalette.blue, fontSize = 9.sp,
-                            maxLines = 1)
+                        DuelUtilityPill(snapshot.cpuHand, engine.cpu.drawPile.size)
                     }
                     Column(
-                        Modifier.weight(1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(0.dp)
-                    ) {
-                        Text("YOU", color = DuelPalette.gold, fontSize = 9.sp,
-                            maxLines = 1)
-                        Text("${snapshot.playerPower}", color = DuelPalette.cream,
-                            fontWeight = FontWeight.Black, fontSize = 19.sp,
-                            lineHeight = 20.sp)
-                        Text("✦ ${snapshot.playerLight}/${snapshot.round}",
-                            color = DuelPalette.blue, fontSize = 9.sp,
-                            maxLines = 1)
-                    }
-                    if (pendingPosition != null &&
-                        engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
-                        TextButton(onClick = { shieldRossiSelf() }) {
-                            Text("SHIELD", color = DuelPalette.gold, fontSize = 9.sp)
-                        }
-                    }
-                    Button(
-                        enabled = snapshot.playerTurn && !snapshot.finished,
-                        onClick = {
-                            if (pendingPosition != null) pendingPosition = null
-                            else if (engine.pendingMovedUnit != null)
-                                message = "Choose a relocation slot first."
-                            else if (engine.human.points > 0 &&
-                                engine.human.hand.indices.any {
-                                    engine.affordable(engine.human, it)
-                                }) endConfirmation = true
-                            else current.endTurn()
-                        },
-                        modifier = Modifier.size(50.dp)
-                            .border(2.dp, Color(0xFFCA9956), CircleShape),
-                        shape = CircleShape,
-                        contentPadding = PaddingValues(3.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF65471F),
-                            contentColor = DuelPalette.cream
-                        )
+                        Modifier.align(Alignment.TopCenter)
+                            .padding(top = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
-                            when {
+                            "ROUND ${snapshot.round}/${ShadowRules.ROUNDS}",
+                            color = DuelPalette.cream,
+                            fontWeight = FontWeight.Black, fontSize = 12.sp
+                        )
+                        DuelRoundMarkers(snapshot.round)
+                    }
+                    Column(
+                        Modifier.align(Alignment.TopEnd)
+                            .padding(top = 37.dp, end = 9.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        DuelLightOrb(snapshot.cpuLight, snapshot.round)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                "CPU", color = DuelPalette.red,
+                                fontSize = 9.sp, fontWeight = FontWeight.Bold
+                            )
+                            DuelPowerCrest(snapshot.cpuPower, isPlayer = false)
+                        }
+                    }
+                    Row(
+                        Modifier.align(Alignment.BottomStart)
+                            .padding(start = 7.dp, bottom = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        DuelPowerCrest(snapshot.playerPower, isPlayer = true)
+                        Column {
+                            Text(
+                                "YOU", color = DuelPalette.gold,
+                                fontSize = 9.sp, fontWeight = FontWeight.Black
+                            )
+                            DuelLightOrb(snapshot.playerLight, snapshot.round)
+                        }
+                        if (pendingPosition != null &&
+                            engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
+                            TextButton(onClick = { shieldRossiSelf() }) {
+                                Text("SHIELD", color = DuelPalette.gold, fontSize = 9.sp)
+                            }
+                        }
+                    }
+                    Row(
+                        Modifier.align(Alignment.BottomEnd)
+                            .padding(end = 7.dp, bottom = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        TextButton(
+                            onClick = { showLog = true },
+                            contentPadding = PaddingValues(horizontal = 4.dp)
+                        ) {
+                            Text("LOG", color = BattleGold, fontSize = 10.sp)
+                        }
+                        DuelGoldTurnDial(
+                            enabled = snapshot.playerTurn && !snapshot.finished,
+                            label = when {
                                 pendingPosition != null -> "CANCEL"
                                 engine.pendingMovedUnit != null -> "MOVE"
                                 else -> "END\nTURN"
                             },
-                            fontSize = 9.sp, fontWeight = FontWeight.Black,
-                            maxLines = 2, lineHeight = 10.sp,
-                            textAlign = TextAlign.Center
+                            onClick = {
+                                if (pendingPosition != null) pendingPosition = null
+                                else if (engine.pendingMovedUnit != null)
+                                    message = "Choose a relocation slot first."
+                                else if (engine.human.points > 0 &&
+                                    engine.human.hand.indices.any {
+                                        engine.affordable(engine.human, it)
+                                    }) endConfirmation = true
+                                else current.endTurn()
+                            }
                         )
-                    }
-                    TextButton(onClick = { showLog = true },
-                        contentPadding = PaddingValues(horizontal = 4.dp)) {
-                        Text("LOG", color = BattleGold, fontSize = 10.sp)
                     }
                 }
             }
