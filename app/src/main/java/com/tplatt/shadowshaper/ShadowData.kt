@@ -14,6 +14,15 @@ import java.util.LinkedHashMap
 object ShadowData {
     /** Direct in-game card-detail captures outrank community/site metadata. */
     const val VIDEO_SOURCE = "User-supplied Shadowshaper card-detail video"
+    /**
+     * Effect evidence described in an uploaded-video note without a complete
+     * cost/Power/effect TSV overlay. These are NOT full-stat video overrides.
+     */
+    const val VIDEO_NOTES_SOURCE = "User-supplied Shadowshaper gameplay video notes"
+    private val recordedVideoNote = Regex(
+        """(?:recorded in-game video|recording screen-|original[^|]*video|card video|video screen|user card-detail video)""",
+        RegexOption.IGNORE_CASE
+    )
     const val DECK_SIZE = ShadowRules.DECK_SIZE
     const val COPIES_LIMIT = ShadowRules.COPY_LIMIT
     const val EXOTIC_LIMIT = ShadowRules.EXOTIC_LIMIT
@@ -88,7 +97,15 @@ object ShadowData {
         card.acquisition = fields[7]
         card.notes = fields[8]
         card.cardNumber = fields[9]
+        // The detail note may document direct original-game footage even for
+        // a card missing from verified_video_cards.tsv. Mark evidence level
+        // honestly and use its noted effect ahead of older website triggers.
+        if (card.source != VIDEO_SOURCE && recordedVideoNote.containsMatchIn(card.notes))
+            card.source = VIDEO_NOTES_SOURCE
     }
+
+    internal fun hasVideoEffectEvidence(card: Card): Boolean =
+        card.source == VIDEO_SOURCE || card.source == VIDEO_NOTES_SOURCE
 
     /**
      * Only the recorded effect text may introduce a row restriction for
@@ -99,7 +116,7 @@ object ShadowData {
      * or this entry has no verified video effect.
      */
     internal fun videoRequiredRow(card: Card): Int? {
-        if (card.source != VIDEO_SOURCE) return null
+        if (!hasVideoEffectEvidence(card)) return null
         val header = card.effect.substringBefore(':').trim()
         val match = Regex(
             """\b(?:when played|sustained)\s*\([^)]*\b(back|front)\s+row\b[^)]*\)""",
@@ -110,7 +127,7 @@ object ShadowData {
     }
 
     internal fun videoHasExplicitAbilityHeader(card: Card): Boolean {
-        if (card.source != VIDEO_SOURCE) return false
+        if (!hasVideoEffectEvidence(card)) return false
         val header = card.effect.substringBefore(':').trim()
         return header.startsWith("When Played", true) ||
             header.startsWith("Sustained", true) ||
