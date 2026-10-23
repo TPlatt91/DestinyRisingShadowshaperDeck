@@ -222,6 +222,34 @@ internal fun DuelCardBacks(count: Int, coverId: String = "default") {
 }
 
 @Composable
+private fun DuelScoreLine(name: String, value: Int, highlight: Color) {
+    Row(
+        Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Text(
+            name, color = DuelPalette.cream, fontSize = 9.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Box(
+            Modifier.size(36.dp)
+                .background(
+                    Brush.radialGradient(listOf(Color(0xFF353636), Color(0xFF191B20))),
+                    CircleShape
+                )
+                .border(2.dp, highlight, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                value.toString(), color = DuelPalette.cream,
+                fontSize = 20.sp, fontWeight = FontWeight.Black
+            )
+        }
+    }
+}
+
+@Composable
 internal fun DuelScore(player: Int, cpu: Int, playerTurn: Boolean) {
     val displayedPlayer by animateIntAsState(
         targetValue = player, animationSpec = tween(320), label = "player score"
@@ -234,37 +262,8 @@ internal fun DuelScore(player: Int, cpu: Int, playerTurn: Boolean) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        @Composable
-        fun ScoreLine(name: String, value: Int, highlight: Color) {
-            Row(
-                Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                Text(
-                    name, color = DuelPalette.cream, fontSize = 9.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Box(
-                    Modifier.size(36.dp)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(Color(0xFF353636), Color(0xFF191B20))
-                            ),
-                            CircleShape
-                        )
-                        .border(2.dp, highlight, CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        value.toString(), color = DuelPalette.cream,
-                        fontSize = 20.sp, fontWeight = FontWeight.Black
-                    )
-                }
-            }
-        }
-        ScoreLine("CPU", displayedCpu, Color(0xFFBC756E))
-        ScoreLine("YOU", displayedPlayer, Color(0xFFE4B968))
+        DuelScoreLine("CPU", displayedCpu, Color(0xFFBC756E))
+        DuelScoreLine("YOU", displayedPlayer, Color(0xFFE4B968))
         Text(
             if (playerTurn) "YOUR TURN" else "OPPONENT TURN",
             color = if (playerTurn) DuelPalette.gold else DuelPalette.red,
