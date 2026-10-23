@@ -8,7 +8,7 @@ if defined ProgramFiles (
   if exist "%ProgramFiles%\Android\Android Studio\jbr\bin\java.exe" call :checkjdk "%ProgramFiles%\Android\Android Studio\jbr"
 )
 if not defined JDK_DIR if defined STUDIO_JDK call :checkjdk "%STUDIO_JDK%"
-if not defined JDK_DIR if defined JAVA_HOME call :checkjdk "%JAVA_HOME:"=%"
+if not defined JDK_DIR if defined JAVA_HOME call :checkjdk "%JAVA_HOME%"
 if not defined JDK_DIR if defined ProgramFiles (
   for %%D in ("%ProgramFiles%\Eclipse Adoptium\jdk-21*" "%ProgramFiles%\Eclipse Adoptium\jdk-17*" "%ProgramFiles%\Java\jdk-21*" "%ProgramFiles%\Java\jdk-17*" "%ProgramFiles%\Microsoft\jdk-21*" "%ProgramFiles%\Microsoft\jdk-17*") do (
     if not defined JDK_DIR if exist "%%~fD\bin\java.exe" call :checkjdk "%%~fD"
@@ -31,9 +31,13 @@ exit /b %ERRORLEVEL%
 :checkjdk
 if defined JDK_DIR exit /b 0
 set "CANDIDATE=%~1"
+set "CANDIDATE=%CANDIDATE:"=%"
 if not exist "%CANDIDATE%\bin\java.exe" exit /b 0
 set "CHECK_VERSION="
-for /f "tokens=3" %%V in ('"%CANDIDATE%\bin\java.exe" -version 2^>^&1 ^| findstr /i "version"') do if not defined CHECK_VERSION set "CHECK_VERSION=%%~V"
+set "JAVA_VERSION_LOG=%TEMP%\shadow_java_version_%RANDOM%_%RANDOM%.txt"
+"%CANDIDATE%\bin\java.exe" -version 2>"%JAVA_VERSION_LOG%"
+for /f "tokens=3" %%V in ('findstr /i "version" "%JAVA_VERSION_LOG%"') do if not defined CHECK_VERSION set "CHECK_VERSION=%%~V"
+del /q "%JAVA_VERSION_LOG%" >nul 2>&1
 if "%CHECK_VERSION:~0,3%"=="21." set "JDK_DIR=%CANDIDATE%"
 if "%CHECK_VERSION:~0,3%"=="17." set "JDK_DIR=%CANDIDATE%"
 exit /b 0
