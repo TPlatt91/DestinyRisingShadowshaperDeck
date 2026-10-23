@@ -128,8 +128,11 @@ class ShadowOriginalVideoActivationTest {
         val left = place(e, "Thrall", e.human, 1, 0)
         val right = place(e, "Thrall", e.human, 1, 1)
         play(e, "Tenacious Wizard", 0, 4)
-        assertTrue(left.inspired)
-        assertTrue(right.inspired)
+        val wizard = e.human.board[0][4]!!
+        // The random eligible Hive pool includes the newly played Wizard.
+        // Exactly two distinct Hive units must be Inspired, not necessarily
+        // both preexisting Thralls.
+        assertEquals(2, listOf(left, right, wizard).count { it.inspired })
         assertEquals(0, e.unresolvedEffects)
 
         val front = engine()
