@@ -500,6 +500,7 @@ private fun DeckScreen(
     var addSearch by rememberSaveable { mutableStateOf("") }
     var addFaction by rememberSaveable { mutableStateOf("All") }
     var addRarity by rememberSaveable { mutableStateOf("All") }
+    var savePressed by remember(state.selected, state.cards) { mutableStateOf(false) }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) runCatching {
             context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
@@ -696,18 +697,36 @@ private fun DeckScreen(
                         contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
                     ) { Text("EXPORT", fontSize = 9.sp) }
                 }
-                Button(
-                    onClick = onBattle,
-                    enabled = legality.isEmpty(),
-                    modifier = Modifier.fillMaxWidth().height(36.dp),
-                    shape = RoundedCornerShape(3.dp),
-                    contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp)
                 ) {
-                    Text(
-                        if (legality.isEmpty()) "SAVED  •  PLAY BATTLE"
-                        else "AUTO-SAVED  •  COMPLETE DECK TO PLAY",
-                        color = Ink, fontWeight = FontWeight.Bold, fontSize = 12.sp
-                    )
+                    Button(
+                        onClick = {
+                            // Every edit is already persisted by ShadowDeckRepository.
+                            // Re-read the selected deck so SAVE verifies persisted state.
+                            vm.refresh()
+                            savePressed = true
+                        },
+                        modifier = Modifier.weight(1f).height(36.dp),
+                        shape = RoundedCornerShape(3.dp),
+                        contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            if (savePressed) "SAVED ✓" else "SAVE",
+                            color = Ink, fontWeight = FontWeight.Bold, fontSize = 12.sp
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = onBattle,
+                        enabled = legality.isEmpty(),
+                        modifier = Modifier.weight(0.55f).height(36.dp),
+                        shape = RoundedCornerShape(3.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp)
+                    ) {
+                        Text("BATTLE ›", color = Gold, fontWeight = FontWeight.Bold,
+                            fontSize = 10.sp, maxLines = 1)
+                    }
                 }
             }
         }
