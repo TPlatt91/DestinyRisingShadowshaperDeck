@@ -981,6 +981,34 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         // Prefer locations where summon-on-play abilities can actually
         // place their units; random flavor is not a substitute for legality.
         when (card.name) {
+            "Cursed Thrall", "Exploder Shank" -> {
+                // These cards immediately relocate into a random opposing
+                // Front Row slot. A full opposing row leaves them on the
+                // CPU's field with no delayed explosion: avoid spending
+                // Light on an effect that cannot take place.
+                val canTransfer = (0 until COLUMNS).any {
+                    empty(human, ShadowRules.FRONT_ROW, it)
+                }
+                value += if (canTransfer) 4.0 else -8.0
+            }
+            "Common Cover" -> {
+                // Two separate Rocks are generated only from Front Row and
+                // each consumes an empty opponent Front Row position.
+                val openSlots = (0 until COLUMNS).count {
+                    empty(human, ShadowRules.FRONT_ROW, it)
+                }
+                val eligible = row == ShadowRules.FRONT_ROW &&
+                    card("Rock")?.numericPower()?.let { it >= 0 } == true
+                value += if (eligible) minOf(2, openSlots) * 3.0 else -4.0
+                if (eligible && openSlots == 0) value -= 4.0
+            }
+            "Ning Fei" -> {
+                // A Clone without a free enemy Front Row slot cannot enter.
+                val canCreateClone = (0 until COLUMNS).any {
+                    empty(human, ShadowRules.FRONT_ROW, it)
+                } && card("Clone")?.numericPower()?.let { it >= 0 } == true
+                value += if (canCreateClone) 3.0 else -4.0
+            }
             "Tomb Ship" -> {
                 val openNeighbors = listOf(col - 1, col + 1)
                     .count { empty(cpu, row, it) }
