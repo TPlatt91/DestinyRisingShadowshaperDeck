@@ -20,6 +20,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,12 +44,16 @@ internal fun DuelCardInspection(
     power: Int,
     onClose: () -> Unit
 ) {
+    val context = LocalContext.current
+    val keywords = remember(card.name) {
+        ShadowKeywordGlossary.onCard(card, ShadowKeywordGlossary.all(context))
+    }
     Dialog(
         onDismissRequest = onClose,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(0.88f).fillMaxHeight(0.83f),
+            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.92f),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = DuelPalette.tableLow),
             border = BorderStroke(2.dp, DuelPalette.rim)
@@ -59,7 +65,7 @@ internal fun DuelCardInspection(
                 DuelCardFrame(
                     card = card,
                     power = power,
-                    modifier = Modifier.fillMaxHeight().width(175.dp),
+                    modifier = Modifier.fillMaxHeight().width(210.dp),
                     inspired = unit?.inspired == true,
                     suppressed = unit?.suppressed == true,
                     scorched = (unit?.scorchTurns ?: 0) > 0,
@@ -120,6 +126,41 @@ internal fun DuelCardInspection(
                         if (card.cardNumber.isNotBlank()) {
                             Text("CARD ID: " + card.cardNumber,
                                 color = DuelPalette.dullGold, fontSize = 11.sp)
+                        }
+                        if (card.classification.isNotBlank()) {
+                            Text("TYPE: " + card.classification,
+                                color = DuelPalette.dullGold, fontSize = 11.sp)
+                        }
+                        if (card.acquisition.isNotBlank()) {
+                            Text("OBTAIN: " + card.acquisition,
+                                color = DuelPalette.dullGold, fontSize = 11.sp)
+                        }
+                        if (card.notes.isNotBlank()) {
+                            Spacer(Modifier.height(7.dp))
+                            Text("CARD NOTES", color = DuelPalette.gold,
+                                fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                            Text(card.notes, color = DuelPalette.cream,
+                                fontSize = 12.sp, lineHeight = 16.sp)
+                        }
+                        if (card.source.isNotBlank()) {
+                            Spacer(Modifier.height(6.dp))
+                            Text("METADATA SOURCE: " + card.source,
+                                color = DuelPalette.dullGold,
+                                fontSize = 11.sp, lineHeight = 14.sp)
+                        }
+                        Spacer(Modifier.height(10.dp))
+                        Text("CARD KEYWORDS", color = DuelPalette.gold,
+                            fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                        if (keywords.isEmpty()) {
+                            Text("No defined keywords in this printed ability.",
+                                color = DuelPalette.dullGold, fontSize = 11.sp)
+                        } else {
+                            ShadowKeywordDefinitions(
+                                keywords,
+                                accent = DuelPalette.gold,
+                                foreground = DuelPalette.cream,
+                                secondary = DuelPalette.dullGold
+                            )
                         }
                         Spacer(Modifier.height(8.dp))
                         Text(
