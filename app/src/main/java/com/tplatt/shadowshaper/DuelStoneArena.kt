@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -94,6 +95,52 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
                     )
                 )
             )
+            // Cracked stone along the edges echoes the original game's
+            // rough slate surround, kept outside the six card columns.
+            val leftRock = Path().apply {
+                moveTo(0f, 0f)
+                lineTo(w * 0.035f, 0f)
+                lineTo(w * 0.016f, h * 0.12f)
+                lineTo(w * 0.05f, h * 0.24f)
+                lineTo(w * 0.020f, h * 0.37f)
+                lineTo(w * 0.045f, h * 0.53f)
+                lineTo(w * 0.015f, h * 0.69f)
+                lineTo(w * 0.038f, h * 0.84f)
+                lineTo(w * 0.02f, h)
+                lineTo(0f, h)
+                close()
+            }
+            val rightRock = Path().apply {
+                moveTo(w, 0f)
+                lineTo(w * 0.963f, 0f)
+                lineTo(w * 0.980f, h * 0.13f)
+                lineTo(w * 0.950f, h * 0.25f)
+                lineTo(w * 0.982f, h * 0.40f)
+                lineTo(w * 0.955f, h * 0.59f)
+                lineTo(w * 0.976f, h * 0.74f)
+                lineTo(w * 0.944f, h * 0.88f)
+                lineTo(w * 0.971f, h)
+                lineTo(w, h)
+                close()
+            }
+            drawPath(leftRock, Color(0xA7191C1D))
+            drawPath(rightRock, Color(0xC0181B1D))
+            // A few irregular fissures, not uniform graphics-card outlines.
+            for (n in 0..5) {
+                val x = w * (0.10f + n * 0.155f)
+                val y = h * (0.10f + (n % 3) * 0.28f)
+                val fissure = Path().apply {
+                    moveTo(x, y)
+                    lineTo(x + w * 0.014f, y + h * 0.018f)
+                    lineTo(x + w * 0.008f, y + h * 0.034f)
+                    lineTo(x + w * 0.028f, y + h * 0.048f)
+                }
+                drawPath(
+                    fissure,
+                    Color(0x4B252828),
+                    style = Stroke(width = hairline)
+                )
+            }
             // Hairline stone courses where the actual battle rows meet.
             for (row in 1..3) {
                 val y = h * row / 4f
