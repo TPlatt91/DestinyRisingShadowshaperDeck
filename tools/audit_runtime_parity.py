@@ -58,6 +58,7 @@ for i, row in enumerate(records(VIDEOS), 1):
     )
 
 detail_names = set()
+video_note_names = set()
 for i, row in enumerate(records(DETAILS), 1):
     if len(row) != 10:
         errors.append(f"{DETAILS}:{i}: invalid field count {len(row)}")
@@ -69,8 +70,19 @@ for i, row in enumerate(records(DETAILS), 1):
     if name not in base:
         errors.append(f"Orphan details for {name}")
         continue
-    base[name].update(faction=row[1], rarity=row[2], cost=row[3],
-                      power=row[4], classification=row[5])
+    # ShadowData.load() treats original recorded card values as final.
+    # Metadata can add classification without replacing those values.
+    if name in video_names:
+        base[name]["classification"] = row[5]
+    else:
+        base[name].update(faction=row[1], rarity=row[2], cost=row[3],
+                          power=row[4], classification=row[5])
+        if re.search(
+            r"(?:recorded in-game video|recording screen-|original[^|]*video|"
+            r"card video|video screen|user card-detail video)", row[8], re.I
+        ):
+            video_note_names.add(name)
+            base[name]["source"] = "User video note (effect evidence only)"
 
 effects_source = (JAVA / "ShadowCardEffects.kt").read_text(encoding="utf-8")
 art_files = list((ASSETS / "card_art").iterdir())
@@ -99,6 +111,9 @@ print("SHADOW SHAPER DUELS — STATIC PARITY AUDIT")
 print("========================================")
 print("Catalog entries:", len(base))
 print("Original video-overlaid entries:", len(video_names))
+print("Additional original-video effect-note entries:", len(video_note_names))
+print("Without documented user-video evidence:",
+      len(set(base) - video_names - video_note_names))
 print("Detailed metadata entries:", len(detail_names))
 print("Basic-effect cards:", len(basic))
 print("Cards with non-basic printed effects:", len(nonbasic))

@@ -59,12 +59,23 @@ with (ASSETS/"verified_video_cards.tsv").open(newline="",encoding="utf-8") as ha
         cards[name].update(cost=cost,power=power,text=effect,
                            source="verified_video_cards.tsv")
 
+video_note_names=set()
 with DETAILS.open(newline="",encoding="utf-8") as handle:
     for row in csv.reader(handle,delimiter="|"):
         if not row: continue
         if len(row)!=10 or row[0] not in cards:
             errors.append(f"Malformed or unknown detail: {row}");continue
-        c=cards[row[0]];c.update({"cost":row[3],"power":row[4],"class":row[5]})
+        c=cards[row[0]]
+        # Full user-video captures supersede any later online/legacy numbers.
+        c["class"]=row[5]
+        if row[0] not in video_overlaid:
+            c.update(cost=row[3],power=row[4])
+            if re.search(
+                r"(?:recorded in-game video|recording screen-|original[^|]*video|"
+                r"card video|video screen|user card-detail video)", row[8], re.I
+            ):
+                video_note_names.add(row[0])
+                c["source"]="original-game video note (effect only)"
 
 counts=Counter()
 for name,card in cards.items():
@@ -91,6 +102,9 @@ print("SHADOWSHAPER EFFECT COVERAGE AUDIT")
 print("=================================")
 print("Unique records:",len(cards))
 print("Verified-video effect overlays:",len(video_overlaid))
+print("Additional user-video effect notes:",len(video_note_names))
+print("Without captured/video-noted effect evidence:",
+      len(set(cards)-video_overlaid-video_note_names))
 for k,v in counts.most_common():print(f"{k}: {v}")
 print("IMPORTANT: SCRIPTED / UNVERIFIED is NOT a completed or validated card.")
 print()
