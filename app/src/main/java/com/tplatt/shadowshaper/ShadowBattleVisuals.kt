@@ -1,6 +1,5 @@
 package com.tplatt.shadowshaper
 
-import android.app.Activity
 import android.widget.ImageView
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -169,7 +168,6 @@ internal fun DuelCardCover(
     coverId: String,
     modifier: Modifier = Modifier
 ) {
-    val context = LocalContext.current
     val chosen = if (DuelCoverCatalog.isKnown(coverId)) coverId else "default"
     Box(
         modifier
