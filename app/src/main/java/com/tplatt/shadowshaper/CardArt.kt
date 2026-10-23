@@ -43,7 +43,7 @@ object CardArt {
      * or corrupting the same on-disk image concurrently.
      */
     @JvmStatic
-    fun bindCover(activity: Activity, view: ImageView, name: String = "default") {
+    fun bindCover(context: Context, view: ImageView, name: String = "default") {
         val id = slug(name)
         if (id !in setOf("default", "denzin", "elite_vandal", "marauder",
                 "morgran", "sniper_vandal", "tracer_shank", "wolf", "zhong_wenbin")) {
@@ -57,15 +57,15 @@ object CardArt {
             view.setImageBitmap(image)
             return
         }
-        val context = activity.applicationContext
+        val appContext = context.applicationContext
         workers.execute {
             val image = synchronized(coverLock) {
                 memory[memoryId] ?: run {
                     var loaded: Bitmap? = try {
-                        context.assets.open("card_cover/$id.webp").use(BitmapFactory::decodeStream)
+                        appContext.assets.open("card_cover/$id.webp").use(BitmapFactory::decodeStream)
                     } catch (_: Exception) { null }
                     if (loaded == null) {
-                        val folder = File(context.cacheDir, "shadowshaper_covers")
+                        val folder = File(appContext.cacheDir, "shadowshaper_covers")
                         folder.mkdirs()
                         val cache = File(folder, "$id.webp")
                         try {
@@ -101,8 +101,8 @@ object CardArt {
                 }
             }
             if (image != null) {
-                activity.runOnUiThread {
-                    if (view.tag == memoryId && !activity.isFinishing)
+                view.post {
+                    if (view.tag == memoryId)
                         view.setImageBitmap(image)
                 }
             }
