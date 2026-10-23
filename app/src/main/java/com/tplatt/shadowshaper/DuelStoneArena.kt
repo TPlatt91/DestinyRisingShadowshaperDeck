@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
@@ -96,57 +95,18 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
                     )
                 )
             )
-            // Cracked stone along the edges echoes the original game's
-            // rough slate surround, kept outside the seven card columns.
-            val leftRock = Path().apply {
-                moveTo(0f, 0f)
-                lineTo(w * 0.035f, 0f)
-                lineTo(w * 0.016f, h * 0.12f)
-                lineTo(w * 0.05f, h * 0.24f)
-                lineTo(w * 0.020f, h * 0.37f)
-                lineTo(w * 0.045f, h * 0.53f)
-                lineTo(w * 0.015f, h * 0.69f)
-                lineTo(w * 0.038f, h * 0.84f)
-                lineTo(w * 0.02f, h)
-                lineTo(0f, h)
-                close()
-            }
-            val rightRock = Path().apply {
-                moveTo(w, 0f)
-                lineTo(w * 0.963f, 0f)
-                lineTo(w * 0.980f, h * 0.13f)
-                lineTo(w * 0.950f, h * 0.25f)
-                lineTo(w * 0.982f, h * 0.40f)
-                lineTo(w * 0.955f, h * 0.59f)
-                lineTo(w * 0.976f, h * 0.74f)
-                lineTo(w * 0.944f, h * 0.88f)
-                lineTo(w * 0.971f, h)
-                lineTo(w, h)
-                close()
-            }
-            drawPath(leftRock, Color(0xC02A2E31))
-            drawPath(rightRock, Color(0xB8292D30))
-            // A few irregular fissures, not uniform graphics-card outlines.
-            for (n in 0..5) {
-                val x = w * (0.10f + n * 0.155f)
-                val y = h * (0.10f + (n % 3) * 0.28f)
-                val fissure = Path().apply {
-                    moveTo(x, y)
-                    lineTo(x + w * 0.014f, y + h * 0.018f)
-                    lineTo(x + w * 0.008f, y + h * 0.034f)
-                    lineTo(x + w * 0.028f, y + h * 0.048f)
-                }
-                drawPath(
-                    fissure,
-                    Color(0x693D4140),
-                    style = Stroke(width = hairline)
-                )
-            }
+            // Real rock faces, fern fronds and loose rubble now come from
+            // DuelArenaEnvironment: a cached, detailed decorative layer
+            // composited immediately over this underlying stone surface.
+            // Keeping this Canvas clear avoids the old mirrored black seams.
             drawRect(
                 color = Color(0x999B9E9B),
                 style = Stroke(width = 1.2.dp.toPx())
             )
         }
+        // All environmental scenery remains behind the legal lane overlay.
+        // Image has no pointer handler or semantic role.
+        DuelArenaEnvironment(Modifier.fillMaxSize())
     }
 }
 
