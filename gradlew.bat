@@ -1,43 +1,39 @@
 @echo off
 setlocal EnableExtensions
 set "APP_HOME=%~dp0"
-set "JAVA_EXE="
 set "JDK_DIR="
-
-rem Prefer Android Studio's bundled runtime when JAVA_HOME is unavailable.
-if defined JAVA_HOME (
-  set "JDK_DIR=%JAVA_HOME:"=%"
-  if not exist "%JDK_DIR%\bin\java.exe" set "JDK_DIR="
+rem Gradle 8.11.1/Kotlin DSL used by this project cannot run on Java 25.
+rem Prefer Android Studio JBR or installed Java 21/17 over Java 25.
+if defined ProgramFiles (
+  if exist "%ProgramFiles%\Android\Android Studio\jbr\bin\java.exe" call :checkjdk "%ProgramFiles%\Android\Android Studio\jbr"
 )
-if not defined JDK_DIR if defined STUDIO_JDK (
-  if exist "%STUDIO_JDK%\bin\java.exe" set "JDK_DIR=%STUDIO_JDK%"
-)
+if not defined JDK_DIR if defined STUDIO_JDK call :checkjdk "%STUDIO_JDK%"
+if not defined JDK_DIR if defined JAVA_HOME call :checkjdk "%JAVA_HOME:"=%"
 if not defined JDK_DIR if defined ProgramFiles (
-  if exist "%ProgramFiles%\Android\Android Studio\jbr\bin\java.exe" set "JDK_DIR=%ProgramFiles%\Android\Android Studio\jbr"
+  for %%D in ("%ProgramFiles%\Eclipse Adoptium\jdk-21*" "%ProgramFiles%\Eclipse Adoptium\jdk-17*" "%ProgramFiles%\Java\jdk-21*" "%ProgramFiles%\Java\jdk-17*" "%ProgramFiles%\Microsoft\jdk-21*" "%ProgramFiles%\Microsoft\jdk-17*") do (
+    if not defined JDK_DIR if exist "%%~fD\bin\java.exe" call :checkjdk "%%~fD"
+  )
 )
 if not defined JDK_DIR if defined LOCALAPPDATA (
-  if exist "%LOCALAPPDATA%\Programs\Android Studio\jbr\bin\java.exe" set "JDK_DIR=%LOCALAPPDATA%\Programs\Android Studio\jbr"
+  if exist "%LOCALAPPDATA%\Programs\Android Studio\jbr\bin\java.exe" call :checkjdk "%LOCALAPPDATA%\Programs\Android Studio\jbr"
 )
-if defined JDK_DIR (
-  set "JAVA_HOME=%JDK_DIR%"
-  set "PATH=%JDK_DIR%\bin;%PATH%"
-  set "JAVA_EXE=%JDK_DIR%\bin\java.exe"
-)
-if not defined JAVA_EXE (
-  for /f "delims=" %%J in ('where java.exe 2^>nul') do if not defined JAVA_EXE set "JAVA_EXE=%%J"
-)
-if not defined JAVA_EXE (
-  echo ERROR: Java not found. Set JAVA_HOME to a valid JDK or install Android Studio with bundled JBR. 1>&2
+if not defined JDK_DIR (
+  echo ERROR: This project requires JDK 17 or 21 to run Gradle 8.11.1. 1>&2
+  echo Current Java may be 25, which fails with IllegalArgumentException: 25.0.2. 1>&2
+  echo Install JDK 21 and set JAVA_HOME to its root, or configure Android Studio's Gradle JDK to 21. 1>&2
   exit /b 9009
 )
-rem Ensure subprocesses launched by the Gradle wrapper also have a valid JAVA_HOME.
-if not defined JAVA_HOME (
-  for %%J in ("%JAVA_EXE%\..\..") do set "JAVA_HOME=%%~fJ"
-)
-if not exist "%JAVA_HOME%\bin\java.exe" (
-  echo ERROR: JAVA_HOME is not a valid JDK: "%JAVA_HOME%" 1>&2
-  exit /b 9009
-)
+set "JAVA_HOME=%JDK_DIR%"
 set "PATH=%JAVA_HOME%\bin;%PATH%"
-"%JAVA_EXE%" -Xmx128m -Dfile.encoding=UTF-8 -classpath "%APP_HOME%gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain %*
+"%JAVA_HOME%\bin\java.exe" -Xmx128m -Dfile.encoding=UTF-8 -classpath "%APP_HOME%gradle\wrapper\gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain %*
 exit /b %ERRORLEVEL%
+
+:checkjdk
+if defined JDK_DIR exit /b 0
+set "CANDIDATE=%~1"
+if not exist "%CANDIDATE%\bin\java.exe" exit /b 0
+set "CHECK_VERSION="
+for /f "tokens=3" %%V in ('"%CANDIDATE%\bin\java.exe" -version 2^>^&1 ^| findstr /i "version"') do if not defined CHECK_VERSION set "CHECK_VERSION=%%~V"
+if "%CHECK_VERSION:~0,3%"=="21." set "JDK_DIR=%CANDIDATE%"
+if "%CHECK_VERSION:~0,3%"=="17." set "JDK_DIR=%CANDIDATE%"
+exit /b 0
