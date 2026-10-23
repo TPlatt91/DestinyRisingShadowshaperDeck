@@ -169,7 +169,7 @@ internal fun DuelCardCover(
     coverId: String,
     modifier: Modifier = Modifier
 ) {
-    val activity = LocalContext.current as? Activity
+    val context = LocalContext.current
     val chosen = if (DuelCoverCatalog.isKnown(coverId)) coverId else "default"
     Box(
         modifier
@@ -180,22 +180,20 @@ internal fun DuelCardCover(
     ) {
         // Retain this neutral card-back silhouette if assets are unavailable.
         Text("♢", color = Color(0xFFBFA68F), fontSize = 15.sp)
-        if (activity != null) {
-            key(chosen) {
-                AndroidView(
-                    factory = { ctx ->
-                        ImageView(ctx).apply {
-                            scaleType = ImageView.ScaleType.FIT_XY
-                            CardArt.bindCover(activity, this, chosen)
-                        }
-                    },
-                    update = { image ->
-                        if (image.tag != "cover_$chosen")
-                            CardArt.bindCover(activity, image, chosen)
-                    },
-                    modifier = Modifier.fillMaxSize().padding(1.dp)
-                )
-            }
+        key(chosen) {
+            AndroidView(
+                factory = { ctx ->
+                    ImageView(ctx).apply {
+                        scaleType = ImageView.ScaleType.FIT_XY
+                        CardArt.bindCover(ctx, this, chosen)
+                    }
+                },
+                update = { image ->
+                    if (image.tag != "cover_$chosen")
+                        CardArt.bindCover(image.context, image, chosen)
+                },
+                modifier = Modifier.fillMaxSize().padding(1.dp)
+            )
         }
     }
 }
