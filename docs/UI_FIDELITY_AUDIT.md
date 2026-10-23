@@ -179,3 +179,19 @@ Code changes to the *active Kotlin Compose battle*, not just an illustrative pla
 - Reduced ordinary slot outline weight and corner engraving intensity. Selected legal placements and effect targets still glow.
 
 **Verification:** Added three pure Kotlin/JUnit regression cases to `DuelLayoutMetricsTest.kt` for board sizing, hand height, and overlap budget, including short-screen layouts. Source files passed a bracket/quote lexical scan. Android compilation and on-phone screenshot review still require the user's next local `run_local_engine_checks.bat` run. No GitHub Actions credits were used.
+
+
+## Slate arena reconstruction and full-card visibility — 23 October 2026
+
+**Direct user feedback:** The earlier portrait build showed a flat gray arena, four rows of tall outlined empty slots, and a short Cursed Thrall card whose name overlay obscured the printed art. The user supplied their original Destiny: Rising Shadowshaper battle screenshot again for side-by-side comparison.
+
+**Implemented in the Android/Kotlin repository:**
+
+1. `DuelStoneArena.kt` provides a cached, seeded stone-grain bitmap, gentle mottled gray marbling, chipped rock edges, small fissures and dark vignette rather than painting the battlefield with a flat color. It is a **procedural approximation of the original stone surface**, not extracted proprietary artwork, and includes no fake cards or scores.
+2. The stone fills the **entire portrait arena** between the opponent/round ribbon and score controls. The four-row legal card formation remains centered within it; black gutters above/below the old compact board are gone.
+3. `DuelArenaGrid` draws thin course lines and faint column guides relative to the actual card-lane coordinates, not the full-height stone floor. The original B/F debug labels and surrounding empty slot rectangles/corner marks are gone. Legal empty placements, relocations and ability targets still receive visible gold outlines/plus markers.
+4. `DuelCardFrame` now leaves the original source image **fully visible**, without a painted name/footer over its bottom. Field miniatures display their live Power (green for buffed, red for reduced, otherwise neutral). Hand cards retain the printed Light indicator. Suppressed, Inspired and Scorched indicators are small lower-corner emblems rather than full-art-covering center banners. The same original embedded WebP/PNG/GIF assets remain in use.
+5. Hit rectangles, event log, card selection, drag/drop, battle inspection and game engine functions are unchanged.
+6. Added two source-level JVM regressions in `DuelVisualParityGuardTest.kt` to prevent accidentally bringing back debug row labels and the obstructing name footer.
+
+**Remaining fidelity boundary:** Procedural stone grain and primitive medallion/status shapes are not pixel-identical to the proprietary Destiny: Rising UI. A fresh on-phone battle screenshot is required to evaluate real density, texture, cards and positioning. The new code has been statically source-checked for delimiter balance but **has not yet passed the user's local Android build or on-device inspection**. Run `run_local_engine_checks.bat` after pulling; do not use GitHub Actions.
