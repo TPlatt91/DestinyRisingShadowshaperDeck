@@ -21,8 +21,8 @@ class DuelVisualParityGuardTest {
 
     private fun actualArenaImage(): File =
         listOf(
-            File("src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp"),
-            File("app/src/main/res/drawable-nodpi/shadow_arena_original_portrait_hq.webp")
+            File("src/main/res/drawable-nodpi/shadow_arena_narrow_ruins_v2.webp"),
+            File("app/src/main/res/drawable-nodpi/shadow_arena_narrow_ruins_v2.webp")
         ).firstOrNull(File::isFile)
             ?: error("The uploaded stone ruins picture must be bundled offline")
 
@@ -35,11 +35,20 @@ class DuelVisualParityGuardTest {
         assertTrue(String(original.readBytes(), 8, 4) == "WEBP")
     }
 
+    @Test fun backgroundPreservesAspectRatioAndKeepsRockBordersNarrow() {
+        val stone = source("DuelStoneArena.kt")
+        val metrics = source("DuelLayoutMetrics.kt")
+        assertTrue(stone.contains("ContentScale.Crop"))
+        assertFalse(stone.contains("ContentScale.FillBounds"))
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.90f"))
+        assertTrue(metrics.contains("screenWidthDp.coerceAtLeast(250) * 0.82f"))
+    }
+
     @Test fun arenaRendersUploadedBitmapInsteadOfOldProceduralRubble() {
         val stone = source("DuelStoneArena.kt")
         val battle = source("ShadowBattleActivity.kt")
-        assertTrue(stone.contains("painterResource(R.drawable.shadow_arena_original_portrait_hq)"))
-        assertTrue(stone.contains("ContentScale.FillBounds"))
+        assertTrue(stone.contains("painterResource(R.drawable.shadow_arena_narrow_ruins_v2)"))
+        assertTrue(stone.contains("ContentScale.Crop"))
         assertFalse(stone.contains("generateSlateTexture"))
         assertFalse(stone.contains("DuelArenaPatina"))
         assertFalse(stone.contains("DuelArenaEnvironment"))
@@ -53,7 +62,7 @@ class DuelVisualParityGuardTest {
         val stone = source("DuelStoneArena.kt")
         val metrics = source("DuelLayoutMetrics.kt")
         val visuals = source("ShadowBattleVisuals.kt")
-        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.70f"))
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.90f"))
         assertTrue(battle.contains("DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION"))
         assertTrue(stone.contains("column in 1 until ShadowRules.COLUMNS"))
         assertFalse(battle.contains("Text(heading.replace"))
