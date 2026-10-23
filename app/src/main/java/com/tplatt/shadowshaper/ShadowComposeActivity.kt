@@ -386,13 +386,13 @@ private fun LibrarySearchBar(
     rarity: String,
     onRarity: (String) -> Unit
 ) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 5.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    // Portrait-friendly: full-width search and a separate compact filter row.
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Box(
-            Modifier.weight(1f).height(36.dp)
+            Modifier.fillMaxWidth().height(36.dp)
                 .background(Color(0xFF161718), RoundedCornerShape(2.dp))
                 .border(1.dp, Color(0xFF66594D), RoundedCornerShape(2.dp))
                 .padding(horizontal = 9.dp),
@@ -406,20 +406,26 @@ private fun LibrarySearchBar(
                 decorationBox = { inner ->
                     Box {
                         if (query.isBlank())
-                            Text("⌕  Tap to search", color = Secondary, fontSize = 12.sp)
+                            Text("⌕  Search cards", color = Secondary, fontSize = 12.sp)
                         inner()
                     }
                 }
             )
         }
-        LibraryFilterSelector(
-            "FACTION", faction, listOf("All", "Humans", "Fallen", "Hive", "Cabal"),
-            onFaction
-        )
-        LibraryFilterSelector(
-            "RARITY", rarity, listOf("All", "Rare", "Legendary", "Mythic", "Exotic"),
-            onRarity
-        )
+        Row(
+            Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(5.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            LibraryFilterSelector(
+                "FACTION", faction,
+                listOf("All", "Humans", "Fallen", "Hive", "Cabal"), onFaction
+            )
+            LibraryFilterSelector(
+                "RARITY", rarity,
+                listOf("All", "Rare", "Legendary", "Mythic", "Exotic"), onRarity
+            )
+        }
     }
 }
 
@@ -463,7 +469,7 @@ private fun CollectionScreen(
                 .border(1.dp, Color(0xFF806648), RoundedCornerShape(3.dp))
         ) {
             LazyVerticalGrid(
-                columns = GridCells.Fixed(8),
+                columns = GridCells.Fixed(3),
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -493,6 +499,7 @@ private fun DeckScreen(
     var addSearch by rememberSaveable { mutableStateOf("") }
     var addFaction by rememberSaveable { mutableStateOf("All") }
     var addRarity by rememberSaveable { mutableStateOf("All") }
+    var showDeckPane by rememberSaveable { mutableStateOf(false) }
     var savePressed by remember(state.selected, state.cards) { mutableStateOf(false) }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) runCatching {
@@ -542,8 +549,8 @@ private fun DeckScreen(
             horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             TextButton(onClick = onBack) { Text("‹ BACK", color = Gold, fontSize = 12.sp) }
-            Text("EDIT DECK", color = Cream, fontWeight = FontWeight.Bold,
-                fontSize = 15.sp)
+            Text("DECK", color = Cream, fontWeight = FontWeight.Bold,
+                fontSize = 14.sp)
             Box(Modifier.weight(1f)) {
                 TextButton(onClick = { deckMenu = true }) {
                     Text("${state.selected} ▾", color = Gold, maxLines = 1,
@@ -558,21 +565,34 @@ private fun DeckScreen(
                 }
             }
             Text("$count / 15", color = Cream, fontWeight = FontWeight.Bold,
-                fontSize = 13.sp)
-            TextButton(onClick = { editName = ""; deckDialog = "New" }) {
-                Text("+ NEW", color = Gold, fontSize = 11.sp)
-            }
-            TextButton(onClick = { editName = state.selected; deckDialog = "Rename" }) {
-                Text("RENAME", color = Secondary, fontSize = 11.sp)
-            }
+                fontSize = 12.sp)
         }
         Row(
-            Modifier.fillMaxSize().padding(horizontal = 7.dp, vertical = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(7.dp)
+            Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 7.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            // LEFT: all eligible card faces, including ones already in the deck.
+            OutlinedButton(
+                onClick = { showDeckPane = false },
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+            ) {
+                Text("CARD GALLERY", color = if (!showDeckPane) Gold else Secondary,
+                    fontSize = 11.sp)
+            }
+            OutlinedButton(
+                onClick = { showDeckPane = true },
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+            ) {
+                Text("MY DECK  $count / 15", color = if (showDeckPane) Gold else Secondary,
+                    fontSize = 11.sp)
+            }
+        }
+        Box(Modifier.weight(1f).fillMaxWidth().padding(5.dp)) {
+            if (!showDeckPane) {
+            // Gallery uses the full phone width instead of a cramped left split.
             Column(
-                Modifier.weight(1.05f).fillMaxHeight()
+                Modifier.fillMaxSize()
                     .background(Color(0xFF262322), RoundedCornerShape(3.dp))
                     .border(1.dp, Color(0xFF786046), RoundedCornerShape(3.dp))
             ) {
@@ -591,7 +611,7 @@ private fun DeckScreen(
                         color = Secondary, fontSize = 9.sp)
                 }
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
+                    columns = GridCells.Fixed(3),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(7.dp),
                     horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -607,14 +627,24 @@ private fun DeckScreen(
                     }
                 }
             }
-            // RIGHT: cost distribution and card list remain visible at all times.
+            } else {
+            // The current deck replaces the gallery in portrait.
             Column(
-                Modifier.weight(0.95f).fillMaxHeight()
+                Modifier.fillMaxSize()
                     .background(Color(0xFF292423), RoundedCornerShape(3.dp))
                     .border(1.dp, Color(0xFF846846), RoundedCornerShape(3.dp))
                     .padding(horizontal = 7.dp, vertical = 5.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(onClick = { editName = ""; deckDialog = "New" },
+                        contentPadding = PaddingValues(horizontal = 3.dp)) {
+                        Text("+ NEW", color = Gold, fontSize = 10.sp)
+                    }
+                    TextButton(onClick = {
+                        editName = state.selected; deckDialog = "Rename"
+                    }, contentPadding = PaddingValues(horizontal = 3.dp)) {
+                        Text("RENAME", color = Secondary, fontSize = 10.sp)
+                    }
                     Text(
                         state.selected.uppercase(), color = Cream,
                         fontSize = 14.sp, fontWeight = FontWeight.Bold,
@@ -652,7 +682,7 @@ private fun DeckScreen(
                 }
                 HorizontalDivider(color = Color(0xFF5E5349))
                 LazyVerticalGrid(
-                    columns = GridCells.Fixed(4),
+                    columns = GridCells.Fixed(3),
                     modifier = Modifier.weight(1f),
                     contentPadding = PaddingValues(vertical = 6.dp),
                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -721,6 +751,7 @@ private fun DeckScreen(
                             fontSize = 10.sp, maxLines = 1)
                     }
                 }
+            }
             }
         }
     }
