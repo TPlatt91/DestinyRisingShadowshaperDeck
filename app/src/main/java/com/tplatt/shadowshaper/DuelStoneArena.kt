@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
-import kotlin.math.abs
 import kotlin.math.sin
 import kotlin.random.Random
 
@@ -33,28 +32,30 @@ import kotlin.random.Random
  */
 private fun generateSlateTexture(): Bitmap {
     val width = 384
-    val height = 384
+    val height = 512
     val pixels = IntArray(width * height)
-    val noise = Random(204023)
-    for (y in 0 until height) {
-        for (x in 0 until width) {
-            val grain = noise.nextInt(-14, 15)
-            val veins = (
-                10.0 * sin(x * 0.023 + sin(y * 0.027) * 2.1) +
-                    7.0 * sin(y * 0.055 + x * 0.008) +
-                    4.0 * sin((x + y) * 0.083)
-                ).toInt()
-            val crack = if (
-                abs(y - (81 + 10 * sin(x * 0.025)).toInt()) < 2 ||
-                abs(y - (274 + 12 * sin(x * 0.018)).toInt()) < 2
-            ) -17 else 0
-            val base = (100 + grain + veins + crack).coerceIn(48, 138)
-            pixels[y * width + x] = AndroidColor.rgb(
-                (base + 2).coerceAtMost(255),
-                (base + 2).coerceAtMost(255),
-                (base - 2).coerceAtLeast(0)
-            )
-        }
+    val grain = Random(204023)
+    for (y in 0 until height) for (x in 0 until width) {
+        val px = x.toDouble() / width
+        val py = y.toDouble() / height
+        val edge = kotlin.math.abs(px - 0.5) * 2.0
+        // Broad eroded sediment bands under irregular, fine pixel-grain.
+        val strata = (
+            8.0 * sin(px * 10.3 + sin(py * 7.4) * 0.9) +
+            5.5 * sin(py * 19.0 + px * 4.7) +
+            4.5 * sin((px * 13.0 - py * 21.0)) +
+            2.5 * sin((px + py) * 64.0)
+        )
+        val weathering = grain.nextInt(-13, 14)
+        val centerLight = 9.0 * (1.0 - edge * edge)
+        val edgeShade = -34.0 * edge * edge * edge
+        val base = (150.0 + strata + weathering + centerLight + edgeShade)
+            .toInt().coerceIn(64, 201)
+        pixels[y * width + x] = AndroidColor.rgb(
+            (base + 2).coerceAtMost(255),
+            (base + 2).coerceAtMost(255),
+            (base - 2).coerceAtLeast(0)
+        )
     }
     return Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888).apply {
         setPixels(pixels, 0, width, 0, 0, width, height)
@@ -64,7 +65,7 @@ private fun generateSlateTexture(): Bitmap {
 @Composable
 internal fun DuelStoneArena(modifier: Modifier = Modifier) {
     val stone = remember { generateSlateTexture().asImageBitmap() }
-    Box(modifier.background(Color(0xFF464747), RoundedCornerShape(5.dp))) {
+    Box(modifier.background(Color(0xFF8F908D), RoundedCornerShape(5.dp))) {
         Image(
             bitmap = stone,
             contentDescription = null,
@@ -79,24 +80,24 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
             drawRect(
                 brush = Brush.horizontalGradient(
                     listOf(
-                        Color(0xD9141718),
-                        Color(0x22191B1B),
+                        Color(0x99272A2C),
+                        Color(0x202A2B2C),
                         Color(0x00292C2D),
-                        Color(0x3317191B),
-                        Color(0xD3161819)
+                        Color(0x30292A2A),
+                        Color(0xA727292B)
                     )
                 )
             )
             drawRect(
                 brush = Brush.verticalGradient(
                     listOf(
-                        Color(0x88141617), Color.Transparent,
-                        Color.Transparent, Color(0x9A151617)
+                        Color(0x5027292A), Color.Transparent,
+                        Color.Transparent, Color(0x7927292A)
                     )
                 )
             )
             // Cracked stone along the edges echoes the original game's
-            // rough slate surround, kept outside the six card columns.
+            // rough slate surround, kept outside the seven card columns.
             val leftRock = Path().apply {
                 moveTo(0f, 0f)
                 lineTo(w * 0.035f, 0f)
@@ -123,8 +124,8 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
                 lineTo(w, h)
                 close()
             }
-            drawPath(leftRock, Color(0xA7191C1D))
-            drawPath(rightRock, Color(0xC0181B1D))
+            drawPath(leftRock, Color(0xC02A2E31))
+            drawPath(rightRock, Color(0xB8292D30))
             // A few irregular fissures, not uniform graphics-card outlines.
             for (n in 0..5) {
                 val x = w * (0.10f + n * 0.155f)
@@ -137,12 +138,12 @@ internal fun DuelStoneArena(modifier: Modifier = Modifier) {
                 }
                 drawPath(
                     fissure,
-                    Color(0x4B252828),
+                    Color(0x693D4140),
                     style = Stroke(width = hairline)
                 )
             }
             drawRect(
-                color = Color(0xAA929492),
+                color = Color(0x999B9E9B),
                 style = Stroke(width = 1.2.dp.toPx())
             )
         }
