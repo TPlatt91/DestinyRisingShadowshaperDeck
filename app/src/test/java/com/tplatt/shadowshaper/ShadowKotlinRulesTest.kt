@@ -73,7 +73,8 @@ class ShadowKotlinRulesTest {
         put(cabal, 2)
         assertEquals(0, ShadowPositionRules.contiguousLineUnits(side, 0, 2))
         assertEquals(2, ShadowPositionRules.contiguousLineUnits(side, 0, 1))
-        assertEquals(0, ShadowPositionRules.contiguousLineUnits(side, 0, 3, cabalLine))
+        // Isolated printed Line unit forms a one-unit run, not a qualified 2+ Line.
+        assertEquals(1, ShadowPositionRules.contiguousLineUnits(side, 0, 3, cabalLine))
         assertFalse(ShadowPositionRules.hasLineAffix("Grants +2 Power to a Line unit."))
         assertTrue(ShadowPositionRules.hasLineAffix("When Played (2 Unit Line): Summons a unit."))
         assertTrue(ShadowPositionRules.hasLineAffix("Sustained (4-Unit Line): Gives +2 Power."))
