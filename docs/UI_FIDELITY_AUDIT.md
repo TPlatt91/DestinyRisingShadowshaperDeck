@@ -133,3 +133,19 @@ A [Shadowshaper community discussion](https://www.reddit.com/r/destinyrisingmobi
 **Reference scope and limitations:** The right-side End Turn location and scoring concepts are supported by the Game8 Destiny: Rising Shadowshaper Duels gameplay guide, and the use of original card art is supported by the user's existing assets. This is **the first fidelity pass**, not a claim of identical texture art, exact typography, unit animations, original audio, or proprietary visual assets. The exact screen geometry still requires comparison with user-recorded original-client battle footage on matching landscape dimensions.
 
 **Verification:** Changes have been pushed to GitHub but no Android device run or Gradle compilation was performed for this UI pass. Run `run_local_engine_checks.bat` locally after pulling, install the new APK, and compare the same battlefield state against the game's recorded screenshots. No GitHub Actions are needed.
+
+
+## Screenshot-driven interface redesign — 23 October 2026
+
+**User-supplied visual targets:**
+- Battle screenshot: gray stone/metal board, four field rows (CPU Back/Front above player Front/Back), utility stack at left, right-side CPU/player medallion scores, blue Light indicators, circular golden End Turn, compact bottom hand.
+- Deck editor screenshot: landscape metallic shell; left four-column artwork gallery with search/filter; right current-deck grid, Power/Light-cost distribution, name/count and bottom SAVE.
+- Collection requirement: reuse the deck-editor artwork/browser look but allocate the whole content width to a full-width grid, without a right deck panel.
+
+**Implemented and pushed:**
+1. `ShadowBattleVisuals.kt`: procedural gray stone slab texture with slate-course markings behind the four actual game rows; subdued transparent slot backgrounds; CPU/player medallion-style Power totals. No screenshots or synthetic card faces are used as actual battlefield background.
+2. `ShadowBattleActivity.kt`: narrow left utility/deck display, larger central battlefield, right HUD with actual CPU/player Light, round count, live Power, a circular gold End Turn button and preserved targeting, shield-self, confirmation and event-log actions. Existing drag interactions, legal placement coordinates, match state, deck selections and AI gameplay remain engine-controlled.
+3. `ShadowComposeActivity.kt`: Deck Construction and Card Collection explicitly use landscape orientation, returning Home/Rules to normal orientation. Deck has independent left gallery and right deck panel with four-column original card faces, live counts, curve, SAVE (the repository already autosaves edits), Battle, export/import, cover and delete. Collection uses the same visual language with a full-width eight-column gallery and no deck panel.
+4. Card gallery artwork loads from the same local PNG/WebP/GIF files already used elsewhere. No changes to the verified card metadata or printed effects.
+
+**Verification boundary:** Repository edits were made directly; a device screenshot comparison and `run_local_engine_checks.bat` execution are still required. These are **reference-matched layouts and custom-drawn materials**, not the proprietary game's original texture/image resources. Exact pixel parity, fonts, HUD ornaments, animation frames, and sound effects remain further fidelity work. Do not use Today in Destiny as gameplay effect authority. No GitHub Actions/credits have been used.
