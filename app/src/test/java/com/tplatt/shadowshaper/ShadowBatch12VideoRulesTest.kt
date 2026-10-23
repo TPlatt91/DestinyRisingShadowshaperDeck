@@ -154,9 +154,11 @@ class ShadowBatch12VideoRulesTest {
         val helhest = place(e, "Helhest", 0, 2)
         val foes = (0..2).map { place(e, "Dreg", 0, it, e.cpu) }
         e.effects.endSide(e.human)
-        assertTrue(foes.all { it.power == 9 })
-        // Provisional conversion: one Power for each observed damage point.
-        assertEquals(9, helhest.power)
+        // Random center can be at either end: the splash hits 2 or 3 units.
+        val damaged = foes.count { it.power == 9 }
+        assertTrue("Expected 2 or 3 units hit, got $damaged", damaged in 2..3)
+        assertEquals(30 - damaged, foes.sumOf { it.power })
+        assertEquals(6 + damaged, helhest.power)
 
         val front = engine()
         val inactive = place(front, "Helhest", 1, 2)
