@@ -100,10 +100,10 @@ internal object DuelArenaScenery {
         seed: Int, base: Int = slate, opacity: Int = 255
     ) {
         val random = Random(seed)
-        val sides = 8 + random.nextInt(4)
+        val sides = 16 + random.nextInt(5)
         val outline = (0 until sides).map { i ->
             val angle = 2.0 * PI * i / sides - PI / 2
-            val jag = random.nextFloat() * 0.25f + 0.81f
+            val jag = random.nextFloat() * 0.19f + 0.85f
             (cx + cos(angle).toFloat() * rx * jag) to
                 (cy + sin(angle).toFloat() * ry * jag)
         }
@@ -130,15 +130,17 @@ internal object DuelArenaScenery {
         canvas.drawPath(path, paint)
         paint.shader = null
 
+        // Very low-contrast cleavage planes: the previous triangular fan
+        // made boulders read like brightly colored low-poly crystals.
         val core = cx + (random.nextFloat() - .5f) * rx * .19f to
             cy + (random.nextFloat() - .5f) * ry * .16f
         for (i in outline.indices) {
             val next = outline[(i + 1) % outline.size]
             val facetColor = when (i % 4) {
-                0 -> rgba(tone(base, 36), (opacity * .67f).toInt())
-                1 -> rgba(tone(base, 13), (opacity * .55f).toInt())
-                2 -> rgba(tone(base, -28), (opacity * .64f).toInt())
-                else -> rgba(tone(base, -11), (opacity * .53f).toInt())
+                0 -> rgba(tone(base, 29), (opacity * .18f).toInt())
+                1 -> rgba(tone(base, 14), (opacity * .13f).toInt())
+                2 -> rgba(tone(base, -26), (opacity * .22f).toInt())
+                else -> rgba(tone(base, -10), (opacity * .14f).toInt())
             }
             polygon(canvas, paint, listOf(core, outline[i], next), facetColor)
         }
@@ -171,16 +173,38 @@ internal object DuelArenaScenery {
                 .65f + random.nextFloat() * .7f)
         }
 
-        // Mineral pitting and flecks catch very little light.
-        repeat(10) {
-            val x = cx + (random.nextFloat() - .5f) * rx * 1.25f
-            val y = cy + (random.nextFloat() - .5f) * ry * 1.18f
+        // Dense lichen/mineral pores clipped to each rock silhouette.
+        // Fine physical-looking abrasion is more faithful than flat facets.
+        canvas.save()
+        canvas.clipPath(path)
+        repeat(95) {
+            val x = cx + (random.nextFloat() - .5f) * rx * 2.05f
+            val y = cy + (random.nextFloat() - .5f) * ry * 2.04f
+            paint.shader = null
             paint.color = rgba(
-                if (random.nextBoolean()) tone(base, 61) else charcoal,
-                random.nextInt(38, 103)
+                if (random.nextInt(5) == 0) tone(base, 67) else
+                    if (random.nextBoolean()) tone(base, -64) else tone(base, 29),
+                random.nextInt(21, 79)
             )
-            canvas.drawCircle(x, y, .4f + random.nextFloat() * 1.35f, paint)
+            canvas.drawCircle(
+                x, y, .28f + random.nextFloat() * 1.45f, paint
+            )
         }
+        // A few tiny weathering streaks, not large geometric triangles.
+        repeat(8) {
+            val px = cx + (random.nextFloat() - .5f) * rx * 1.64f
+            val py = cy + (random.nextFloat() - .5f) * ry * 1.72f
+            stroke(
+                canvas, paint,
+                AndroidPath().apply {
+                    moveTo(px, py)
+                    lineTo(px + random.nextFloat() * 4.2f,
+                        py + 2.5f + random.nextFloat() * 4f)
+                },
+                rgba(tone(base, 76), random.nextInt(34, 82)), .65f
+            )
+        }
+        canvas.restore()
     }
 
     private fun leaf(
