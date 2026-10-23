@@ -1,5 +1,5 @@
 ==== Shadow Shaper Duels diagnostics ====
-Started: Fri 10/23/2026 16:29:32.00
+Started: Fri 10/23/2026 16:31:30.87
 JAVA_HOME=
 Java candidates on PATH:
 C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot\bin\java.exe
@@ -55,27 +55,15 @@ Daemon will be stopped at the end of the build
 > Task :app:createDebugApkListingFileRedirect UP-TO-DATE
 > Task :app:assembleDebug UP-TO-DATE
 > Task :app:compileDebugUnitTestKotlin
-> Task :app:compileDebugUnitTestJavaWithJavac
+> Task :app:compileDebugUnitTestJavaWithJavac UP-TO-DATE
 > Task :app:processDebugUnitTestJavaRes UP-TO-DATE
 
 > Task :app:testDebugUnitTest FAILED
 
-ShadowBatch0108VideoRulesTest > exploderShankTransfersAndDetonatesForTwoDamageToBothNeighbors FAILED
-    java.lang.AssertionError at ShadowBatch0108VideoRulesTest.kt:126
-
-ShadowBatch0108VideoRulesTest > batch08DecurionBuffsVerticallyAdjacentUnitByTwo FAILED
-    java.lang.AssertionError at ShadowBatch0108VideoRulesTest.kt:164
-
-ShadowBatch0910VideoRulesTest > colossusOnlyBuffsVerticallyAdjacentCabal FAILED
-    java.lang.AssertionError at ShadowBatch0910VideoRulesTest.kt:258
-
-ShadowBatch0910VideoRulesTest > gladiatorGrantsAdditionalDamageNotPowerToTargetAndNeighbors FAILED
-    java.lang.AssertionError at ShadowBatch0910VideoRulesTest.kt:312
-
 ShadowBatch12VideoRulesTest > helhestBackRowDamagesTargetAndHorizontalNeighbors FAILED
     java.lang.AssertionError at ShadowBatch12VideoRulesTest.kt:157
 
-336 tests completed, 5 failed
+336 tests completed, 1 failed
 
 FAILURE: Build failed with an exception.
 
@@ -245,7 +233,7 @@ Caused by: org.gradle.api.internal.exceptions.MarkedVerificationException: There
 	at org.gradle.internal.concurrent.AbstractManagedExecutor$1.run(AbstractManagedExecutor.java:48)
 
 
-BUILD FAILED in 9s
-42 actionable tasks: 3 executed, 39 up-to-date
+BUILD FAILED in 12s
+42 actionable tasks: 2 executed, 40 up-to-date
 
 Local checks exit code: 1
