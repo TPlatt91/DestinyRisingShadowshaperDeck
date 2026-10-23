@@ -498,6 +498,8 @@ private fun DeckScreen(
     var confirmDelete by remember { mutableStateOf(false) }
     var coverDialog by remember { mutableStateOf(false) }
     var addSearch by rememberSaveable { mutableStateOf("") }
+    var addFaction by rememberSaveable { mutableStateOf("All") }
+    var addRarity by rememberSaveable { mutableStateOf("All") }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) runCatching {
             context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { reader ->
@@ -527,20 +529,31 @@ private fun DeckScreen(
     val legality = vm.legality()
     val deckCards = state.cards.keys.mapNotNull { vm.catalog[it] }.sortedBy { it.name }
     val suggestions = vm.alphabetical.filter { card ->
-        card.isPlayable && card.name !in state.cards &&
-        (addSearch.isBlank() || card.name.contains(addSearch.trim(), true))
-    }.take(30)
+        card.isPlayable &&
+            (addFaction == "All" || card.faction.equals(addFaction, true)) &&
+            (addRarity == "All" || card.rarity.equals(addRarity, true)) &&
+            (addSearch.isBlank() || listOf(card.name, card.effect)
+                .any { it.contains(addSearch.trim(), ignoreCase = true) })
+    }
 
-    Column(Modifier.fillMaxSize()) {
-        PageHeading("DECK CONSTRUCTION", "Your saved decks are preserved from the Java version", onBack)
+    // The original minigame deck builder has two equally important panes:
+    // a browseable card gallery at left, and the selected 15-card deck at right.
+    Column(Modifier.fillMaxSize().background(Color(0xFF141415))) {
         Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp),
-            verticalAlignment = Alignment.CenterVertically
+            Modifier.fillMaxWidth().height(43.dp)
+                .background(Color(0xFF211C1A))
+                .border(1.dp, Color(0xFF5C4838))
+                .padding(horizontal = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
+            TextButton(onClick = onBack) { Text("‹ BACK", color = Gold, fontSize = 12.sp) }
+            Text("EDIT DECK", color = Cream, fontWeight = FontWeight.Bold,
+                fontSize = 15.sp)
             Box(Modifier.weight(1f)) {
-                OutlinedButton(onClick = { deckMenu = true }) {
-                    Text(state.selected, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text("  ▾")
+                TextButton(onClick = { deckMenu = true }) {
+                    Text("${state.selected} ▾", color = Gold, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis)
                 }
                 DropdownMenu(expanded = deckMenu, onDismissRequest = { deckMenu = false }) {
                     state.names.forEach { name ->
@@ -550,102 +563,155 @@ private fun DeckScreen(
                     }
                 }
             }
-            TextButton(onClick = { editName = ""; deckDialog = "New" }) { Text("+ NEW") }
-            TextButton(onClick = { editName = state.selected; deckDialog = "Rename" }) { Text("RENAME") }
+            Text("$count / 15", color = Cream, fontWeight = FontWeight.Bold,
+                fontSize = 13.sp)
+            TextButton(onClick = { editName = ""; deckDialog = "New" }) {
+                Text("+ NEW", color = Gold, fontSize = 11.sp)
+            }
+            TextButton(onClick = { editName = state.selected; deckDialog = "Rename" }) {
+                Text("RENAME", color = Secondary, fontSize = 11.sp)
+            }
         }
-        Card(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-            colors = CardDefaults.cardColors(containerColor = Raised)
+        Row(
+            Modifier.fillMaxSize().padding(horizontal = 7.dp, vertical = 5.dp),
+            horizontalArrangement = Arrangement.spacedBy(7.dp)
         ) {
-            Column(Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("$power POWER", color = Gold, fontSize = 23.sp,
+            // LEFT: all eligible card faces, including ones already in the deck.
+            Column(
+                Modifier.weight(1.05f).fillMaxHeight()
+                    .background(Color(0xFF262322), RoundedCornerShape(3.dp))
+                    .border(1.dp, Color(0xFF786046), RoundedCornerShape(3.dp))
+            ) {
+                LibrarySearchBar(
+                    addSearch, { addSearch = it },
+                    addFaction, { addFaction = it },
+                    addRarity, { addRarity = it }
+                )
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("CARD GALLERY", color = Gold, fontSize = 11.sp,
                         fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text("$count/15", fontSize = 22.sp, fontWeight = FontWeight.Bold, color = Cream)
+                    Text("${suggestions.size} CARDS  •  TAP ART TO INSPECT",
+                        color = Secondary, fontSize = 9.sp)
                 }
-                Text(if (legality.isEmpty()) "LEGAL DECK" else legality,
-                    color = if (legality.isEmpty()) Color(0xFFB6E1C1) else Warn,
-                    fontSize = 12.sp)
-                Spacer(Modifier.height(7.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    curve.forEachIndexed { index, amount ->
-                        Column(
-                            modifier = Modifier.weight(1f)
-                                .background(Panel, RoundedCornerShape(7.dp))
-                                .padding(vertical = 5.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(if (index == 5) "6+" else "${index + 1}",
-                                color = Gold, fontSize = 11.sp)
-                            Text("$amount", color = Cream, fontWeight = FontWeight.Bold)
-                        }
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(7.dp),
+                    horizontalArrangement = Arrangement.spacedBy(5.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    gridItems(suggestions, key = { it.name }) { card ->
+                        LibraryCardFace(
+                            card,
+                            state.cards[card.name] ?: 0,
+                            onInspect = { onCard(card) },
+                            onAdd = { vm.add(card) }
+                        )
                     }
                 }
             }
-        }
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            DuelCardCover(state.cover, Modifier.width(26.dp).height(37.dp))
-            Text("CARD BACK  •  " + DuelCoverCatalog.title(state.cover),
-                color = Gold, fontSize = 12.sp, modifier = Modifier.weight(1f))
-            TextButton(onClick = { coverDialog = true }) {
-                Text("CHANGE")
-            }
-        }
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 7.dp),
-            horizontalArrangement = Arrangement.spacedBy(5.dp)
-        ) {
-            Button(onClick = onBattle, enabled = legality.isEmpty(),
-                modifier = Modifier.weight(1f)) { Text("⚔  BATTLE") }
-            OutlinedButton(onClick = { pasteDialog = true }) { Text("IMPORT") }
-            OutlinedButton(onClick = { exportFile.launch("${state.selected}.txt") }) { Text("SAVE FILE") }
-        }
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            TextButton(onClick = {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText("Shadowshaper deck", vm.exportText()))
-            }) { Text("Copy deck") }
-            TextButton(onClick = {
-                context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).apply {
-                    type = "text/plain"
-                    putExtra(Intent.EXTRA_TEXT, vm.exportText())
-                    putExtra(Intent.EXTRA_SUBJECT, state.selected)
-                }, "Share deck"))
-            }) { Text("Share") }
-            TextButton(onClick = { confirmDelete = true }) { Text("Delete", color = Warn) }
-        }
-        OutlinedTextField(
-            value = addSearch, onValueChange = { addSearch = it },
-            label = { Text("Find cards to add") }, singleLine = true,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-        )
-        LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(7.dp)
-        ) {
-            item { Text("IN YOUR DECK", color = Gold, fontWeight = FontWeight.Bold) }
-            if (deckCards.isEmpty()) item { Text("No cards added yet. Choose a card below.", color = Secondary) }
-            items(deckCards, key = { "selected_" + it.name }) { card ->
-                CardTile(card, state.cards[card.name] ?: 0) { onCard(card) }
-            }
-            item {
-                HorizontalDivider(color = Color(0xFF775943), modifier = Modifier.padding(vertical = 8.dp))
-                Text("ADD CARDS", color = Gold, fontWeight = FontWeight.Bold)
-            }
-            items(suggestions, key = { "suggested_" + it.name }) { card ->
-                CardTile(card, 0) { onCard(card) }
+            // RIGHT: cost distribution and card list remain visible at all times.
+            Column(
+                Modifier.weight(0.95f).fillMaxHeight()
+                    .background(Color(0xFF292423), RoundedCornerShape(3.dp))
+                    .border(1.dp, Color(0xFF846846), RoundedCornerShape(3.dp))
+                    .padding(horizontal = 7.dp, vertical = 5.dp)
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        state.selected.uppercase(), color = Cream,
+                        fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text("$count / 15", color = Gold, fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp)
+                }
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 3.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("POWER $power", color = CoolBlue,
+                        fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                    Spacer(Modifier.width(2.dp))
+                    curve.forEachIndexed { index, amount ->
+                        Column(
+                            Modifier.weight(1f)
+                                .background(Color(0xFF1B1D1E), RoundedCornerShape(2.dp))
+                                .border(1.dp, Color(0xFF63564B))
+                                .padding(vertical = 2.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text(if (index == 5) "6+" else "${index + 1}",
+                                color = Gold, fontSize = 9.sp)
+                            Text("$amount", color = Cream, fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+                if (legality.isNotBlank()) {
+                    Text(legality, color = Warn, fontSize = 10.sp, maxLines = 2)
+                }
+                HorizontalDivider(color = Color(0xFF5E5349))
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(4),
+                    modifier = Modifier.weight(1f),
+                    contentPadding = PaddingValues(vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    gridItems(deckCards, key = { it.name }) { card ->
+                        LibraryCardFace(
+                            card, state.cards[card.name] ?: 0,
+                            onInspect = { onCard(card) }
+                        )
+                    }
+                }
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    OutlinedButton(
+                        onClick = { coverDialog = true },
+                        contentPadding = PaddingValues(horizontal = 7.dp, vertical = 2.dp)
+                    ) {
+                        Text("COVER", fontSize = 9.sp)
+                    }
+                    TextButton(
+                        onClick = { pasteDialog = true },
+                        contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+                    ) { Text("IMPORT", fontSize = 9.sp) }
+                    TextButton(
+                        onClick = { confirmDelete = true },
+                        contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+                    ) { Text("DELETE", fontSize = 9.sp, color = Warn) }
+                    Spacer(Modifier.weight(1f))
+                    TextButton(
+                        onClick = { exportFile.launch("${state.selected}.txt") },
+                        contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+                    ) { Text("EXPORT", fontSize = 9.sp) }
+                }
+                Button(
+                    onClick = onBattle,
+                    enabled = legality.isEmpty(),
+                    modifier = Modifier.fillMaxWidth().height(36.dp),
+                    shape = RoundedCornerShape(3.dp),
+                    contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        if (legality.isEmpty()) "SAVED  •  PLAY BATTLE"
+                        else "AUTO-SAVED  •  COMPLETE DECK TO PLAY",
+                        color = Ink, fontWeight = FontWeight.Bold, fontSize = 12.sp
+                    )
+                }
             }
         }
     }
-
     if (coverDialog) {
         AlertDialog(
             onDismissRequest = { coverDialog = false },
