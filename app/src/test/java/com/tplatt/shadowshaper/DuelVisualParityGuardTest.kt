@@ -38,8 +38,14 @@ class DuelVisualParityGuardTest {
         val environment = source("DuelArenaEnvironment.kt")
         val trim = source("DuelArenaTrim.kt")
         val battle = source("ShadowBattleActivity.kt")
+        assertTrue(stone.contains("DuelArenaPatina(Modifier.fillMaxSize())"))
         assertTrue(stone.contains("DuelArenaEnvironment(Modifier.fillMaxSize())"))
         assertTrue(stone.contains("DuelArenaTrim(Modifier.fillMaxSize())"))
+        val patina = source("DuelArenaPatina.kt")
+        assertTrue(patina.contains("internal fun DuelArenaPatina("))
+        assertFalse(patina.contains("Modifier.clickable"))
+        assertTrue(stone.indexOf("DuelArenaPatina(Modifier.fillMaxSize())") <
+            stone.indexOf("DuelArenaEnvironment(Modifier.fillMaxSize())"))
         assertTrue(trim.contains("cornerPaths"))
         assertTrue(trim.contains("brass.copy(alpha"))
         assertFalse(trim.contains("Modifier.clickable"))
@@ -55,6 +61,20 @@ class DuelVisualParityGuardTest {
         assertTrue(environment.contains("contentDescription = null"))
         assertFalse(environment.contains("Modifier.clickable"))
         assertFalse(environment.contains("ShadowEngine."))
+    }
+
+    @Test fun sevenLaneFormationStaysInsideStoneAndBothScoreGemsStayRight() {
+        val battle = source("ShadowBattleActivity.kt")
+        val metrics = source("DuelLayoutMetrics.kt")
+        val stone = source("DuelStoneArena.kt")
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.86f"))
+        assertTrue(battle.contains("DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION"))
+        assertTrue(stone.contains("val columns = ShadowRules.COLUMNS"))
+        assertTrue(battle.contains("DuelPowerCrest(snapshot.cpuPower, isPlayer = false)"))
+        assertTrue(battle.contains("DuelPowerCrest(snapshot.playerPower, isPlayer = true)"))
+        assertTrue(battle.contains("DuelGoldTurnDial("))
+        assertTrue(battle.contains("DuelCardCover(\\n                            chosenCover"))
+        assertTrue(battle.contains("drawBehind {"))
     }
 
     @Test fun cardFramesPreserveSourceArtworkWithoutCoveringNameStrip() {
