@@ -15,8 +15,9 @@ import androidx.compose.ui.unit.dp
 /**
  * Uses the actual cracked-stone and foliage artwork supplied by the user.
  *
- * The portrait derivative is bundled offline at drawable-nodpi so Android
- * will not density-scale it. This is NOT the former generated masonry/noise
+ * The 720x1280 portrait derivative has approximately 5% narrow edge
+ * borders, keeping natural cracks and nearly all width for the seven cards.
+ * It is bundled offline at drawable-nodpi without density scaling. This is NOT the former generated masonry/noise
  * scene: it contains the user's real cracks, carved stones, moss and foliage.
  * No overlay in this composable intercepts any touch or drag event.
  */
@@ -24,11 +25,12 @@ import androidx.compose.ui.unit.dp
 internal fun DuelStoneArena(modifier: Modifier = Modifier) {
     Box(modifier) {
         Image(
-            painter = painterResource(R.drawable.shadow_arena_original_portrait_hq),
+            painter = painterResource(R.drawable.shadow_arena_narrow_ruins_v2),
             contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            // Asset already adapted to portrait: preserve every edge detail.
-            contentScale = ContentScale.FillBounds
+            // Crops a few top/bottom pixels rather than stretching the
+            // stone, preserving cracks, rocks, and foliage proportions.
+            contentScale = ContentScale.Crop
         )
     }
 }
