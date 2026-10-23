@@ -237,3 +237,14 @@ Run `run_local_engine_checks.bat` on the user's Gradle/Android SDK machine. It s
 **Xur → Rock → Zhiyao test correction:** A previous source regression incorrectly expected a Zhiyao **on the Rock recipient's own field** to trigger when Xur summoned a Rock there. The trigger requires an **opposing** Front Row arrival; the owner's Zhiyao must not react. `ShadowBuffChainResolutionTest.kt` now positions the reacting Zhiyao on Xur's side (opposite the summoned Rock), and a new regression ensures a Zhiyao already allied with the receiving side does *not* gain Power. Neither case changes the engine's existing owner-relative watcher dispatch.
 
 **Verification:** GitHub source/tests committed; all tests are unexecuted pending the user's local Gradle run. No GitHub Actions, remote CI, or usage credits were consumed.
+
+## Opposing Front Row capacity in CPU placement decisions
+
+**Source correction:** `ShadowEngine.evaluateCpuPlacement` previously only valued open summon positions for Tomb Ship and Drop Pod, both of which place allies on the CPU's own field. Other played cards may move into, or summon tokens onto, the **opponent's** Front Row. The CPU could therefore spend its scarce Light on a blocked Cursed Thrall / Exploder Shank transfer, an empty Common Cover Rock placement, or a blocked Ning Fei Clone summon instead of playing a normally useful unit.
+
+- **Cursed Thrall / Exploder Shank:** the CPU now favors a transfer only when the opposing Front Row contains a free slot, with a substantial penalty when it is full. A human may still legally play a card on their own board and encounter the existing blocked-transfer fallback. The AI preference is an efficiency heuristic; it does not invent a restriction on hand play.
+- **Common Cover:** the CPU values zero, one, or two available *opponent* Front Row Rock destinations and prioritizes a legal Front Row play. If the Rock catalog entry is absent, the AI does not assign a summon reward. The two summons remain separate actual placement events.
+- **Ning Fei:** the CPU rewards the Clone-producing ability only if the opponent has room in the Front Row and the Clone is a verified catalog unit.
+- **Six new local JVM scenarios** in `ShadowCpuOpponentCapacityTest.kt` verify blocked/open enemy Front Row preference for the two transfer cards, Common Cover preference and Front Row location, Ning Fei's conditional Clone creation, and no phantom placement revisions for unmade summons.
+
+**Verification:** Changes pushed to GitHub `main`, not run through Gradle or on a device. No GitHub Actions were used. These improvements make the AI less wasteful without claiming equivalence with Destiny: Rising's original opponent AI.
