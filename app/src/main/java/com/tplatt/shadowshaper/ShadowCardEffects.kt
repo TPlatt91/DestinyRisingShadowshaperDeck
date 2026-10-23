@@ -464,11 +464,12 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             }
             if (newUnit.row == ShadowRules.FRONT_ROW &&
                 watcher.card.name == "Zhiyao") {
-                // Route every Power bonus through the shared resolver so
-                // Tan-2 doubling and own-buff triggers also work for Zhiyao.
-                val beforeBonus = watcher.bonus
-                buff(watcher, 1)
-                val granted = (watcher.bonus - beforeBonus).coerceAtLeast(0)
+                // Track the amount awarded by THIS placement trigger.
+                // The total bonus delta after buff() can also include a
+                // nested Saladin response to opposing sniper retaliation.
+                // Those later, permanent bonuses must not expire alongside
+                // Zhiyao's three-turn bonus. Tan-2's doubling still applies.
+                val granted = buffAndReport(watcher, 1)
                 if (granted > 0 && isPresent(watcher)) {
                     watcher.timedBonuses.add(ShadowEngine.TimedBonus(granted, 3))
                     log("Zhiyao reacts +" + granted + " Power for 3 turns.")

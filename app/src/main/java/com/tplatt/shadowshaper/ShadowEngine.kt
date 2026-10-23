@@ -586,13 +586,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
      * sniper or death sweep can remove it. Each grant still independently
      * consumes Tan-2's next-bonus modifier.
      */
-    private fun applyPowerBonus(target: Unit?, amount: Int): Boolean {
-        if (target == null || amount <= 0 || !isPresent(target)) return false
+    private fun applyPowerBonus(target: Unit?, amount: Int): Int {
+        if (target == null || amount <= 0 || !isPresent(target)) return 0
         if (resolutionDepth >= 32) {
             recordUnresolvedEffect(
                 "SAFETY: recursive Power bonus rejected after 32 resolutions."
             )
-            return false
+            return 0
         }
         var applied = amount
         val doubler = all(target.owner).firstOrNull {
@@ -606,11 +606,18 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.power += applied
         target.bonus += applied
         log("BUFF +" + applied + " ▶ " + target.card.name)
-        return true
+        return applied
+    }
+
+    /** Return ONLY this Power bonus, excluding nested sniper/Saladin reactions. */
+    internal fun buffAndReport(target: Unit?, amount: Int): Int {
+        val applied = applyPowerBonus(target, amount)
+        if (applied > 0) onBuff(target!!)
+        return applied
     }
 
     internal fun buff(target: Unit?, amount: Int) {
-        if (applyPowerBonus(target, amount)) onBuff(target!!)
+        buffAndReport(target, amount)
     }
 
     /** Resolve all surviving Saladins' reactions to this one damage event. */
@@ -620,7 +627,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         for (saladin in sources) {
             if (!isPresent(target)) break
             if (!isPresent(saladin) || saladin.suppressed) continue
-            if (applyPowerBonus(target, 3)) granted++
+            if (applyPowerBonus(target, 3) > 0) granted++
         }
         // Each bonus is still its own acquisition for on-buff effects. The
         // Power gains happen first so an intermediate negative value cannot
