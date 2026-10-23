@@ -36,7 +36,7 @@ class DuelLayoutMetricsTest {
         assertEquals(112, DuelLayoutMetrics.rightHudWidth(740))
         assertEquals(102, DuelLayoutMetrics.leftHudWidth(900))
         assertEquals(132, DuelLayoutMetrics.rightHudWidth(900))
-        assertEquals(6, ShadowRules.COLUMNS)
+        assertEquals(7, ShadowRules.COLUMNS)
     }
     @Test fun portraitBoardHeightUsesPhoneWidthInsteadOfStretchingAllRows() {
         assertEquals(358.8f, DuelLayoutMetrics.portraitBoardHeight(390, 820), 0.01f)
