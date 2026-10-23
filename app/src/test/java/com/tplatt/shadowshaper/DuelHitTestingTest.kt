@@ -49,4 +49,18 @@ class DuelHitTestingTest {
         assertEquals(368f, overlay.x, 0.01f)
         assertEquals(136.8f, overlay.y, 0.01f)
     }
+    @Test fun seventhColumnCanAcceptDropButEighthCannot() {
+        val lastColumn = mapOf(
+            "0-1-6" to Rect(350f, 100f, 402f, 174f),
+            "0-1-7" to Rect(410f, 100f, 462f, 174f)
+        )
+        assertEquals(
+            DuelDropCell(1, 6),
+            DuelHitTesting.playerSlotAt(Offset(370f, 130f), lastColumn)
+        )
+        assertNull(
+            DuelHitTesting.playerSlotAt(Offset(430f, 130f), lastColumn)
+        )
+    }
+
 }
