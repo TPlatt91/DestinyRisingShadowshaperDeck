@@ -370,7 +370,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         contentAlignment = Alignment.Center
                     ) {
                     Box(
-                        Modifier.fillMaxWidth()
+                        Modifier.fillMaxWidth(
+                            DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION
+                        )
                             .height(DuelLayoutMetrics.portraitBoardHeight(
                                 screenConfig.screenWidthDp,
                                 screenConfig.screenHeightDp
