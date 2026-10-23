@@ -121,6 +121,48 @@ class ShadowVideoSourcePriorityTest {
         assertTrue(e.activeInRow(c, ShadowRules.FRONT_ROW))
     }
 
+    @Test fun detailedVideoNoteMarksEffectEvidenceWithoutFreezingWebsiteOnlyStats() {
+        val c = card("Wolf", "https://www.todayindestiny.com",
+            "When Played: Destroys a 5-Power-or-higher unit if you have 6 allies.")
+        val fields = conflictingMetadata(c.name).toMutableList()
+        fields[8] = "Card video 38645.mp4 confirms no row restriction and 6 allies."
+        ShadowData.applyDetailedMetadata(c, fields)
+        assertEquals(ShadowData.VIDEO_NOTES_SOURCE, c.source)
+        assertTrue(ShadowData.hasVideoEffectEvidence(c))
+        // This is an EFFECT note, not a complete captured stat overlay:
+        // numeric fields still come from the separately verified detail row.
+        assertEquals("6", c.cost)
+        assertEquals("1", c.power)
+        val e = ShadowEngine(mapOf(c.name to c), 4L)
+        assertTrue(e.activeInRow(c, ShadowRules.FRONT_ROW))
+        assertTrue(e.activeInRow(c, ShadowRules.BACK_ROW))
+    }
+
+    @Test fun todayInDestinyCardFaceOnlyNoteIsNotMisrepresentedAsGameplayVideo() {
+        val c = card("Carrier", "https://www.todayindestiny.com",
+            "When Played: Summons a Dreg to each side.")
+        val fields = conflictingMetadata(c.name).toMutableList()
+        fields[8] = "Power/Light cost confirmed from original TodayInDestiny card-face image."
+        ShadowData.applyDetailedMetadata(c, fields)
+        assertFalse(ShadowData.hasVideoEffectEvidence(c))
+        assertEquals("https://www.todayindestiny.com", c.source)
+        val e = ShadowEngine(mapOf(c.name to c), 3L)
+        assertFalse(e.activeInRow(c, ShadowRules.FRONT_ROW))
+        assertTrue(e.activeInRow(c, ShadowRules.BACK_ROW))
+    }
+
+    @Test fun directVideoOverlayRetainsHigherPriorityThanOriginalVideoNotes() {
+        val c = card("Ayuela", ShadowData.VIDEO_SOURCE,
+            "Sustained (Back Row): Deals 2 damage when a Front Row enemy arrives.")
+        val fields = conflictingMetadata(c.name).toMutableList()
+        fields[8] = "Recorded in-game video 38646.mp4; 2 damage for 2 turns."
+        ShadowData.applyDetailedMetadata(c, fields)
+        assertEquals(ShadowData.VIDEO_SOURCE, c.source)
+        assertEquals("3", c.cost)
+        assertEquals("8", c.power)
+        assertEquals(ShadowRules.BACK_ROW, ShadowData.videoRequiredRow(c))
+    }
+
     @Test fun videoCaptureWithCombinedRowConditionUsesItsRecordedRow() {
         val c = card("Combined Header", ShadowData.VIDEO_SOURCE,
             "When Played (3-Unit Line, Back Row): Deals 2 damage.")
