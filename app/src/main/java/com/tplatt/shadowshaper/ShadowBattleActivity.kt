@@ -378,14 +378,18 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                    Column(
+                    Box(
                         Modifier.fillMaxWidth()
                             .height(DuelLayoutMetrics.portraitBoardHeight(
                                 screenConfig.screenWidthDp,
                                 screenConfig.screenHeightDp
-                            ).dp),
-                        verticalArrangement = Arrangement.spacedBy(1.dp)
+                            ).dp)
                     ) {
+                        DuelArenaGrid(Modifier.fillMaxSize())
+                        Column(
+                            Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(1.dp)
+                        ) {
                     val targets = if (pendingPosition != null && selectedIndex in engine.human.hand.indices)
                         engine.targetOptions(engine.human, engine.human.hand[selectedIndex],
                             pendingPosition!!.first, pendingPosition!!.second)
@@ -476,6 +480,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 }
                             }
                         }
+                    }
                     }
                     }
                 }
