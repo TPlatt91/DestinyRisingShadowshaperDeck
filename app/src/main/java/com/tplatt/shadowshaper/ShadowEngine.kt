@@ -269,7 +269,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             if (card.name == "Knight" && (!unit.card.faction.equals("Hive", true) || !unit.inspired))
                 continue
             if (card.name == "Wizard" && !unit.card.faction.equals("Hive", true)) continue
-            if (card.name == "Hyssop" && unit.bonus <= 0) continue
+            // The printed "with a bonus" condition includes live Column/
+            // Line auras, not just permanent Power stored in unit.bonus.
+            // Use the same active-bonus calculation as Bazinet/Thinktank.
+            if (card.name == "Hyssop" && powerBonus(unit) <= 0) continue
             if (card.name == "Wolf" &&
                 !ShadowSpecialCardRules.wolfTargetEligible(power(unit))) continue
             if (card.name == "Molkrul" && power(unit) > 10) continue
