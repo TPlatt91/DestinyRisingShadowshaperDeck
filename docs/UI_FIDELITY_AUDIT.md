@@ -211,3 +211,25 @@ The user provided the original Destiny: Rising Shadowshaper battlefield screensh
 - No additional overlays obscure original locally stored card art. Game rounds remain six; only **column capacity** increases to seven.
 
 **Validation limit:** Files were verified syntactically for balanced Kotlin delimiters, but Android/Gradle local compilation and on-device screenshot parity validation remain pending. This **changes gameplay board capacity**, so the complete local test suite must be rerun. No GitHub Actions or usage credits were consumed.
+
+
+## Ruined-stone arena environment pass — 23 October 2026
+
+**User reference and requirement:** Latest installed-app screenshot showed a relatively clean stone slab. The user compared it with their Destiny: Rising in-game reference showing **asymmetrical fractured rock rubble and ocher/olive foliage**, most visible along the left/lower-left edge, and a deep right-side stone wall. User explicitly requested actual implementation of a substantially richer visual overhaul.
+
+### Implemented directly in Kotlin
+
+- **`DuelArenaEnvironment.kt`** (new): static procedural landscape scene drawn once into a transparent 640×1024 Android bitmap. Includes recessed dark cliff gutters; **14 individually shaded large masonry masses**, 23 smaller angular rubble pieces, bevel highlights and multi-plane stone facets, fractures and mineral pitting, 5 moss beds, **9 individually leafed fern clusters**, 5 creeping ivy vines, approximately 45 scattered fallen leaves and 480 small earth/mineral fragments. Colors range from dark granite and gray-green stone to olive, ocher and muted yellow foliage to match the supplied game screenshot.
+- Rendered foliage uses physically layered stems, double-sided tapered leaves, per-leaf highlights and veins, and irregular clustered dirt/moss. Each stone receives a silhouette, cast shadow, planar facet shading, worn bevel and individually varied crack/grain. Location and appearance use fixed PRNG seeds so scene decorations do not jump on recomposition.
+- The environment is cached as a single **2.5-MiB ARGB bitmap** by a synchronized lazy property; it is displayed as a regular non-interactive Compose Image, so performance does not depend on regenerating hundreds of leaf/rock paths every animation frame.
+- **`DuelStoneArena.kt`** now composites the detailed environment over the lighter slate texture and vignette, instead of the earlier primitive and repeated mirrored black cliff strokes. The separate **`DuelArenaGrid` and real card hits are rendered above both**.
+- **`DuelArenaTrim.kt`** (new): blue-gray chipped corner brackets, etched perimeter, four rivets, subtle polished top edge and thin worn brass bottom rail echo the screenshot's metallic frame. Trim is visual only and remains outside the primary card lanes.
+- **`DuelBattleHud.kt`**: reworked the End Turn control with a toothed/ticked bronze-gold outer bezel and recessed dark ring while preserving the existing real guarded `onClick`. Other score and Light HUD elements still read live engine state.
+- **`ShadowBattleActivity.kt`**: surrounding header and hand tray now use cool blue-black steel gradients rather than the former warm brown, matching the original interface's environmental palette.
+- **`DuelVisualParityGuardTest.kt`**: local source guard verifies scenery layering, rock/fern/vine/moss/debris artists, cached render, null accessibility description and absence of click handlers/game-engine effects, including the perimeter trim.
+
+### Fidelity, scope and validation
+
+- The user's screenshots guided placement, silhouette and color. Procedural art is an **original recreation**, not a false claim to possess the exact Destiny: Rising texture files or photo-real original background.
+- This pass modifies **battle presentation only**. Portrait orientation, 7 legal columns per row, gameplay rules, card artwork, CPU decisions, placement, movement, targeting, drag/drop and actual action callbacks were left untouched.
+- Source files were checked for balanced Kotlin delimiters and verified decoration order; **Android/Gradle compilation and phone screenshot comparison still require the user's next `run_local_engine_checks.bat`**. No GitHub Actions or usage credits were used.
