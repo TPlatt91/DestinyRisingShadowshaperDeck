@@ -206,13 +206,31 @@ class ShadowBuffChainResolutionTest {
     @Test fun buffedXurSummonsRockAndTriggersEnemyArrivalReaction() {
         val e = engine()
         val xur = place(e, "Xur", e.human, 0, 2)
-        val zhiyao = place(e, "Zhiyao", e.cpu, 0, 4)
+        // Xur summons an opposing unit onto the CPU side. The Human
+        // Zhiyao sees an ENEMY arrival and therefore gets its bonus.
+        val zhiyao = place(e, "Zhiyao", e.human, 0, 4)
 
         e.buff(xur, 1)
 
         assertEquals(1, e.cpu.board[1].filterNotNull().count { it.card.name == "Rock" })
         assertEquals(4, zhiyao.power)
         assertEquals(1, zhiyao.timedBonuses.size)
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun buffedXurRockDoesNotTriggerReceivingSidesOwnZhiyao() {
+        val e = engine()
+        val xur = place(e, "Xur", e.human, 0, 2)
+        // The CPU's Zhiyao is an ALLY of the summoned Rock, regardless
+        // of the Rock card's printed faction. Allied deployment cannot
+        // satisfy "opponent places a unit in the Front Row".
+        val ownZhiyao = place(e, "Zhiyao", e.cpu, 0, 4)
+
+        e.buff(xur, 1)
+
+        assertEquals(1, e.cpu.board[1].filterNotNull().count { it.card.name == "Rock" })
+        assertEquals(3, ownZhiyao.power)
+        assertTrue(ownZhiyao.timedBonuses.isEmpty())
         assertEquals(0, e.unresolvedEffects)
     }
 }
