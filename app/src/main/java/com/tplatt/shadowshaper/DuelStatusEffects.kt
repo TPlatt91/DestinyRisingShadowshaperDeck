@@ -62,16 +62,22 @@ internal fun DuelCardStatusFx(
     val pulse = remember(unit) { Animatable(0f) }
     var pulseKind by remember(unit) { mutableStateOf<DuelEffectKind?>(null) }
     var seenSerial by remember(unit) { mutableStateOf(0L) }
-    val ambient = rememberInfiniteTransition(label = "status edge shimmer")
-    val shimmer by ambient.animateFloat(
-        initialValue = .40f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1900, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "embers and status aura"
-    )
+    // Do not run idle infinite animations on normal, unmarked cards.
+    val hasOngoingStatus = unit.scorchTurns > 0 || unit.overshield ||
+        unit.inspired || unit.suppressed
+    val shimmer = if (hasOngoingStatus) {
+        val ambient = rememberInfiniteTransition(label = "status edge shimmer")
+        val level by ambient.animateFloat(
+            initialValue = .40f,
+            targetValue = 1f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(1900, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            ),
+            label = "embers and status aura"
+        )
+        level
+    } else .6f
 
     LaunchedEffect(unit, events.lastOrNull()?.serial) {
         // This list is capped and contains only actual engine-confirmed
