@@ -39,7 +39,7 @@ class DuelLayoutMetricsTest {
         assertEquals(7, ShadowRules.COLUMNS)
     }
     @Test fun portraitLaneWidthLeavesBothRubbleMarginsVisible() {
-        assertEquals(0.80f, DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION, 0.001f)
+        assertEquals(0.86f, DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION, 0.001f)
         assertEquals(ShadowRules.COLUMNS, 7)
     }
 
