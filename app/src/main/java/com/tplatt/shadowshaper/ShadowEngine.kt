@@ -88,6 +88,13 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     @JvmField var lastPlacedRow = -1
     @JvmField var lastPlacedColumn = -1
     @JvmField var placementRevision = 0
+    // Audio telemetry ONLY: count cards actually drawn, without relying on
+    // hand-size deltas (a draw and play can happen in the same engine tick).
+    // Not used in legality checks, RNG, decks, Power or card effect resolution.
+    @JvmField var humanDrawTotal = 0
+    @JvmField var cpuDrawTotal = 0
+    @JvmField var humanEmptyDrawTotal = 0
+    @JvmField var cpuEmptyDrawTotal = 0
     @JvmField var pendingMovedUnit: Unit? = null
     @JvmField var pendingMoveCaster: Player? = null
 
@@ -155,6 +162,10 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         lastPlacedRow = -1
         lastPlacedColumn = -1
         placementRevision = 0
+        humanDrawTotal = 0
+        cpuDrawTotal = 0
+        humanEmptyDrawTotal = 0
+        cpuEmptyDrawTotal = 0
         resolutionDepth = 0
         draw(human, ShadowRules.openingHand(humanFirst))
         draw(cpu, ShadowRules.openingHand(!humanFirst))
@@ -174,7 +185,14 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     fun draw(side: Player, count: Int) {
         repeat(count.coerceAtLeast(0)) {
-            if (side.drawPile.isNotEmpty()) side.hand.add(side.drawPile.removeAt(side.drawPile.lastIndex))
+            if (side.drawPile.isNotEmpty()) {
+                side.hand.add(side.drawPile.removeAt(side.drawPile.lastIndex))
+                if (side === human) humanDrawTotal++
+                else if (side === cpu) cpuDrawTotal++
+            } else {
+                if (side === human) humanEmptyDrawTotal++
+                else if (side === cpu) cpuEmptyDrawTotal++
+            }
         }
     }
 
