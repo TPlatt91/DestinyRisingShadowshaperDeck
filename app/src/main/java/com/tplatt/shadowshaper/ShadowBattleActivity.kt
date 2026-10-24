@@ -174,6 +174,10 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var effectAnnouncement by remember { mutableStateOf<String?>(null) }
     var draggedIndex by remember { mutableIntStateOf(-1) }
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
+    // Visual-only hand-to-slot travel. Coordinates use the same window-space
+    // geometry as drag hit testing; they are never game rules or extra slots.
+    var pendingFingerRelease by remember { mutableStateOf<Offset?>(null) }
+    var latestHumanLaunch by remember { mutableStateOf<DuelHandLaunch?>(null) }
     var rootTopLeftInWindow by remember { mutableStateOf(Offset.Zero) }
     val cardBounds = remember { mutableStateMapOf<Int, Rect>() }
     // A card drag must win horizontal gesture recognition over the hand list.
@@ -222,6 +226,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         try {
             candidate.start(chosenDeck, cpu)
             coordinator = candidate
+            latestHumanLaunch = null
+            pendingFingerRelease = null
             selectedIndex = -1
             pendingPosition = null
             inspectedUnit = null
@@ -237,9 +243,31 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
+    fun recordSuccessfulLaunch(
+        e: ShadowEngine,
+        handIndex: Int,
+        row: Int,
+        column: Int,
+        release: Offset? = null
+    ) {
+        val source = release ?: cardBounds[handIndex]?.center
+        val destination = slotBounds["0-$row-$column"]?.center
+        latestHumanLaunch = if (source != null && destination != null) {
+            DuelHandLaunch(
+                placementRevision = e.placementRevision,
+                row = row,
+                column = column,
+                offsetX = source.x - destination.x,
+                offsetY = source.y - destination.y
+            )
+        } else null
+    }
+
     fun playAt(row: Int, column: Int) {
         val e = engine ?: return
         val co = current ?: return
+        val release = pendingFingerRelease
+        pendingFingerRelease = null
         if (e.pendingMovedUnit != null && e.pendingMoveCaster === e.human) {
             message = if (co.resolveMove(e.human, row, column)) "Relocation complete." else e.lastActionError
             return
@@ -262,6 +290,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             else "Choose a gold-highlighted target for " + card.name
         } else {
             if (co.play(e.human, index, row, column, null)) {
+                recordSuccessfulLaunch(e, index, row, column, release)
                 selectedIndex = -1
                 pendingPosition = null
                 message = "Card played."
@@ -276,6 +305,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         if (selectedIndex !in e.human.hand.indices) return
         if (co.play(e.human, selectedIndex, position.first, position.second,
                 ShadowEngine.Target(owner, row, column))) {
+            recordSuccessfulLaunch(e, selectedIndex, position.first, position.second)
             selectedIndex = -1
             pendingPosition = null
             message = "Effect resolved."
@@ -289,6 +319,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         val card = e.human.hand.getOrNull(selectedIndex) ?: return
         if (card.name != "Rossi-11") return
         if (co.play(e.human, selectedIndex, position.first, position.second, null)) {
+            recordSuccessfulLaunch(e, selectedIndex, position.first, position.second)
             selectedIndex = -1
             pendingPosition = null
             message = "Overshield granted to Rossi-11."
@@ -495,6 +526,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                                 row = row,
                                                 column = col
                                             ),
+                                            entryFromHand = if (owner === engine.human) {
+                                                latestHumanLaunch?.takeIf {
+                                                    it.matches(engine.placementRevision, row, col)
+                                                }?.let { Offset(it.offsetX, it.offsetY) }
+                                            } else null,
                                             modifier = Modifier.width(fit.width.dp).height(fit.height.dp)
                                                 .graphicsLayer {
                                                     // Visual art gains presence inside the
@@ -758,6 +794,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                                 draggedIndex = -1
                                                 if (drop != null) {
                                                     selectedIndex = index
+                                                    pendingFingerRelease = dragPosition
                                                     playAt(drop.row, drop.column)
                                                 } else {
                                                     message = "Release the card over a glowing empty slot."
