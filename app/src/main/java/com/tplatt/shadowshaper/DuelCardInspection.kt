@@ -24,6 +24,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
@@ -53,6 +54,10 @@ internal fun DuelCardInspection(
     onNext: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val detailScroll = rememberScrollState()
+    LaunchedEffect(card.name, browseIndex) {
+        detailScroll.scrollTo(0)
+    }
     val keywords = remember(card.name) {
         ShadowKeywordGlossary.onCard(card, ShadowKeywordGlossary.all(context))
     }
@@ -107,7 +112,7 @@ internal fun DuelCardInspection(
                 DuelPopupRule()
                 Column(
                     Modifier.fillMaxWidth().weight(1f)
-                        .verticalScroll(rememberScrollState())
+                        .verticalScroll(detailScroll)
                         .padding(horizontal = 12.dp, vertical = 4.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
