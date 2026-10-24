@@ -30,8 +30,11 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -407,6 +411,16 @@ private fun LandingAction(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
+    var entered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(85L + (index.toIntOrNull() ?: 1) * 65L)
+        entered = true
+    }
+    val reveal by animateFloatAsState(
+        targetValue = if (entered) 1f else 0f,
+        animationSpec = tween(470),
+        label = "staggered tactical tile entrance"
+    )
     val press by animateFloatAsState(
         targetValue = if (pressed) 1f else 0f,
         animationSpec = tween(140),
@@ -422,6 +436,8 @@ private fun LandingAction(
             .graphicsLayer {
                 scaleX = 1f - press * .014f
                 scaleY = 1f - press * .026f
+                translationY = (1f - reveal) * 13.dp.toPx()
+                alpha = reveal
             }
             .clip(landingCut)
             .background(
