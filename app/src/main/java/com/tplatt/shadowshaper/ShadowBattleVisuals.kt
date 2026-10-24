@@ -3,6 +3,10 @@ package com.tplatt.shadowshaper
 import android.widget.ImageView
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -339,7 +343,7 @@ internal fun DuelCardFrame(
                 scaleY = scale
                 alpha = if (playable) 1f else 0.65f
             }
-            .shadow(if (selected) 8.dp else 2.dp, RoundedCornerShape(5.dp))
+            .shadow(if (selected) 10.dp else if (compact) 5.dp else 3.dp, RoundedCornerShape(5.dp))
             .clip(RoundedCornerShape(5.dp))
             .background(Color(0xFF21191C))
             .border(if (selected) 2.dp else 1.dp,
@@ -404,9 +408,24 @@ private fun DuelStatChip(
 
 @Composable
 private fun DuelStatusDot(value: String, color: Color) {
-    Text(value, fontSize = 10.sp, color = color,
-        modifier = Modifier.background(Color(0xC71E1A1C), CircleShape)
-            .padding(horizontal = 4.dp, vertical = 1.dp))
+    // Only units actually carrying a status create this small animation.
+    // It never changes the duration, source, or rules of a status effect.
+    val transition = rememberInfiniteTransition(label = "unit status $value")
+    val shine by transition.animateFloat(
+        initialValue = .48f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1150),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "status glimmer"
+    )
+    Text(
+        value, fontSize = 11.sp, color = color.copy(alpha = shine),
+        modifier = Modifier
+            .background(Color(0xD61A1D23), CircleShape)
+            .border(.65.dp, color.copy(alpha = shine * .8f), CircleShape)
+            .padding(horizontal = 3.dp, vertical = 1.dp)
+    )
 }
 
 @Composable
