@@ -1,5 +1,12 @@
 package com.tplatt.shadowshaper
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -15,6 +22,11 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -41,8 +53,17 @@ internal fun DuelPowerCrest(
     isPlayer: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier.size(52.dp), contentAlignment = Alignment.Center) {
-        Canvas(Modifier.size(49.dp)) {
+    val displayed by animateIntAsState(value, animationSpec = tween(340), label = "power crest")
+    val pulse = remember(isPlayer) { Animatable(0f) }
+    var ready by remember(isPlayer) { mutableStateOf(false) }
+    LaunchedEffect(value, isPlayer) {
+        if (ready) {
+            pulse.snapTo(1f)
+            pulse.animateTo(0f, tween(durationMillis = 570))
+        } else ready = true
+    }
+    Box(modifier.size(54.dp), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(51.dp)) {
             val cx = size.width / 2f
             val cy = size.height / 2f
             val radius = size.width * 0.45f
@@ -61,7 +82,13 @@ internal fun DuelPowerCrest(
                 )
             )
             drawPath(diamond, color = Color(0xFF11171D), style = Stroke(4.dp.toPx()))
-            drawPath(diamond, color = edge, style = Stroke(1.5.dp.toPx()))
+            drawPath(diamond, color = edge, style = Stroke((1.5f + pulse.value * 1.4f).dp.toPx()))
+            if (pulse.value > .02f) {
+                drawPath(
+                    diamond, color = edge.copy(alpha = pulse.value * .78f),
+                    style = Stroke((2f + pulse.value * 2.4f).dp.toPx())
+                )
+            }
             drawLine(
                 edge.copy(alpha = .60f),
                 Offset(cx, cy - radius * 0.83f),
@@ -69,7 +96,7 @@ internal fun DuelPowerCrest(
             )
         }
         Text(
-            value.toString(),
+            displayed.toString(),
             color = Color.White,
             fontSize = 18.sp,
             fontWeight = FontWeight.Black,
@@ -82,19 +109,28 @@ internal fun DuelPowerCrest(
 /** Destiny-style blue Light orb rather than a generic numeric Text chip. */
 @Composable
 internal fun DuelLightOrb(value: Int, maximum: Int) {
+    val shown by animateIntAsState(value, animationSpec = tween(240), label = "light value")
+    val glow = remember { Animatable(0f) }
+    var initialized by remember { mutableStateOf(false) }
+    LaunchedEffect(value) {
+        if (initialized) {
+            glow.snapTo(1f)
+            glow.animateTo(0f, tween(460))
+        } else initialized = true
+    }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Box(
-            Modifier.size(20.dp)
+            Modifier.size(21.dp)
                 .background(
                     Brush.radialGradient(
                         listOf(Color(0xFFC6E9FF), Color(0xFF3B90D0), Color(0xFF17456F))
                     ),
                     CircleShape
                 )
-                .border(1.dp, Color(0xFFE2F3FF), CircleShape),
+                .border((1f + glow.value).dp, Color(0xFFE2F3FF), CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Box(
@@ -103,7 +139,7 @@ internal fun DuelLightOrb(value: Int, maximum: Int) {
             )
         }
         Text(
-            "$value/$maximum",
+            "$shown/$maximum",
             color = Color(0xFFF2F1E8), fontSize = 12.sp,
             fontWeight = FontWeight.Bold, maxLines = 1
         )
@@ -134,6 +170,14 @@ internal fun DuelGoldTurnDial(
     label: String,
     onClick: () -> Unit
 ) {
+    val glint = rememberInfiniteTransition(label = "turn dial")
+    val dialLight by glint.animateFloat(
+        initialValue = .45f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            tween(durationMillis = 1650), repeatMode = RepeatMode.Reverse
+        ),
+        label = "gold bezel glow"
+    )
     Box(
         Modifier.size(62.dp),
         contentAlignment = Alignment.Center
@@ -154,7 +198,7 @@ internal fun DuelGoldTurnDial(
                 radius = outer
             )
             drawCircle(
-                Color(0xFFDEB66B), radius = outer * .91f,
+                Color(0xFFDEB66B).copy(alpha = if (enabled) dialLight else .45f), radius = outer * .91f,
                 style = Stroke(1.2.dp.toPx())
             )
             for (index in 0 until 16) {
