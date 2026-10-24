@@ -17,7 +17,7 @@ import kotlin.math.abs
 /**
  * One swipe = one adjacent card. Swipe LEFT -> next, RIGHT -> previous.
  * No wraparound at either end; this works for filtered binder pages, a
- * selected deck, and the live hand without selecting a hidden/unlisted card.
+ * selected deck, and Skirmish's OPEN hand viewer (never the hand row).
  */
 internal object DuelCardSwipeNavigation {
     const val MIN_SWIPE_DP = 56f
@@ -33,7 +33,6 @@ internal object DuelCardSwipeNavigation {
         if (minimumPixels <= 0f || abs(horizontalPixels) < minimumPixels) return 0
         return if (horizontalPixels < 0f) 1 else -1
     }
-
 }
 
 /**
