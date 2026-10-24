@@ -51,3 +51,27 @@ Generated fallback clips are cached in the application's private `shadow_sound_v
 4. If a compiler error is encountered, push the resulting local log for correction. Static source validation alone does not establish successful APK compilation.
 
 Core sources: `DuelSoundDesign.kt`, `DuelSoundSynthesis.kt`, `DuelSoundPlayer.kt`; integration: `ShadowBattleActivity.kt` and `DuelBoardAnimations.kt`. JUnit coverage: `DuelSoundDesignTest.kt`, `DuelAudioIntegrationGuardTest.kt`.
+
+
+## Second audio pass: drawing, riffling and card-hand interaction (23 October 2026)
+
+**Reference:** Real Destiny: Rising / Shadowshaper gameplay footage and Sound Lab's Destiny: Rising case study describe a layered, bespoke sci-fi sound aesthetic specifically tuned for mobile phone speakers: https://www.soundlab.la/game-audio-case-studies/destiny-rising. The added effects are ORIGINAL deterministic synthesized layered paper-like noise, delicate card-edge scrapes, short interface harmonics and subtle mechanical textures; they are NOT isolated original-game recordings. If clean permitted clips become available, override by the corresponding `assets/shadow_sfx/<stem>.ogg` filename.
+
+**Eleven new stems / 27 total sounds:**
+- `draw_single`: quick card-edge slide with soft futuristic swish — active for real one-card draws
+- `draw_multi`: several interleaved card swipes — active for real multi-card draws
+- `shuffle`: layered card riffle with granular pulses — active on genuine match-start deck shuffle
+- `opening_deal`: multiple clipped swipes mixed with subtle crystalline harmonics — active at opening-hand dealing
+- `mulligan`: subtle returning/reshuffling cue — **prepared only**, because the current ShadowEngine has NO mulligan action
+- `discard`: single sharp card flick — **prepared only**, because the current ShadowEngine has NO normal discard action/pile
+- `card_lift`: short slide-lift cue — active on a legal drag start
+- `target_lock`: quick holographic confirmation — active when a targeted play prompts the user
+- `ability_trigger`: electronic activation chime — active when a targeted ability successfully resolves
+- `card_break`: brittle destruction accent layered with the existing `destroy` sample — active only for actual destruction journal entries
+- `deck_empty`: quiet double-warning tone — active when the engine attempts to draw cards from an exhausted deck
+
+**Sound synchronization:** The original engine now exposes four observation-only counters: `humanDrawTotal`, `cpuDrawTotal`, `humanEmptyDrawTotal`, `cpuEmptyDrawTotal`. The existing `draw(side, count)` increments these ONLY when it really removes a card from a draw pile (or actually fails due to an empty pile). The counters reset on match start and do **not** affect rules, decks, RNG, AI, effects, hand sizes or placement. The Compose battle audio listener reads counter deltas when the existing coordinator publishes a new snapshot, including hand-count-only changes. Multi-card effects such as Kevarrh's draw 2 and simultaneous start-of-round player/CPU draws trigger `draw_multi` followed by up to four short staggered card slides. The opening hand is special: the engine shuffles both decks when `start()` runs and deals 4 or 5 cards based on turn order; one match-only coroutine waits for the `shuffle` sample to decode before playing the riffle, `opening_deal`, and a small staggered hand draw sequence. Ordinary Compose redraws must NOT replay the opening cue or previous journal entries. A card drawn and played in the same tick still generates a draw cue.
+
+**Limitations:** The eleven new cues are short synthesized WAVs. None are the exact Destiny: Rising SFX. There is no implemented mulligan/discard UI or rule, so those two sounds are intentionally unused until real corresponding mechanics exist. There's no fake card shuffle on every turn: the actual deck shuffles once at match creation. CPU/heroes' play rules remain unchanged; GitHub Actions remain disabled and do not need to be run.
+
+**Tests:** `DuelDrawAudioTest.kt` covers single, double, two-sided round draw, empty deck, no changes, reset monotonicity and real engine counter placement. `DuelAudioIntegrationGuardTest.kt` checks that startup audio, drag lift, target lock, ability resolution, destruction and snapshot observation are wired while absent mechanics remain silent. Existing `DuelSoundDesignTest.kt` now checks all **27** generated PCM WAV files. These are source/pure-JVM tests, not proof of device playback. Pull and run `run_local_engine_checks.bat` locally; inspect the new APK on a phone. No GitHub Actions required.
