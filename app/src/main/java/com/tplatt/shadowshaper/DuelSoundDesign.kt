@@ -39,6 +39,42 @@ internal enum class DuelSound(val assetName: String, val durationMs: Int, val ga
     DECK_EMPTY("deck_empty", 280, .38f)
 }
 
+/**
+ * Observation-only counters supplied by ShadowEngine's real draw() function.
+ * Hand size is intentionally ignored: a card can be drawn and played in one
+ * resolution, and CPU / human draw simultaneously at a round boundary.
+ */
+internal data class DuelDrawAudioSnapshot(
+    val playerDraws: Int,
+    val opponentDraws: Int,
+    val playerEmptyAttempts: Int,
+    val opponentEmptyAttempts: Int
+) {
+    fun since(previous: DuelDrawAudioSnapshot): DuelDrawAudioChange =
+        DuelDrawAudioChange(
+            playerDrawn = (playerDraws - previous.playerDraws).coerceAtLeast(0),
+            opponentDrawn = (opponentDraws - previous.opponentDraws).coerceAtLeast(0),
+            emptyAttempts = (
+                playerEmptyAttempts - previous.playerEmptyAttempts +
+                    opponentEmptyAttempts - previous.opponentEmptyAttempts
+            ).coerceAtLeast(0)
+        )
+}
+
+internal data class DuelDrawAudioChange(
+    val playerDrawn: Int,
+    val opponentDrawn: Int,
+    val emptyAttempts: Int
+) {
+    val totalDrawn: Int get() = playerDrawn + opponentDrawn
+    val sound: DuelSound? get() = when {
+        totalDrawn >= 2 -> DuelSound.DRAW_MULTI
+        totalDrawn == 1 -> DuelSound.DRAW_SINGLE
+        emptyAttempts > 0 -> DuelSound.DECK_EMPTY
+        else -> null
+    }
+}
+
 internal object DuelSoundEvents {
     fun transmatFor(faction: String?): DuelSound = when (
         DuelTransmatResolver.forFaction(faction)
