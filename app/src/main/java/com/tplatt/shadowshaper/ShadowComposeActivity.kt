@@ -113,9 +113,9 @@ class ShadowComposeActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         @Suppress("DEPRECATION")
-        window.statusBarColor = android.graphics.Color.rgb(23, 18, 16)
+        window.statusBarColor = android.graphics.Color.rgb(8, 13, 20)
         @Suppress("DEPRECATION")
-        window.navigationBarColor = android.graphics.Color.rgb(23, 18, 16)
+        window.navigationBarColor = android.graphics.Color.rgb(8, 13, 20)
         setContent {
             ShadowTheme {
                 val vm: ShadowDeckViewModel = viewModel()
