@@ -1308,7 +1308,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         title = { Text("BATTLE LOG") },
         text = {
             Column(Modifier.height(250.dp).verticalScroll(rememberScrollState())) {
-                engine.journal.forEach { Text(it, fontSize = 11.sp, color = BattleCream) }
+                engine.fullJournal.forEach { Text(it, fontSize = 11.sp, color = BattleCream) }
             }
         },
         confirmButton = {
