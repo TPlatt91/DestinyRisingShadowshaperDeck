@@ -102,6 +102,21 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     @JvmField var pendingMoveCaster: Player? = null
 
     internal val effects = ShadowCardEffects(this)
+    // Lightweight, transient effects for the Compose board. The engine is
+    // authoritative; visuals never feed back into Power or match rules.
+    @JvmField val visualEvents = ArrayList<DuelEffectEvent>()
+    @JvmField var visualSerial = 0L
+    internal fun emitVisual(
+        kind: DuelEffectKind,
+        target: Unit,
+        source: Unit? = null,
+        amount: Int = 0
+    ) {
+        visualSerial++
+        DuelEffectEvents.append(
+            visualEvents, DuelEffectEvent(visualSerial, kind, target, source, amount)
+        )
+    }
     private var resolutionDepth = 0
     // Identity-based: two copies of The Disfavored are separate sources.
     // A source may activate once per causal bonus chain. The set is cleared
@@ -148,6 +163,8 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         clear(cpu)
         journal.clear()
         fullJournal.clear()
+        visualEvents.clear()
+        visualSerial = 0L
         unresolvedEffects = 0
         unresolvedEffectDetails.clear()
         rejectedCpuMoves = 0
@@ -595,8 +612,11 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
 
     internal fun inspire(target: Unit?) {
         if (target == null || !isPresent(target)) return
-        target.inspired = true
-        log("INSPIRED ▶ " + target.card.name)
+        if (!target.inspired) {
+            target.inspired = true
+            emitVisual(DuelEffectKind.INSPIRED, target)
+            log("INSPIRED ▶ " + target.card.name)
+        }
     }
 
     internal fun inspireRandom(side: Player, faction: String, count: Int) {
@@ -642,14 +662,28 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     }
 
     /** Return ONLY this Power bonus, excluding nested sniper/Saladin reactions. */
-    internal fun buffAndReport(target: Unit?, amount: Int): Int {
+    internal fun buffAndReport(
+        target: Unit?, amount: Int, source: Unit? = null
+    ): Int {
         val applied = applyPowerBonus(target, amount)
-        if (applied > 0) onBuff(target!!)
+        if (applied > 0) {
+            val unit = target!!
+            emitVisual(
+                if (source != null && source !== unit)
+                    DuelEffectKind.POWER_TRANSFER else DuelEffectKind.POWER_GAINED,
+                unit, source, applied
+            )
+            onBuff(unit)
+        }
         return applied
     }
 
     internal fun buff(target: Unit?, amount: Int) {
         buffAndReport(target, amount)
+    }
+
+    internal fun buff(target: Unit?, amount: Int, source: Unit?) {
+        buffAndReport(target, amount, source)
     }
 
     /** Resolve all surviving Saladins' reactions to this one damage event. */
@@ -721,6 +755,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
             )
         target.scorchEffects.add(ScorchEffect(source, damage, turns))
         syncScorchView(target)
+        emitVisual(DuelEffectKind.SCORCH_APPLIED, target, source, damage)
     }
 
     internal fun suppress(target: Unit?) {
@@ -747,6 +782,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         target.scorchSource = null
         target.scorchEffects.clear()
         target.timedBonuses.clear()
+        emitVisual(DuelEffectKind.SUPPRESSED, target)
         log("SUPPRESSED ▶ " + target.card.name)
     }
 
@@ -793,6 +829,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     private fun shieldAbsorbs(target: Unit, effect: String): Boolean {
         if (!target.overshield) return false
         target.overshield = false
+        emitVisual(DuelEffectKind.OVERSHIELD_BLOCKED, target)
         log("OVERSHIELD blocks " + effect + " ▶ " + target.card.name)
         return true
     }
