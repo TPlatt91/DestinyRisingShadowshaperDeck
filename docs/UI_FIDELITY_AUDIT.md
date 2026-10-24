@@ -339,3 +339,25 @@ The user asked for significantly more polished **physical placement animation**:
 **Multiple summons:** A single card effect can populate several slots before the Compose view receives a frame. The battle now records each unit's first rendered placement revision with `remember(current, unit)`, so all new tokens/materialized units receive landing animation rather than only the last position reported by `engine.lastPlacedColumn`. The last-placement cue still handles existing-unit relocation effects.
 
 **User constraints:** portrait orientation, seven slots per row, user-provided original stone image, previously fixed drag/drop, all card gameplay mechanics and images are unchanged. No GitHub Actions were run. **Android compilation and device animation are not yet verified;** run `run_local_engine_checks.bat` after pulling. Delimiter/quote static checking is not proof of Kotlin compiler acceptance.
+
+
+## Faction-transmat arrival effects — 23 October 2026
+
+User requested Destiny 2-inspired faction transmats when cards are played during the existing Hearthstone-style 760ms lift/hover/slam/bounce/settle animation, and explicitly clarified that Scorn, Taken and other suggested enemy groups do **not** exist in this Shadowshaper card game. No non-game factions were added to the implementation.
+
+**Catalog audit:** `app/src/main/assets/card_details.tsv` currently contains Humans (43), Fallen (33), Cabal (25), and Hive (18) faction annotations. `verified_video_cards.tsv`, `expanded_cards.tsv`, and `community_cards.tsv` likewise use only these four factions. No Vex entry is currently present; Vex transmat support was explicitly requested as future-ready rendering, not a claim that Vex cards exist.
+
+**Implemented directly in Android Kotlin:**
+- `DuelTransmatStyle.kt`: exactly **five types**: DEFAULT, HIVE, CABAL, VEX, FALLEN. Case/whitespace-normalized, exact faction mapping: Human(s), Exo(s), Awoken → DEFAULT; Hive → HIVE; Cabal → CABAL; Vex → VEX; Fallen → FALLEN. Empty, unknown and neutral tokens fall back to DEFAULT. No classification is inferred from a card's artwork, name, rarity or surrounding units.
+- `DuelTransmatVisuals.kt`: Canvas-only, lightweight thematic effects under the original card faces:
+  * **Default:** luminous pale blue/white beam, concentric energy rings, clean sparks
+  * **Hive:** green occult thorns/runes, smoky updraft particles and ash
+  * **Cabal:** intense red-orange portal, thick shockwave, metallic chevrons and falling dust
+  * **Vex:** amber hexagonal time-gate, floating lattice data shards and horizontal scan line
+  * **Fallen:** cyan Arc/Ether bolts, zigzagging electrical filaments and crackling nodes
+- `DuelBoardAnimations.kt`: after confirmed card entry/placement, begins the **170ms transmat precharge first**, temporarily hides the moving card until the effect is charged, then retains the existing 760ms hand-to-slot travel, hover, slam, recoil and settlement. Transmat energy runs for a maximum of 960ms, fades automatically, and cannot replay on normal Compose recomposition. Rarity-specific final impact particles and genuine Power-change effects still work. Both directly played and summoned token units use their own metadata faction.
+- `ShadowBattleActivity.kt`: CPU waits 1070ms between visual actions so full precharge+landing are visible. No AI decisions, game rules, legal slots, hand interaction, or animations attached to invalid plays were modified.
+- `DuelTransmatStyleTest.kt`: JVM mapping, normalization, unknown neutral default, visibility envelope and timing checks.
+- `DuelVisualParityGuardTest.kt`: asserts all five distinct render branches and precharge integration, exact metadata use, seven slots, noninteractivity, original `shadow_arena_original_portrait_hq` art and absence of effect-engine calls.
+
+**Verification limit:** Changes are pushed. Delimiter/static checks are not the Android compiler or proof of rendered frames; user must pull, run existing `run_local_engine_checks.bat` and visually test card plays/summons on phone. No GitHub Actions were used.
