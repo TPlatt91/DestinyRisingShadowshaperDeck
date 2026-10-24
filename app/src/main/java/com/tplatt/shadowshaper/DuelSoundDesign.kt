@@ -23,7 +23,20 @@ internal enum class DuelSound(val assetName: String, val durationMs: Int, val ga
     STATUS("status", 320, .39f),
     TURN("turn", 500, .50f),
     WIN("win", 800, .54f),
-    LOSE("lose", 700, .48f)
+    LOSE("lose", 700, .48f),
+    // Layered tactile cards + subtle technology cues. These are separate
+    // assets even when the corresponding gameplay action is not implemented.
+    DRAW_SINGLE("draw_single", 180, .48f),
+    DRAW_MULTI("draw_multi", 330, .44f),
+    SHUFFLE("shuffle", 620, .53f),
+    OPENING_DEAL("opening_deal", 550, .47f),
+    MULLIGAN("mulligan", 530, .46f),
+    DISCARD("discard", 190, .47f),
+    CARD_LIFT("card_lift", 145, .31f),
+    TARGET_LOCK("target_lock", 235, .38f),
+    ABILITY_TRIGGER("ability_trigger", 310, .44f),
+    CARD_BREAK("card_break", 410, .48f),
+    DECK_EMPTY("deck_empty", 280, .38f)
 }
 
 internal object DuelSoundEvents {
