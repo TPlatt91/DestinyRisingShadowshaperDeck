@@ -159,7 +159,7 @@ internal fun DuelDeckCounter(coverId: String, label: String, count: Int) {
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy((-13).dp)) {
-            repeat(minOf(3, maxOf(1, count))) {
+            repeat(count.coerceIn(0, 3)) {
                 DuelCardCover(
                     coverId,
                     Modifier.width(19.dp).height(29.dp)
