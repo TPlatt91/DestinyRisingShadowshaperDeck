@@ -157,6 +157,8 @@ private fun ShadowTheme(content: @Composable () -> Unit) {
 private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     var page by rememberSaveable { mutableStateOf(activity.intent.getStringExtra("start_page") ?: "home") }
     var detail by remember { mutableStateOf<ShadowData.Card?>(null) }
+    // Browse only the cards in the originating collection or binder tab.
+    var inspectionCards by remember { mutableStateOf<List<ShadowData.Card>>(emptyList()) }
     val matchRepository = remember(activity) { ShadowMatchRepository(activity) }
     val resumePulse = (activity as? ShadowComposeActivity)?.resumePulse ?: 0
     val hasUnfinishedMatch = remember(resumePulse) {
@@ -185,7 +187,10 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
                 "deck" -> DeckScreen(
                     vm = vm, state = state,
                     onBack = { page = "home" },
-                    onCard = { detail = it },
+                    onCard = { card, visibleCards ->
+                        detail = card
+                        inspectionCards = visibleCards.toList()
+                    },
                     onBattle = {
                         val intent = Intent(activity, ShadowBattleActivity::class.java)
                             .putExtra("selected_deck", state.selected)
@@ -194,7 +199,10 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
                 )
                 "collection" -> CollectionScreen(
                     vm = vm, state = state, onBack = { page = "home" },
-                    onCard = { detail = it }
+                    onCard = { card, visibleCards ->
+                        detail = card
+                        inspectionCards = visibleCards.toList()
+                    }
                 )
                 "rules" -> RulesScreen(onBack = { page = "home" })
             }
@@ -202,8 +210,24 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     }
     if (detail != null) {
         val card = detail!!
-        CardDetailsDialog(card, state.cards[card.name] ?: 0, onDismiss = { detail = null },
-            onAdd = { vm.add(card) }, onRemove = { vm.remove(card.name) })
+        val browseIndex = inspectionCards.indexOfFirst { it.name == card.name }
+        CardDetailsDialog(
+            card = card,
+            copies = state.cards[card.name] ?: 0,
+            onDismiss = { detail = null; inspectionCards = emptyList() },
+            onAdd = { vm.add(card) },
+            onRemove = { vm.remove(card.name) },
+            browseIndex = browseIndex,
+            browseCount = inspectionCards.size,
+            onPrevious = {
+                DuelCardSwipeNavigation.adjacent(browseIndex, inspectionCards.size, -1)
+                    ?.let { detail = inspectionCards[it] }
+            },
+            onNext = {
+                DuelCardSwipeNavigation.adjacent(browseIndex, inspectionCards.size, 1)
+                    ?.let { detail = inspectionCards[it] }
+            }
+        )
     }
     if (state.message != null) {
         DuelPopupDialog(
@@ -455,7 +479,7 @@ private fun LibrarySearchBar(
 @Composable
 private fun CollectionScreen(
     vm: ShadowDeckViewModel, state: ShadowDeckUiState,
-    onBack: () -> Unit, onCard: (ShadowData.Card) -> Unit
+    onBack: () -> Unit, onCard: (ShadowData.Card, List<ShadowData.Card>) -> Unit
 ) {
     val context = LocalContext.current
     val glossary = remember(context) { ShadowKeywordGlossary.all(context) }
@@ -552,7 +576,7 @@ private fun CollectionScreen(
                             DuelBinderCardSleeve(
                                 card = card,
                                 copies = state.cards[card.name] ?: 0,
-                                onInspect = { onCard(card) },
+                                onInspect = { onCard(card, filtered) },
                                 artwork = { artModifier ->
                                     CardArtPreview(card, artModifier)
                                 }
@@ -568,7 +592,7 @@ private fun CollectionScreen(
 @Composable
 private fun DeckScreen(
     vm: ShadowDeckViewModel, state: ShadowDeckUiState, onBack: () -> Unit,
-    onCard: (ShadowData.Card) -> Unit, onBattle: () -> Unit
+    onCard: (ShadowData.Card, List<ShadowData.Card>) -> Unit, onBattle: () -> Unit
 ) {
     val context = LocalContext.current
     val glossary = remember(context) { ShadowKeywordGlossary.all(context) }
@@ -718,7 +742,7 @@ private fun DeckScreen(
                         DuelBinderCardSleeve(
                             card = card,
                             copies = state.cards[card.name] ?: 0,
-                            onInspect = { onCard(card) },
+                            onInspect = { onCard(card, suggestions) },
                             onAdd = { vm.add(card) },
                             artwork = { artModifier -> CardArtPreview(card, artModifier) }
                         )
@@ -790,7 +814,7 @@ private fun DeckScreen(
                         DuelBinderCardSleeve(
                             card = card,
                             copies = state.cards[card.name] ?: 0,
-                            onInspect = { onCard(card) },
+                            onInspect = { onCard(card, deckCards) },
                             artwork = { artModifier -> CardArtPreview(card, artModifier) }
                         )
                     }
@@ -1044,9 +1068,14 @@ private fun CardMetadataLine(label: String, value: String) {
 @Composable
 private fun CardDetailsDialog(
     card: ShadowData.Card, copies: Int,
-    onDismiss: () -> Unit, onAdd: () -> Unit, onRemove: () -> Unit
+    onDismiss: () -> Unit, onAdd: () -> Unit, onRemove: () -> Unit,
+    browseIndex: Int = -1,
+    browseCount: Int = 0,
+    onPrevious: () -> Unit = {},
+    onNext: () -> Unit = {}
 ) {
-    var enlarged by remember(card.name) { mutableStateOf(false) }
+    // Swipe between cards without collapsing the enlarged artwork viewer.
+    var enlarged by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val keywords = remember(card.name) {
         ShadowKeywordGlossary.onCard(card, ShadowKeywordGlossary.all(context))
@@ -1056,7 +1085,13 @@ private fun CardDetailsDialog(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Surface(
-            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.94f).widthIn(max = 540.dp),
+            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.94f)
+                .widthIn(max = 540.dp)
+                .duelSwipeToBrowse(
+                    enabled = browseIndex >= 0 && browseCount > 1,
+                    onPrevious = onPrevious,
+                    onNext = onNext
+                ),
             color = Color(0xFF0C1620),
             shape = CutCornerShape(13.dp),
             border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)
@@ -1077,6 +1112,11 @@ private fun CardDetailsDialog(
                         modifier = Modifier.width(88.dp)
                     )
                 }
+                DuelCardPagerControls(
+                    index = browseIndex, count = browseCount,
+                    onPrevious = onPrevious, onNext = onNext,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
                 DuelPopupRule()
                 Column(
                     modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
@@ -1186,8 +1226,17 @@ private fun CardDetailsDialog(
                             modifier = Modifier.width(88.dp)
                         )
                     }
+                    DuelCardPagerControls(
+                        index = browseIndex, count = browseCount,
+                        onPrevious = onPrevious, onNext = onNext,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    )
                     BoxWithConstraints(
-                        modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
+                        modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp)
+                            .duelSwipeToBrowse(
+                                enabled = browseIndex >= 0 && browseCount > 1,
+                                onPrevious = onPrevious, onNext = onNext
+                            ),
                         contentAlignment = Alignment.Center
                     ) {
                         val artWidth = minOf(maxWidth, maxHeight * (500f / 754f))
