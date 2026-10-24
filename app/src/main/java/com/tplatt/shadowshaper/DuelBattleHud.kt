@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -146,20 +147,50 @@ internal fun DuelLightOrb(value: Int, maximum: Int) {
     }
 }
 
+/**
+ * Staggered card-back pile for actual remaining deck count.
+ * Reuses the local cover art already bundled with the game.
+ * Purely decorative: cards cannot be accessed through this image.
+ */
+@Composable
+internal fun DuelDeckCounter(coverId: String, label: String, count: Int) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        Row(horizontalArrangement = Arrangement.spacedBy((-13).dp)) {
+            repeat(minOf(3, maxOf(1, count))) {
+                DuelCardCover(
+                    coverId,
+                    Modifier.width(19.dp).height(29.dp)
+                )
+            }
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+            Text(
+                label, fontSize = 9.sp, color = metallicGold,
+                fontWeight = FontWeight.Bold, maxLines = 1
+            )
+            Text(
+                "$count", fontSize = 13.sp,
+                color = Color(0xFFF3F1EB),
+                fontWeight = FontWeight.Black, maxLines = 1
+            )
+        }
+    }
+}
+
 /** Actual CPU deck count and hidden hand, no invented discard-pile mechanics. */
 @Composable
 internal fun DuelUtilityPill(hand: Int, deck: Int) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
-    ) {
-        DuelCardCover("default", Modifier.width(21.dp).size(width = 21.dp, height = 31.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(0.dp)) {
-            Text("CPU DECK  $deck", fontSize = 9.sp, color = metallicGold,
-                fontWeight = FontWeight.Bold, maxLines = 1)
-            Text("HAND  $hand", fontSize = 9.sp, color = Color(0xFFF0E5D5),
-                maxLines = 1)
-        }
+    Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
+        DuelDeckCounter("default", "CPU DECK", deck)
+        Text(
+            "HAND $hand",
+            fontSize = 9.sp,
+            color = Color(0xFFE9DDD0),
+            maxLines = 1
+        )
     }
 }
 
