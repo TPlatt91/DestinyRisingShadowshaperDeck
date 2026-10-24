@@ -273,7 +273,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
 
     // A legal deck explicitly selected in Deck Construction should continue
     // directly to opponent choice, without forcing a second deck selection.
-    LaunchedEffect(requestedDeck) {
+    LaunchedEffect(requestedDeck, resumeChoice) {
         if (!requestedDeck.isNullOrBlank() && !resumeChoice && coordinator == null) {
             val saved = validDecks.firstOrNull { it.first == requestedDeck }
             if (saved != null) {
@@ -586,8 +586,13 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
             Text(
-                "☰  MENU", color = BattleGold, fontSize = 10.sp,
-                modifier = Modifier.clickable { sounds.play(DuelSound.UI_TAP); settingsDialog = true }
+                if (inspectingFinalBoard) "‹  RESULTS" else "☰  MENU",
+                color = BattleGold, fontSize = 10.sp,
+                modifier = Modifier.clickable {
+                    sounds.play(DuelSound.UI_TAP)
+                    if (inspectingFinalBoard) inspectingFinalBoard = false
+                    else settingsDialog = true
+                }
                     .padding(horizontal = 10.dp, vertical = 5.dp)
             )
             Text("SHADOWSHAPER DUELS", color = DuelPalette.cream,
@@ -670,7 +675,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 }
                                 val relocating = moving && unit == null &&
                                     owner === engine.pendingMovedUnit?.owner
-                                val legal = !moving && unit == null && owner === engine.human &&
+                                val legal = !snapshot.finished && !moving && unit == null &&
+                                    owner === engine.human &&
                                     pendingPosition == null && selectedIndex >= 0 &&
                                     engine.isPlayablePlacement(engine.human, selectedIndex, row, col)
                                 val id = (if (owner === engine.human) "0" else "1") + "-$row-$col"
@@ -687,7 +693,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                             else if (legal) stateDescription = "Available card placement"
                                         }
                                         .then(
-                                            if (targeting || relocating || (owner === engine.human && unit == null))
+                                            if (!snapshot.finished &&
+                                                (targeting || relocating || (owner === engine.human && unit == null)))
                                                 Modifier.clickable {
                                                     if (relocating) playAt(row, col)
                                                     else if (targeting) chooseTarget(owner, row, col)
@@ -724,7 +731,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                             unit = unit,
                                             currentPower = engine.power(unit),
                                             placementRevision = engine.placementRevision,
-                                            isNewestPlacement = newlyVisible || DuelPlacementCue.isNewlyPlaced(
+                                            isNewestPlacement = !snapshot.finished && freshOpeningAudio &&
+                                                (newlyVisible || DuelPlacementCue.isNewlyPlaced(
                                                 placementRevision = engine.placementRevision,
                                                 lastSide = engine.lastPlacedSide,
                                                 lastRow = engine.lastPlacedRow,
@@ -732,7 +740,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                                 side = if (owner === engine.human) 0 else 1,
                                                 row = row,
                                                 column = col
-                                            ),
+                                            )),
                                             entryFromHand = if (owner === engine.human) {
                                                 latestHumanLaunch?.takeIf {
                                                     it.matches(engine.placementRevision, row, col)
@@ -1135,7 +1143,36 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     }
     }
 
-    if (deckDialog) AlertDialog(
+    if (resumeChoice && savedAtLaunch != null && coordinator == null) AlertDialog(
+        onDismissRequest = {},
+        title = { Text("CONTINUE LAST MATCH?") },
+        text = {
+            Text(
+                "Round ${savedAtLaunch.engine.round} of ${ShadowRules.ROUNDS} • " +
+                    "${savedAtLaunch.deckName}. Continue with the exact saved board, " +
+                    "hands and turn, or begin a new match?"
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { resumeMatch(savedAtLaunch) }) { Text("CONTINUE") }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                matchRepository.clear()
+                resumeChoice = false
+                deckDialog = true
+            }) { Text("START NEW") }
+        }
+    )
+    if (restoringError != null) AlertDialog(
+        onDismissRequest = { restoringError = null },
+        title = { Text("SAVE RECOVERY") },
+        text = { Text(restoringError.orEmpty()) },
+        confirmButton = {
+            TextButton(onClick = { restoringError = null }) { Text("OK") }
+        }
+    )
+    if (deckDialog && !resumeChoice) AlertDialog(
         onDismissRequest = { if (engine != null) deckDialog = false },
         title = { Text("CHOOSE A DECK") },
         text = {
@@ -1144,6 +1181,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 validDecks.forEach { (name, deck) ->
                     TextButton(onClick = {
                         chosenDeck = deck
+                        chosenDeckName = name
                         chosenCover = if (name == "Starter Practice Deck") "default" else saves.cover(name)
                         deckDialog = false
                         factionDialog = true
@@ -1210,7 +1248,13 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     enabled = audioEnabled
                 ) { Text("TEST SOUND") }
                 TextButton(onClick = { settingsDialog = false }) { Text("RESUME") }
-                TextButton(onClick = { settingsDialog = false; deckDialog = true }) { Text("NEW MATCH") }
+                TextButton(onClick = {
+                    settingsDialog = false
+                    matchRepository.clear()
+                    coordinator = null
+                    deckDialog = true
+                    factionDialog = false
+                }) { Text("NEW MATCH") }
                 TextButton(onClick = { settingsDialog = false; onRules() }) { Text("RULES") }
                 TextButton(onClick = { settingsDialog = false; exitConfirmation = true }) { Text("HOME") }
             }
@@ -1220,8 +1264,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     if (exitConfirmation) AlertDialog(
         onDismissRequest = { exitConfirmation = false },
         title = { Text("Leave battle?") },
-        text = { Text("This match will be lost.") },
-        confirmButton = { TextButton(onClick = onExit) { Text("LEAVE") } },
+        text = { Text("Your current match is saved automatically. You can continue it later.") },
+        confirmButton = { TextButton(onClick = onExit) { Text("SAVE & HOME") } },
         dismissButton = { TextButton(onClick = { exitConfirmation = false }) { Text("STAY") } }
     )
     if (endConfirmation) AlertDialog(
@@ -1233,20 +1277,28 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         },
         dismissButton = { TextButton(onClick = { endConfirmation = false }) { Text("KEEP PLAYING") } }
     )
-    if (snapshot?.finished == true) {
+    if (snapshot?.finished == true && !inspectingFinalBoard &&
+        !showLog && inspectedUnit == null && inspectedCard == null) {
         DuelMatchResult(
             playerPower = snapshot.playerPower,
             cpuPower = snapshot.cpuPower,
             unresolvedEffects = snapshot.unresolvedEffects,
+            onInspectBoard = { inspectingFinalBoard = true },
+            onReviewLog = { showLog = true },
             onRematch = {
+                // Fresh engine/seed/deck shuffle, but reuse chosen decks.
+                startMatch(selectedCpuFaction)
+            },
+            onSelectDecks = {
                 coordinator = null
-                deckDialog = true
-                factionDialog = false
-                openingDialog = false
+                selectedIndex = -1
                 pendingPosition = null
                 inspectedUnit = null
                 inspectedCard = null
-                selectedIndex = -1
+                inspectingFinalBoard = false
+                openingDialog = false
+                deckDialog = true
+                factionDialog = false
             },
             onHome = onExit
         )
