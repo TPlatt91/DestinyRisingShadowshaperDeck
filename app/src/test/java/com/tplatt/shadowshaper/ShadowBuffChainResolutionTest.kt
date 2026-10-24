@@ -27,6 +27,9 @@ class ShadowBuffChainResolutionTest {
         val cards = listOf(
             card("The Disfavored", "Hive", 3,
                 "Sustained (Front Row): When acquiring a buff, grants +2 Power to one of your different Hive units at random."),
+            card("Thrall", "Hive", 2, "No special effects."),
+            card("Mishra", "Humans", 8,
+                "When Played: Grants +3 Power to adjacent allies."),
             card("Ogre", "Hive", 3,
                 "Sustained: When acquiring a buff, deals 1 damage to 2 random opposing units."),
             card("Tenacious Ogre", "Hive", 5,
@@ -58,6 +61,81 @@ class ShadowBuffChainResolutionTest {
         if (power != null) unit.power = power
         side.board[row][column] = unit
         return unit
+    }
+
+    @Test fun realHandPlayGivingDisfavoredPowerAlsoBuffsAnotherHiveAndReportsIt() {
+        val e = engine()
+        e.humanTurn = true
+        e.human.points = 8
+        val source = place(e, "The Disfavored", e.human, ShadowRules.FRONT_ROW, 1)
+        val ally = place(e, "Thrall", e.human, ShadowRules.BACK_ROW, 0)
+        e.human.hand.add(e.catalog.getValue("Mishra"))
+
+        // Mishra's actual on-play effect buffs the adjacent Disfavored.
+        assertTrue(e.play(e.human, 0, ShadowRules.FRONT_ROW, 2, null))
+        assertEquals(6, source.power) // Mishra +3
+        assertEquals(4, ally.power) // The Disfavored +2
+        assertTrue(e.journal.any {
+            it == "The Disfavored ▶ +2 Power to Thrall"
+        })
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun buffOnBackRowDisfavoredDoesNotTriggerItsFrontRowAbility() {
+        val e = engine()
+        e.humanTurn = true
+        e.human.points = 8
+        val source = place(e, "The Disfavored", e.human, ShadowRules.BACK_ROW, 1)
+        val ally = place(e, "Thrall", e.human, ShadowRules.FRONT_ROW, 0)
+        e.human.hand.add(e.catalog.getValue("Mishra"))
+
+        assertTrue(e.play(e.human, 0, ShadowRules.BACK_ROW, 2, null))
+        assertEquals(6, source.power)
+        assertEquals(2, ally.power)
+        assertFalse(e.journal.any { it.startsWith("The Disfavored ▶") })
+    }
+
+    @Test fun actualTurnEndInspiredBuffOnDisfavoredTriggersHiveBonus() {
+        val e = engine()
+        e.humanTurn = true
+        val source = place(e, "The Disfavored", e.human, ShadowRules.FRONT_ROW, 1)
+        val ally = place(e, "Thrall", e.human, ShadowRules.BACK_ROW, 0)
+        source.inspired = true
+
+        e.endTurn()
+
+        assertEquals(4, source.power) // Inspired +1 at the end of own turn
+        assertEquals(4, ally.power) // Disfavored reacts +2
+        assertTrue(e.journal.any { it.contains("The Disfavored ▶ +2 Power to Thrall") })
+        assertEquals(0, e.unresolvedEffects)
+    }
+
+    @Test fun deadUnsweptHiveCannotStealDisfavoredRandomBuff() {
+        val e = engine(seed = 7L)
+        val source = place(e, "The Disfavored", e.human, ShadowRules.FRONT_ROW, 0)
+        val alive = place(e, "Thrall", e.human, ShadowRules.BACK_ROW, 0)
+        val defeated = place(e, "Thrall", e.human, ShadowRules.FRONT_ROW, 1, power = 0)
+
+        e.buff(source, 1)
+
+        assertEquals(4, source.power)
+        assertEquals(4, alive.power)
+        assertEquals(0, defeated.bonus)
+        assertTrue(e.journal.any { it == "The Disfavored ▶ +2 Power to Thrall" })
+    }
+
+    @Test fun disfavoredWithNoOtherSurvivingHiveGivesNoPhantomBuff() {
+        val e = engine()
+        val source = place(e, "The Disfavored", e.human, ShadowRules.FRONT_ROW, 0)
+        val defeated = place(e, "Thrall", e.human, ShadowRules.BACK_ROW, 0, power = 0)
+
+        e.buff(source, 1)
+
+        assertEquals(4, source.power)
+        assertEquals(0, defeated.bonus)
+        assertTrue(e.journal.any {
+            it == "The Disfavored: no other surviving Hive ally to buff."
+        })
     }
 
     @Test fun twoDisfavoredCopiesResolveOneCausalChainWithoutInfiniteFeedback() {
