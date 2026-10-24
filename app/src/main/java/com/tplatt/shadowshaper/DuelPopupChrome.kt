@@ -30,6 +30,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Text
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -438,13 +442,174 @@ internal fun DuelPopupMenuRow(
     label: String,
     description: String,
     onClick: () -> Unit,
-    highlighted: Boolean = false
+    highlighted: Boolean = false,
+    enabled: Boolean = true
 ) {
     val tint = if (highlighted) DuelPopupColors.gold else DuelPopupColors.ice
-    DuelPopupAction(
-        label = label,
-        onClick = onClick,
-        style = if (highlighted) DuelPopupActionStyle.PRIMARY else DuelPopupActionStyle.SECONDARY,
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val decoration = CutCornerShape(
+        topStart = 2.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 10.dp
+    )
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 57.dp)
+            .graphicsLayer {
+                val scale = if (enabled && pressed) .986f else 1f
+                scaleX = scale
+                scaleY = scale
+                alpha = if (enabled) 1f else .42f
+            }
+            .clip(decoration)
+            .background(
+                Brush.horizontalGradient(
+                    if (highlighted) listOf(Color(0xFF3D3529), Color(0xFF21272D))
+                    else listOf(Color(0xFF1E2B35), Color(0xFF101C27))
+                )
+            )
+            .border(
+                if (highlighted) 1.dp else .65.dp,
+                tint.copy(alpha = if (highlighted) .87f else .57f),
+                decoration
+            )
+            .clickable(
+                enabled = enabled, interactionSource = interaction,
+                indication = null, role = Role.Button, onClick = onClick
+            )
+            .semantics { contentDescription = label }
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Canvas(Modifier.size(22.dp)) {
+            drawCircle(
+                color = tint.copy(alpha = .91f),
+                radius = size.minDimension * .44f,
+                center = Offset(size.width * .5f, size.height * .5f),
+                style = Stroke(1.2.dp.toPx())
+            )
+            val c = Offset(size.width * .5f, size.height * .5f)
+            drawLine(tint, Offset(c.x - size.width * .15f, c.y),
+                Offset(c.x + size.width * .16f, c.y), 1.4.dp.toPx())
+            drawCircle(tint, 1.3.dp.toPx(), c)
+        }
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Text(
+                label,
+                fontSize = 12.sp,
+                color = if (highlighted) DuelPopupColors.gold else DuelPopupColors.white,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp,
+                maxLines = 1
+            )
+            if (description.isNotBlank()) {
+                Text(
+                    description,
+                    fontSize = 10.sp,
+                    color = DuelPopupColors.muted,
+                    lineHeight = 12.sp,
+                    maxLines = 2
+                )
+            }
+        }
+        Canvas(Modifier.size(12.dp)) {
+            val col = tint.copy(alpha = .89f)
+            drawLine(
+                col,
+                Offset(size.width * .22f, size.height * .15f),
+                Offset(size.width * .73f, size.height * .5f),
+                1.3.dp.toPx()
+            )
+            drawLine(
+                col,
+                Offset(size.width * .73f, size.height * .5f),
+                Offset(size.width * .22f, size.height * .85f),
+                1.3.dp.toPx()
+            )
+        }
+    }
+}
+
+@Composable
+internal fun DuelPopupSoundSettings(
+    enabled: Boolean,
+    volume: Float,
+    onEnabledChange: (Boolean) -> Unit,
+    onVolumeChange: (Float) -> Unit
+) {
+    val cut = CutCornerShape(topStart = 2.dp, topEnd = 11.dp,
+        bottomStart = 11.dp, bottomEnd = 2.dp)
+    Row(
+        Modifier.fillMaxWidth()
+            .clip(cut)
+            .background(Color(0xFF172630))
+            .border(.75.dp, DuelPopupColors.border.copy(alpha = .83f), cut)
+            .padding(horizontal = 12.dp, vertical = 7.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(
+                "SOUND EFFECTS",
+                color = DuelPopupColors.white,
+                fontWeight = FontWeight.Bold,
+                fontSize = 12.sp,
+                letterSpacing = 1.1.sp
+            )
+            Text(
+                "IN-GAME AUDIO",
+                color = DuelPopupColors.muted,
+                fontSize = 9.sp,
+                letterSpacing = .6.sp
+            )
+        }
+        Switch(
+            checked = enabled,
+            onCheckedChange = onEnabledChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Color(0xFFFFF5DA),
+                checkedTrackColor = Color(0xFF957849),
+                checkedBorderColor = DuelPopupColors.gold,
+                uncheckedThumbColor = Color(0xFFB3BEC7),
+                uncheckedTrackColor = Color(0xFF253443),
+                uncheckedBorderColor = DuelPopupColors.border
+            )
+        )
+    }
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            "SFX VOLUME",
+            color = DuelPopupColors.muted,
+            fontSize = 10.sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.3.sp
+        )
+        Text(
+            "${(volume * 100f).toInt()}%",
+            color = DuelPopupColors.gold,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+    Slider(
+        value = volume.coerceIn(0f, 1f),
+        onValueChange = onVolumeChange,
+        valueRange = 0f..1f,
+        enabled = enabled,
+        colors = SliderDefaults.colors(
+            thumbColor = DuelPopupColors.gold,
+            activeTrackColor = DuelPopupColors.gold,
+            inactiveTrackColor = Color(0xFF344755),
+            activeTickColor = DuelPopupColors.gold,
+            inactiveTickColor = DuelPopupColors.ice,
+            disabledThumbColor = DuelPopupColors.muted,
+            disabledActiveTrackColor = DuelPopupColors.border
+        ),
         modifier = Modifier.fillMaxWidth()
     )
 }
