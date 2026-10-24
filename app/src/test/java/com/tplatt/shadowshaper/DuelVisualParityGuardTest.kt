@@ -126,6 +126,8 @@ class DuelVisualParityGuardTest {
         assertTrue(battle.contains("pendingFingerRelease = dragPosition"))
         assertTrue(battle.contains("entryFromHand = if (owner === engine.human)"))
         assertTrue(battle.contains("latestHumanLaunch?.takeIf"))
+        assertTrue(battle.contains("val firstVisibleRevision = remember(current, unit)"))
+        assertTrue(battle.contains("isNewestPlacement = newlyVisible ||"))
         assertTrue(animated.contains("DuelLandingMotion.at("))
         assertTrue(animated.contains("landing.animateTo("))
         assertTrue(animated.contains("animatedRevision != placementRevision"))
