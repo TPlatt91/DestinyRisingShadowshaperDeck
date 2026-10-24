@@ -104,7 +104,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal val effects = ShadowCardEffects(this)
     // Lightweight, transient effects for the Compose board. The engine is
     // authoritative; visuals never feed back into Power or match rules.
-    @JvmField val visualEvents = ArrayList<DuelEffectEvent>()
+    internal val visualEvents = ArrayList<DuelEffectEvent>()
     @JvmField var visualSerial = 0L
     internal fun emitVisual(
         kind: DuelEffectKind,
