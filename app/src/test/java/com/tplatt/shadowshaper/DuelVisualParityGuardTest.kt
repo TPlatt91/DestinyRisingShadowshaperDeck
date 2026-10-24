@@ -141,6 +141,32 @@ class DuelVisualParityGuardTest {
         assertFalse(animated.contains("engine.endTurn("))
     }
 
+    @Test fun allFiveTransmatStylesPrecedeRealCardLandingOnly() {
+        val animations = source("DuelBoardAnimations.kt")
+        val transmat = source("DuelTransmatVisuals.kt")
+        val styles = source("DuelTransmatStyle.kt")
+        val battle = source("ShadowBattleActivity.kt")
+        val stone = source("DuelStoneArena.kt")
+
+        assertTrue(animations.contains("DuelTransmatResolver.forFaction(unit.card.faction)"))
+        assertTrue(animations.contains("DuelTransmatArrival("))
+        assertTrue(animations.contains("delay(DuelTransmatResolver.PRECHARGE_MS)"))
+        assertTrue(animations.contains("alpha = if (precharging) 0f else motion.opacity"))
+        assertTrue(animations.contains("isNewestPlacement && placementRevision > 0"))
+        assertTrue(animations.contains("animatedRevision != placementRevision"))
+        assertTrue(transmat.contains("DuelTransmatStyle.DEFAULT -> defaultTransmat("))
+        assertTrue(transmat.contains("DuelTransmatStyle.HIVE -> hiveTransmat("))
+        assertTrue(transmat.contains("DuelTransmatStyle.CABAL -> cabalTransmat("))
+        assertTrue(transmat.contains("DuelTransmatStyle.VEX -> vexTransmat("))
+        assertTrue(transmat.contains("DuelTransmatStyle.FALLEN -> fallenTransmat("))
+        assertTrue(styles.contains("else -> DuelTransmatStyle.DEFAULT"))
+        assertFalse(transmat.contains("engine.play("))
+        assertFalse(transmat.contains("engine.damage("))
+        assertFalse(transmat.contains("Modifier.clickable"))
+        assertTrue(battle.contains("for (col in 0 until ShadowRules.COLUMNS)"))
+        assertTrue(stone.contains("R.drawable.shadow_arena_original_portrait_hq"))
+    }
+
     @Test fun largerUnitArtKeepsSevenLegalSlotsAndUserStoneBackground() {
         val battle = source("ShadowBattleActivity.kt")
         val metrics = source("DuelLayoutMetrics.kt")
