@@ -322,3 +322,18 @@ The user requested a new direct GitHub implementation pass while preserving port
 - Added `DuelVisualEventTest.kt` for classification of actual journal messages, prevented damage, failed summon and generic turn records.
 - Extended `DuelVisualParityGuardTest.kt` to require the correct image, card-slot loop, visual-only unit animation, actual Power deltas, card art scaling and connected HUD/overlay components.
 - All touched files passed a delimiter/quote structural scan. **The new revision has NOT been compiled on the user's Android machine or device.** Run the existing `run_local_engine_checks.bat` locally and inspect the updated APK before asserting animation or pixel parity. No GitHub Actions or workflows were used.
+
+
+## Hearthstone-inspired physical card landing (user request, 23 October 2026)
+
+The user asked for significantly more polished **physical placement animation**: cards should travel and fall onto their legal slots, rather than simply fading into place.
+
+**Pushed implementation (no GitHub Actions):**
+- `DuelLandingMotion.kt` is a pure 760ms rendering timeline: hand/drag release → sweeping ascent with tilt → short hover → accelerated downward slam/squash → subtle recoil → exact final board coordinates. The trajectory is deterministic and clamps invalid progress. Alternate columns tilt in opposite directions so repeated actions do not look copied. `DuelHandLaunch` records the source-to-destination pixel delta for only the successful placement revision, row, and column.
+- `ShadowBattleActivity.kt` captures the real hand card bounds for tap-to-play or the release location for drag-to-play, and passes the window-relative launch vector into the existing card renderer. Targeted on-play effects and Rossi-11 self-shield also record the source only *after* confirmed `co.play`. A new match clears the visual launch state; illegal plays never record placement. Normal seven-slot grid and clickable/drag targets are unchanged.
+- `DuelBoardAnimations.kt` uses the timeline to travel the full card face toward the highlighted slot, spin it several degrees, pause above the stone, slam down, rebound, and settle. It renders a brief rarity-tinted ring, horizontal impact flash and twelve sparks from the real slot. Exotic emits gold, Mythic warm red, Legendary violet, and other rarities icy blue; source artwork remains unobscured. CPU plays and summons without a hand launch drop from above the board.
+- Prevents replay on incidental Compose recomposition with per-unit last-animated revision. Existing buff/damage UI remains separate, driven by **actual `currentPower` deltas**.
+- Increased CPU display pacing from 540ms to 900ms between actions to give the 760ms landing sequence time to finish. The CPU decisions, cards, board rules and end-turn logic are unchanged.
+- `DuelLandingMotionTest.kt` covers hand origin, arc/hover, downward slam and bounce, exact settling, clamped bounds, opposite tilt direction, and matching only the genuine placement revision/slot. `DuelVisualParityGuardTest.kt` asserts hand-bound capture, game-engine-neutral rendering and use of the timeline.
+
+**User constraints:** portrait orientation, seven slots per row, user-provided original stone image, previously fixed drag/drop, all card gameplay mechanics and images are unchanged. No GitHub Actions were run. **Android compilation and device animation are not yet verified;** run `run_local_engine_checks.bat` after pulling. Delimiter/quote static checking is not proof of Kotlin compiler acceptance.
