@@ -4,6 +4,7 @@ import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -45,10 +46,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,8 +85,7 @@ internal fun ShadowLandingPage(
     hasSavedMatch: Boolean,
     onDeckConstruction: () -> Unit,
     onCardCollection: () -> Unit,
-    onRules: () -> Unit,
-    catalogCount: Int
+    onRules: () -> Unit
 ) {
     val ambient = rememberInfiniteTransition(label = "quiet landing ambience")
     val glow by ambient.animateFloat(
@@ -94,8 +97,17 @@ internal fun ShadowLandingPage(
         ),
         label = "orbital light"
     )
+    val orbitalPhase by ambient.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 22000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "slow orbital tracking"
+    )
     Box(Modifier.fillMaxSize().background(landingInk)) {
-        LandingAtmosphere(glow, Modifier.fillMaxSize())
+        LandingAtmosphere(glow, orbitalPhase, Modifier.fillMaxSize())
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             contentPadding = PaddingValues(
@@ -103,7 +115,7 @@ internal fun ShadowLandingPage(
             ),
             verticalArrangement = Arrangement.spacedBy(11.dp)
         ) {
-            item { LandingHero(glow) }
+            item { LandingHero(glow, orbitalPhase * 360f) }
             if (hasSavedMatch) {
                 item {
                     LandingContinue(
@@ -135,7 +147,7 @@ internal fun ShadowLandingPage(
                 LandingAction(
                     index = "03",
                     title = "CARD COLLECTION",
-                    subtitle = "EXPLORE $catalogCount RECORDED CARDS",
+                    subtitle = "BROWSE THE CARD ARCHIVE",
                     kind = LandingGlyphKind.COLLECTION,
                     onClick = onCardCollection
                 )
@@ -149,13 +161,13 @@ internal fun ShadowLandingPage(
                     onClick = onRules
                 )
             }
-            item { LandingFooter(catalogCount) }
+            item { LandingFooter() }
         }
     }
 }
 
 @Composable
-private fun LandingAtmosphere(glow: Float, modifier: Modifier = Modifier) {
+private fun LandingAtmosphere(glow: Float, phase: Float, modifier: Modifier = Modifier) {
     Canvas(modifier) {
         val width = size.width
         val height = size.height
@@ -202,6 +214,32 @@ private fun LandingAtmosphere(glow: Float, modifier: Modifier = Modifier) {
                 strokeWidth = .6.dp.toPx()
             )
         }
+        // A slow moving scanner passes underneath the navigation tiles.
+        // Geometry is drawn in this canvas only, with no bitmap allocations.
+        val scannerY = height * (-.12f + phase * 1.25f)
+        drawLine(
+            color = landingIce.copy(alpha = .055f * glow),
+            start = Offset(0f, scannerY),
+            end = Offset(width, scannerY - height * .09f),
+            strokeWidth = 3.dp.toPx()
+        )
+        drawLine(
+            color = landingGold.copy(alpha = .10f * glow),
+            start = Offset(0f, scannerY + 6.dp.toPx()),
+            end = Offset(width, scannerY - height * .09f + 6.dp.toPx()),
+            strokeWidth = .7.dp.toPx()
+        )
+        // Sparse distant stars give the slow scan a sense of depth. Positions
+        // are deterministic so there is no flicker or random redraw churn.
+        for (i in 0 until 25) {
+            val x = width * ((i * 37 + 11) % 103) / 103f
+            val y = height * ((i * 59 + 17) % 107) / 107f
+            drawCircle(
+                color = landingIce.copy(alpha = (.07f + .05f * glow) * (if (i % 5 == 0) 1f else .45f)),
+                radius = (if (i % 6 == 0) 1f else .6f).dp.toPx(),
+                center = Offset(x, y)
+            )
+        }
         // Upper-right survey rings appear behind the hero emblem.
         repeat(3) { idx ->
             drawCircle(
@@ -224,20 +262,35 @@ private fun LandingAtmosphere(glow: Float, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun LandingHero(glow: Float) {
+private fun LandingHero(glow: Float, orbitDegrees: Float) {
+    var entered by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(125)
+        entered = true
+    }
+    val reveal by animateFloatAsState(
+        targetValue = if (entered) 1f else 0f,
+        animationSpec = tween(durationMillis = 850),
+        label = "title transmat reveal"
+    )
     BoxWithConstraints(
         modifier = Modifier.fillMaxWidth().height(244.dp)
     ) {
         val narrow = maxWidth < 355.dp
         LandingOrbitalEmblem(
             glow = glow,
+            rotation = orbitDegrees,
             modifier = Modifier
                 .align(Alignment.TopEnd)
                 .padding(top = 5.dp, end = 1.dp)
                 .size(if (narrow) 126.dp else 155.dp)
         )
         Column(
-            modifier = Modifier.align(Alignment.TopStart).fillMaxWidth(),
+            modifier = Modifier.align(Alignment.TopStart).fillMaxWidth()
+                .graphicsLayer {
+                    alpha = reveal
+                    translationY = (1f - reveal) * 17.dp.toPx()
+                },
             verticalArrangement = Arrangement.Top
         ) {
             Row(
@@ -251,9 +304,10 @@ private fun LandingHero(glow: Float) {
                 Text(
                     "DESTINY: RISING",
                     color = landingGold,
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 3.sp,
+                    fontSize = 11.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 2.6.sp,
                     maxLines = 1
                 )
             }
@@ -262,20 +316,30 @@ private fun LandingHero(glow: Float) {
                 "SHADOW",
                 fontSize = if (narrow) 33.sp else 39.sp,
                 lineHeight = if (narrow) 36.sp else 41.sp,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Light,
                 fontFamily = FontFamily.SansSerif,
                 color = landingPale,
-                letterSpacing = 1.sp,
+                letterSpacing = 3.3.sp,
+                style = TextStyle(shadow = Shadow(
+                    color = landingIce.copy(alpha = .08f + glow * .11f),
+                    offset = Offset.Zero,
+                    blurRadius = 12f
+                )),
                 maxLines = 1
             )
             Text(
                 "SHAPER",
                 fontSize = if (narrow) 33.sp else 39.sp,
                 lineHeight = if (narrow) 36.sp else 41.sp,
-                fontWeight = FontWeight.Black,
+                fontWeight = FontWeight.Light,
                 fontFamily = FontFamily.SansSerif,
                 color = landingPale,
-                letterSpacing = 1.sp,
+                letterSpacing = 3.3.sp,
+                style = TextStyle(shadow = Shadow(
+                    color = landingIce.copy(alpha = .08f + glow * .11f),
+                    offset = Offset.Zero,
+                    blurRadius = 12f
+                )),
                 maxLines = 1
             )
             Row(
@@ -287,8 +351,14 @@ private fun LandingHero(glow: Float) {
                     fontSize = if (narrow) 40.sp else 47.sp,
                     lineHeight = if (narrow) 43.sp else 49.sp,
                     color = landingGold,
-                    fontWeight = FontWeight.Black,
-                    letterSpacing = 4.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    fontFamily = FontFamily.SansSerif,
+                    letterSpacing = 5.sp,
+                    style = TextStyle(shadow = Shadow(
+                        color = landingGold.copy(alpha = .12f + glow * .22f),
+                        offset = Offset.Zero,
+                        blurRadius = 16f
+                    )),
                     maxLines = 1
                 )
                 Canvas(Modifier.width(36.dp).height(20.dp)) {
@@ -324,9 +394,10 @@ private fun LandingHero(glow: Float) {
                 )
             }
             Text(
-                "A TACTICAL CARD GAME  /  SOLO AGAINST AI",
+                "A TACTICAL CARD GAME",
                 fontSize = if (narrow) 8.sp else 9.sp,
                 color = landingMuted,
+                fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Medium,
                 letterSpacing = 1.05.sp,
                 maxLines = 1
@@ -350,7 +421,11 @@ private fun LandingHero(glow: Float) {
 }
 
 @Composable
-private fun LandingOrbitalEmblem(glow: Float, modifier: Modifier = Modifier) {
+private fun LandingOrbitalEmblem(
+    glow: Float,
+    rotation: Float,
+    modifier: Modifier = Modifier
+) {
     Canvas(modifier) {
         val c = Offset(size.width * .5f, size.height * .5f)
         val radius = size.width * .435f
@@ -360,14 +435,27 @@ private fun LandingOrbitalEmblem(glow: Float, modifier: Modifier = Modifier) {
         drawCircle(gold, radius, c, style = Stroke(thin))
         drawCircle(gold.copy(alpha = .6f), radius * .78f, c, style = Stroke(thin))
         drawCircle(gold.copy(alpha = .85f), radius * .13f, c, style = Stroke(thin))
-        for (index in 0 until 8) {
-            val theta = (index * PI / 4.0 - PI / 2.0)
-            val direction = Offset(cos(theta).toFloat(), sin(theta).toFloat())
-            drawLine(
-                color = gold,
-                start = c + direction * (radius * .81f),
-                end = c + direction * (radius * 1.02f),
-                strokeWidth = if (index % 2 == 0) 1.6.dp.toPx() else thin
+        // Continuous 22-second orbit: only the outer calibration marks
+        // rotate. The central crest remains steady and fully legible.
+        rotate(rotation, pivot = c) {
+            for (index in 0 until 8) {
+                val theta = (index * PI / 4.0 - PI / 2.0)
+                val direction = Offset(cos(theta).toFloat(), sin(theta).toFloat())
+                drawLine(
+                    color = gold,
+                    start = c + direction * (radius * .81f),
+                    end = c + direction * (radius * 1.02f),
+                    strokeWidth = if (index % 2 == 0) 1.6.dp.toPx() else thin
+                )
+            }
+            drawArc(
+                color = landingIce.copy(alpha = .22f * glow),
+                startAngle = -28f,
+                sweepAngle = 48f,
+                useCenter = false,
+                topLeft = Offset(c.x - radius, c.y - radius),
+                size = Size(radius * 2f, radius * 2f),
+                style = Stroke(1.35.dp.toPx())
             )
         }
         val kite = Path().apply {
@@ -495,10 +583,11 @@ private fun LandingAction(
             }
             Column(Modifier.weight(1f)) {
                 Text(
-                    index + "  /  TACTICAL MENU",
+                    index + "  /  DIRECTOR",
                     fontSize = 8.sp,
-                    fontWeight = FontWeight.Bold,
-                    letterSpacing = 1.35.sp,
+                    fontFamily = FontFamily.Monospace,
+                    fontWeight = FontWeight.Medium,
+                    letterSpacing = 1.25.sp,
                     color = if (primary) landingGold else landingMuted.copy(alpha = .75f),
                     maxLines = 1
                 )
@@ -507,8 +596,9 @@ private fun LandingAction(
                     title,
                     fontSize = if (title.length > 15) 16.sp else 20.sp,
                     lineHeight = 22.sp,
-                    letterSpacing = .5.sp,
-                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 1.35.sp,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.SemiBold,
                     color = landingPale,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
@@ -518,7 +608,9 @@ private fun LandingAction(
                     subtitle,
                     fontSize = 10.sp,
                     lineHeight = 13.sp,
-                    letterSpacing = .2.sp,
+                    letterSpacing = .65.sp,
+                    fontFamily = FontFamily.SansSerif,
+                    fontWeight = FontWeight.Light,
                     color = landingMuted,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -582,8 +674,9 @@ private fun LandingContinue(onClick: () -> Unit, description: String) {
             Text(
                 "CONTINUE BATTLE",
                 color = landingPale,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
+                fontFamily = FontFamily.SansSerif,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.6.sp,
                 fontSize = 14.sp
             )
             Spacer(Modifier.height(4.dp))
@@ -689,48 +782,31 @@ private fun LandingChevron(modifier: Modifier = Modifier, color: Color = landing
     }
 }
 
+/**
+ * Decorative termination line only. Card counts, verification status and
+ * repetitive footer branding belong in the actual collection/card details.
+ */
 @Composable
-private fun LandingFooter(catalogCount: Int) {
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(top = 13.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        Canvas(Modifier.fillMaxWidth().height(11.dp)) {
-            val mid = size.width * .5f
-            drawLine(
-                landingRule.copy(alpha = .7f),
-                Offset(0f, size.height * .5f),
-                Offset(mid - 16.dp.toPx(), size.height * .5f),
-                .75.dp.toPx()
-            )
-            drawLine(
-                landingRule.copy(alpha = .7f),
-                Offset(mid + 16.dp.toPx(), size.height * .5f),
-                Offset(size.width, size.height * .5f),
-                .75.dp.toPx()
-            )
-            drawCircle(
-                landingGold.copy(alpha = .72f),
-                radius = 2.8.dp.toPx(),
-                center = Offset(mid, size.height * .5f),
-                style = Stroke(.9.dp.toPx())
-            )
-        }
-        Text(
-            "SHADOW SHAPER DUELS   /   $catalogCount CARDS ARCHIVED",
-            color = landingMuted,
-            fontSize = 9.sp,
-            letterSpacing = 1.sp,
-            maxLines = 1
+private fun LandingFooter() {
+    Canvas(Modifier.fillMaxWidth().padding(top = 10.dp).height(10.dp)) {
+        val mid = size.width * .5f
+        drawLine(
+            landingRule.copy(alpha = .56f),
+            Offset(0f, size.height * .5f),
+            Offset(mid - 19.dp.toPx(), size.height * .5f),
+            .75.dp.toPx()
         )
-        Text(
-            "UNVERIFIED EFFECTS ARE IDENTIFIED IN CARD DETAILS",
-            color = landingMuted.copy(alpha = .66f),
-            fontSize = 8.sp,
-            letterSpacing = .35.sp,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
+        drawLine(
+            landingRule.copy(alpha = .56f),
+            Offset(mid + 19.dp.toPx(), size.height * .5f),
+            Offset(size.width, size.height * .5f),
+            .75.dp.toPx()
+        )
+        drawCircle(
+            landingGold.copy(alpha = .69f),
+            radius = 3.dp.toPx(),
+            center = Offset(mid, size.height * .5f),
+            style = Stroke(.9.dp.toPx())
         )
     }
 }
