@@ -100,6 +100,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
  * during migration; the launcher now enters this Activity.
  */
 class ShadowComposeActivity : ComponentActivity() {
+    // Changes in a normal Activity lifecycle callback automatically refresh
+    // the launcher Resume entry, with no extra lifecycle-compose dependency.
+    internal var resumePulse by mutableIntStateOf(0)
+    override fun onResume() {
+        super.onResume()
+        resumePulse++
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -144,18 +152,9 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     var page by rememberSaveable { mutableStateOf(activity.intent.getStringExtra("start_page") ?: "home") }
     var detail by remember { mutableStateOf<ShadowData.Card?>(null) }
     val matchRepository = remember(activity) { ShadowMatchRepository(activity) }
-    var hasUnfinishedMatch by remember { mutableStateOf(matchRepository.load() != null) }
-    // Refresh whenever the launcher returns from a battle (including an
-    // Android process recreation or navigating back to Home).
-    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
-    DisposableEffect(owner, matchRepository) {
-        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
-            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                hasUnfinishedMatch = matchRepository.load() != null
-            }
-        }
-        owner.lifecycle.addObserver(observer)
-        onDispose { owner.lifecycle.removeObserver(observer) }
+    val resumePulse = (activity as? ShadowComposeActivity)?.resumePulse ?: 0
+    val hasUnfinishedMatch = remember(resumePulse) {
+        matchRepository.load() != null
     }
     val state by vm.state.collectAsState()
     BackHandler(page != "home") { page = "home" }
