@@ -80,7 +80,7 @@ class ShadowLandingPageGuardTest {
         assertTrue(landing.contains("\"A TACTICAL CARD GAME\""))
         assertTrue(landing.contains("LandingFooter()"))
         // The number of cards is still available inside Card Collection.
-        assertTrue(home.contains("${filtered.size} / ${vm.catalog.size}"))
+        assertTrue(home.contains("\${filtered.size} / \${vm.catalog.size}"))
     }
 
     @Test fun titleAndMenuUseSciFiTypographyWithoutExternalFontFiles() {
