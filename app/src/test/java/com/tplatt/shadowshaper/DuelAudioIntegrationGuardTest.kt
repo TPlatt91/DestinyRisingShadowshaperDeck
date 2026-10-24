@@ -51,10 +51,10 @@ class DuelAudioIntegrationGuardTest {
         assertTrue(screen.contains("lastAudioTurn = key"))
         assertTrue(screen.contains("matchOutcomePlayed = true"))
         assertTrue(screen.contains("sounds.play(DuelSound.CARD_SELECT)"))
-        assertTrue(screen.contains("DuelSound.DAMAGE"))
+        assertTrue(classifier.contains("DuelSound.DAMAGE"))
         assertTrue(classifier.contains("DAMAGE PREVENTED"))
         assertTrue(classifier.contains("DESTROYED ▶"))
-        assertTrue(classifier.contains("SUMMON"))
+        assertTrue(classifier.contains("DuelSound.TRANSMAT_DEFAULT"))
     }
 
     @Test fun muteAndVolumeSettingsPersistWithoutChangingGameRules() {
