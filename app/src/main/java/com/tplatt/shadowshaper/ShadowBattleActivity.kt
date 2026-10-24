@@ -576,44 +576,24 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             )
         )
     ) {
-        Row(Modifier.fillMaxWidth().height(29.dp)
-            .background(
-                Brush.horizontalGradient(
-                    listOf(
-                        Color(0xFF27313C),
-                        Color(0xFF141B22),
-                        Color(0xFF242C35)
-                    )
-                )
-            )
-            .border(width = 1.dp, color = Color(0xFF807967))
-            .padding(horizontal = 10.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                if (inspectingFinalBoard) "‹  RESULTS" else "☰  MENU",
-                color = BattleGold, fontSize = 10.sp,
-                modifier = Modifier.clickable {
-                    sounds.play(DuelSound.UI_TAP)
-                    if (inspectingFinalBoard) inspectingFinalBoard = false
-                    else settingsDialog = true
-                }
-                    .padding(horizontal = 10.dp, vertical = 5.dp)
-            )
-            Text("SHADOWSHAPER DUELS", color = DuelPalette.cream,
-                letterSpacing = 1.sp, fontSize = 11.sp, fontWeight = FontWeight.Black)
-            Text(
-                when {
-                    snapshot?.finished == true -> "DUEL COMPLETE"
-                    engine?.pendingMovedUnit != null && engine.pendingMoveCaster === engine.human ->
-                        "MOVE UNIT"
-                    pendingPosition != null -> "TARGET"
-                    snapshot?.playerTurn == true -> "YOUR TURN"
-                    snapshot != null -> "CPU TURN"
-                    else -> "SINGLE PLAYER"
-                }, color = BattleGold, fontSize = 9.sp
-            )
-        }
+        DuelBattleTopBar(
+            status = when {
+                snapshot?.finished == true -> "DUEL COMPLETE"
+                engine?.pendingMovedUnit != null &&
+                    engine.pendingMoveCaster === engine.human -> "MOVE UNIT"
+                pendingPosition != null -> "TARGET"
+                snapshot?.playerTurn == true -> "YOUR TURN"
+                snapshot != null -> "CPU TURN"
+                else -> "SINGLE PLAYER"
+            },
+            reviewingBoard = inspectingFinalBoard,
+            yourTurn = snapshot?.playerTurn == true,
+            onNavigation = {
+                sounds.play(DuelSound.UI_TAP)
+                if (inspectingFinalBoard) inspectingFinalBoard = false
+                else settingsDialog = true
+            }
+        )
         if (engine != null && snapshot != null) {
             Column(
                 Modifier.weight(1f).fillMaxWidth().padding(3.dp),
