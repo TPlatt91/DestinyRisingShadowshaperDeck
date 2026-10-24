@@ -776,6 +776,7 @@ private fun ShadowBattleScreen(
                                             sounds = sounds,
                                             unit = unit,
                                             currentPower = engine.power(unit),
+                                            effectEvents = engine.visualEvents.filter { it.target === unit },
                                             placementRevision = engine.placementRevision,
                                             isNewestPlacement = !snapshot.finished &&
                                                 (resumedAtRevision < 0 ||
@@ -1135,6 +1136,14 @@ private fun ShadowBattleScreen(
             }
         }
     }
+    // Draw source-to-recipient beams across measured legal slots.
+    // Visual events come from the engine; placement and turns never wait.
+    DuelPowerTransferBeam(
+        event = engine?.let { DuelEffectEvents.lastTransfer(it.visualEvents) },
+        boundsInWindow = slotBounds,
+        rootTopLeftInWindow = rootTopLeftInWindow,
+        modifier = Modifier.fillMaxSize().zIndex(7f)
+    )
     AnimatedVisibility(
         visible = turnAnnouncement != null && !openingDialog && !deckDialog && !factionDialog,
         enter = fadeIn(), exit = fadeOut(),
