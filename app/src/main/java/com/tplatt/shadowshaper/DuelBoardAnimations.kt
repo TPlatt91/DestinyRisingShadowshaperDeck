@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
 import kotlin.math.cos
@@ -58,6 +60,15 @@ internal fun DuelAnimatedUnit(
         Animatable(if (isNewestPlacement && placementRevision > 0) 0f else 1f)
     }
     var animatedRevision by remember(unit) { mutableIntStateOf(-1) }
+    val transmat = remember(unit) {
+        Animatable(if (isNewestPlacement && placementRevision > 0) 0f else 1f)
+    }
+    var precharging by remember(unit) {
+        mutableStateOf(isNewestPlacement && placementRevision > 0)
+    }
+    // The faction comes only from the actual card catalog metadata, never
+    // inferred from imagery/name, so summons and normal plays agree.
+    val transmatStyle = DuelTransmatResolver.forFaction(unit.card.faction)
     val impact = remember(unit) { Animatable(0f) }
     var previousPower by remember(unit) { mutableIntStateOf(currentPower) }
     var powerDelta by remember(unit) { mutableIntStateOf(0) }
@@ -66,7 +77,23 @@ internal fun DuelAnimatedUnit(
         if (isNewestPlacement && placementRevision > 0 &&
             animatedRevision != placementRevision) {
             animatedRevision = placementRevision
+            precharging = true
             landing.snapTo(0f)
+            transmat.snapTo(0f)
+            // Spawn the faction portal BEFORE the Hearthstone-style card
+            // travels/falls. Both timelines are draw-only and never block
+            // the engine's already-committed play.
+            launch {
+                transmat.animateTo(
+                    1f,
+                    tween(
+                        durationMillis = DuelTransmatResolver.EFFECT_MS,
+                        easing = LinearEasing
+                    )
+                )
+            }
+            delay(DuelTransmatResolver.PRECHARGE_MS)
+            precharging = false
             landing.animateTo(
                 1f,
                 tween(
@@ -75,7 +102,9 @@ internal fun DuelAnimatedUnit(
                 )
             )
         } else if (!isNewestPlacement || placementRevision <= 0) {
+            precharging = false
             landing.snapTo(1f)
+            transmat.snapTo(1f)
         }
     }
 
@@ -112,6 +141,15 @@ internal fun DuelAnimatedUnit(
     }
 
     Box(modifier) {
+        // The portal is under the moving original card art and has no touch
+        // targets. Unrecognized/neutral entries get the default transmat.
+        if (precharging || transmat.value < 1f) {
+            DuelTransmatArrival(
+                style = transmatStyle,
+                progress = transmat.value,
+                modifier = Modifier.matchParentSize()
+            )
+        }
         // A brief ring and individual sparks stay anchored to the actual
         // slot while the artwork moves. No extra overlay obscures card art.
         if (landingImpact > .001f) {
@@ -156,7 +194,7 @@ internal fun DuelAnimatedUnit(
                     rotationZ = motion.tiltDegrees
                     scaleX = motion.scale
                     scaleY = motion.scale
-                    alpha = motion.opacity
+                    alpha = if (precharging) 0f else motion.opacity
                 }
                 .shadow(
                     elevation = if (landing.value < 1f) 12.dp else 5.dp,
