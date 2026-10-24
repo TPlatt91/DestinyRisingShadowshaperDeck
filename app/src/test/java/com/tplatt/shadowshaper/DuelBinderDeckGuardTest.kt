@@ -58,7 +58,8 @@ class DuelBinderDeckGuardTest {
 
     @Test fun addInspectSearchAndDeckManagementActionsUnchanged() {
         val screen = source("ShadowComposeActivity.kt")
-        assertTrue(screen.contains("onInspect = { onCard(card) }"))
+        assertTrue(screen.contains("onInspect = { onCard(card, suggestions) }"))
+        assertTrue(screen.contains("onInspect = { onCard(card, deckCards) }"))
         assertTrue(screen.contains("onAdd = { vm.add(card) }"))
         assertTrue(screen.contains("vm.remove(card.name)"))
         assertTrue(screen.contains("LibrarySearchBar("))
@@ -84,7 +85,7 @@ class DuelBinderDeckGuardTest {
         assertTrue(collection.contains("binder = true"))
         assertTrue(collection.contains("LibrarySearchBar("))
         assertTrue(collection.contains("filtered.size"))
-        assertTrue(collection.contains("onInspect = { onCard(card) }"))
+        assertTrue(collection.contains("onInspect = { onCard(card, filtered) }"))
         assertTrue(collection.contains("state.cards[card.name] ?: 0"))
         assertFalse(collection.contains("onAdd ="))
         assertFalse(collection.contains("isPlayable"))
