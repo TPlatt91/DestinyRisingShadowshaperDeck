@@ -71,4 +71,35 @@ class DuelAudioIntegrationGuardTest {
         assertFalse(runtime.contains("engine.endTurn("))
         assertFalse(runtime.contains("engine.play("))
     }
+    @Test fun drawSoundsAreBasedOnEngineDrawEventsRatherThanHandSizeGuesswork() {
+        val engine = source("ShadowEngine.kt")
+        val sounds = source("DuelSoundDesign.kt")
+        val battle = source("ShadowBattleActivity.kt")
+        assertTrue(engine.contains("humanDrawTotal++"))
+        assertTrue(engine.contains("cpuDrawTotal++"))
+        assertTrue(engine.contains("humanEmptyDrawTotal++"))
+        assertTrue(engine.contains("cpuEmptyDrawTotal++"))
+        assertTrue(sounds.contains("data class DuelDrawAudioSnapshot("))
+        assertTrue(sounds.contains("DuelSound.DRAW_MULTI"))
+        assertTrue(sounds.contains("DuelSound.DRAW_SINGLE"))
+        assertTrue(battle.contains("DuelDrawAudioSnapshot("))
+        assertTrue(battle.contains("lastAudioDraws = drawNow"))
+        assertTrue(battle.contains("change.totalDrawn.coerceAtMost(4)"))
+        assertTrue(battle.contains("snapshot?.playerHand, snapshot?.cpuHand"))
+    }
+
+    @Test fun openingShuffleAndNewActionsPlayOnlyAtConfirmedInteractionPoints() {
+        val battle = source("ShadowBattleActivity.kt")
+        assertTrue(battle.contains("LaunchedEffect(current)"))
+        assertTrue(battle.contains("sounds.isReady(DuelSound.SHUFFLE)"))
+        assertTrue(battle.contains("sounds.play(DuelSound.OPENING_DEAL)"))
+        assertTrue(battle.contains("sounds.play(DuelSound.CARD_LIFT)"))
+        assertTrue(battle.contains("sounds.play(DuelSound.TARGET_LOCK)"))
+        assertTrue(battle.contains("sounds.play(DuelSound.ABILITY_TRIGGER)"))
+        assertTrue(battle.contains("sounds.play(DuelSound.CARD_BREAK)"))
+        assertTrue(battle.contains("if (canPlace)"))
+        assertFalse(battle.contains("sounds.play(DuelSound.MULLIGAN)"))
+        assertFalse(battle.contains("sounds.play(DuelSound.DISCARD)"))
+    }
+
 }
