@@ -290,44 +290,6 @@ private fun CardTile(card: ShadowData.Card, copies: Int, onClick: () -> Unit) {
     }
 }
 
-// Plain collection browser; Deck Construction uses the recessed leather binder sleeves.
-@Composable
-private fun LibraryCardFace(
-    card: ShadowData.Card,
-    copies: Int,
-    onInspect: () -> Unit,
-    onAdd: (() -> Unit)? = null
-) {
-    Box(
-        Modifier.fillMaxWidth().aspectRatio(0.67f)
-            .background(Color(0xFF211D1D), RoundedCornerShape(3.dp))
-            .border(1.dp, if (copies > 0) Gold else Color(0xFF6F665E),
-                RoundedCornerShape(3.dp))
-            .clickable(onClick = onInspect)
-    ) {
-        CardArtPreview(card, Modifier.fillMaxSize().padding(2.dp))
-        if (copies > 0) {
-            Text(
-                "×$copies", color = Cream, fontSize = 11.sp,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.align(Alignment.TopEnd)
-                    .background(Color(0xD7271C17), RoundedCornerShape(3.dp))
-                    .padding(horizontal = 4.dp, vertical = 1.dp)
-            )
-        }
-        if (onAdd != null && card.isPlayable) {
-            TextButton(
-                onClick = onAdd,
-                modifier = Modifier.align(Alignment.BottomEnd).height(30.dp)
-                    .background(Color(0xDD3B2D1C), RoundedCornerShape(3.dp)),
-                contentPadding = PaddingValues(horizontal = 6.dp, vertical = 1.dp)
-            ) {
-                Text("+", color = Gold, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            }
-        }
-    }
-}
-
 @Composable
 private fun LibraryFilterSelector(
     label: String,
@@ -521,37 +483,83 @@ private fun CollectionScreen(
     val filtered = remember(criteria, vm.alphabetical, glossary) {
         vm.alphabetical.filter { ShadowLibraryFiltering.matches(it, criteria, glossary) }
     }
-    Column(
-        Modifier.fillMaxSize().background(Color(0xFF141415))
-    ) {
+    // Collection and Deck Construction share the same leather binder artwork.
+    // This is a full-width archive: summoned-only cards stay viewable, with no
+    // deck editing "+" control and no sidebar reducing the portrait card grid.
+    Column(Modifier.fillMaxSize().background(BinderPalette.edge)) {
         Row(
             Modifier.fillMaxWidth().height(43.dp)
-                .background(Color(0xFF221E1B))
-                .border(1.dp, Color(0xFF554636))
-                .padding(horizontal = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .background(BinderPalette.leatherDark)
+                .border(1.dp, BinderPalette.brass)
+                .padding(horizontal = 5.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(5.dp)
         ) {
-            TextButton(onClick = onBack) { Text("‹ BACK", color = Gold, fontSize = 12.sp) }
-            Text("CARD COLLECTION", color = Cream, fontSize = 17.sp,
-                fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Text("${filtered.size} / ${vm.catalog.size} CARDS",
-                color = Gold, fontSize = 12.sp)
+            TextButton(onClick = onBack) {
+                Text("‹ BACK", color = Gold, fontSize = 12.sp)
+            }
+            Text(
+                "CARD COLLECTION",
+                color = BinderPalette.ivory, fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.weight(1f), maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                "${filtered.size} / ${vm.catalog.size}",
+                color = BinderPalette.bronze, fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
-        LibrarySearchBar(criteria, updateCriteria, choices)
         Box(
-            Modifier.fillMaxSize().padding(8.dp)
-                .background(Color(0xFF272423), RoundedCornerShape(3.dp))
-                .border(1.dp, Color(0xFF806648), RoundedCornerShape(3.dp))
+            Modifier.weight(1f).fillMaxWidth()
+                .padding(horizontal = 5.dp, vertical = 4.dp)
         ) {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(3),
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(8.dp),
-                horizontalArrangement = Arrangement.spacedBy(5.dp),
-                verticalArrangement = Arrangement.spacedBy(7.dp)
-            ) {
-                gridItems(filtered, key = { it.name }) { card ->
-                    LibraryCardFace(card, state.cards[card.name] ?: 0, { onCard(card) })
+            DuelBinderPage(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier.fillMaxSize()
+                        .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 8.dp)
+                ) {
+                    LibrarySearchBar(
+                        criteria, updateCriteria, choices, binder = true
+                    )
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .background(Color(0xE51A110D), CutCornerShape(3.dp))
+                            .border(.75.dp, BinderPalette.brass.copy(alpha = .78f))
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "CARD ARCHIVE", color = BinderPalette.bronze,
+                            fontSize = 11.sp, fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Text(
+                            "${filtered.size} CARDS  •  TAP ART TO INSPECT",
+                            color = Secondary, fontSize = 9.sp
+                        )
+                    }
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(
+                            start = 4.dp, end = 4.dp, top = 9.dp, bottom = 12.dp
+                        ),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        gridItems(filtered, key = { it.name }) { card ->
+                            DuelBinderCardSleeve(
+                                card = card,
+                                copies = state.cards[card.name] ?: 0,
+                                onInspect = { onCard(card) },
+                                artwork = { artModifier ->
+                                    CardArtPreview(card, artModifier)
+                                }
+                            )
+                        }
+                    }
                 }
             }
         }
