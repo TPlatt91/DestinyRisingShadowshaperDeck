@@ -428,29 +428,56 @@ private fun DuelStatusDot(value: String, color: Color) {
     )
 }
 
+/**
+ * Row ability colors deliberately differ from ordinary gold placement.
+ * Front = ember/amber (forward pressure); Back = arc-blue (support).
+ */
+internal fun duelRowGlowColor(glow: DuelRowGlow): Color = when (glow) {
+    DuelRowGlow.FRONT_ABILITY -> Color(0xFFFFAE65)
+    DuelRowGlow.BACK_ABILITY -> Color(0xFF73D5FF)
+    DuelRowGlow.STANDARD -> DuelPalette.gold
+}
+
 @Composable
 internal fun DuelSlotBackground(
     selected: Boolean,
     friendly: Boolean,
     occupied: Boolean,
     modifier: Modifier = Modifier,
-    label: String = "+"
+    label: String = "+",
+    glow: DuelRowGlow = DuelRowGlow.STANDARD
 ) {
-    // Empty cells in the original battle are unframed stone: no tall gray
-    // cards, outlines, or corner brackets until a real card is placed.
-    // A glowing selection remains for legal placement, movement and targets.
+    // The engine is the sole authority for which empty slots are playable.
+    // A special row gets a luminous colored inset, without making another
+    // row illegal or changing target/movement gold indicators.
     Box(modifier, contentAlignment = Alignment.Center) {
         if (selected) {
+            val ability = glow != DuelRowGlow.STANDARD && friendly && !occupied
+            val accent = if (ability) duelRowGlowColor(glow) else DuelPalette.gold
+            val baseFill = if (friendly) Color(0x5534BFA3) else Color(0x66BDA67A)
+            val slotShape = RoundedCornerShape(3.dp)
             Box(
                 Modifier.fillMaxSize()
                     .background(
-                        if (friendly) Color(0x5534BFA3) else Color(0x66BDA67A),
-                        RoundedCornerShape(3.dp)
+                        if (ability) Brush.verticalGradient(
+                            listOf(
+                                accent.copy(alpha = .31f),
+                                accent.copy(alpha = .12f),
+                                accent.copy(alpha = .35f)
+                            )
+                        ) else Brush.verticalGradient(listOf(baseFill, baseFill)),
+                        slotShape
                     )
-                    .border(1.6.dp, DuelPalette.gold, RoundedCornerShape(3.dp))
+                    .border(if (ability) 2.dp else 1.6.dp, accent, slotShape)
             )
+            if (ability) {
+                Box(
+                    Modifier.fillMaxSize().padding(3.dp)
+                        .border(.75.dp, accent.copy(alpha = .7f), RoundedCornerShape(2.dp))
+                )
+            }
             Text(
-                label, color = DuelPalette.gold,
+                label, color = accent,
                 fontSize = 20.sp, fontWeight = FontWeight.Bold
             )
         }
