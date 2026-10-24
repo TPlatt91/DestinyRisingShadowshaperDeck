@@ -51,8 +51,8 @@ class DuelSoundDesignTest {
         assertTrue(DuelSoundEvents.newLines(old, listOf("MATCH SEED: 2")).isEmpty())
     }
 
-    @Test fun allSixteenEffectsProduceValidNonSilentPcmWav() {
-        assertEquals(16, DuelSound.entries.size)
+    @Test fun allTwentySevenEffectsProduceValidNonSilentPcmWav() {
+        assertEquals(27, DuelSound.entries.size)
         for (sound in DuelSound.entries) {
             val wav = DuelSoundSynthesis.wav(sound)
             assertEquals(sound.name, 44 + sound.durationMs *
