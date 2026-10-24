@@ -414,18 +414,6 @@ private fun LibrarySearchBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             item {
-                LibraryFilterSelector(
-                    "FACTION", criteria.faction, choices.factions,
-                    { onChange(criteria.copy(faction = it)) }, binder
-                )
-            }
-            item {
-                LibraryFilterSelector(
-                    "RARITY", criteria.rarity, choices.rarities,
-                    { onChange(criteria.copy(rarity = it)) }, binder
-                )
-            }
-            item {
                 TextButton(
                     onClick = { showMore = !showMore },
                     modifier = Modifier.height(36.dp)
@@ -445,6 +433,18 @@ private fun LibrarySearchBar(
                         fontSize = 11.sp, color = if (count > 0) Gold else Cream
                     )
                 }
+            }
+            item {
+                LibraryFilterSelector(
+                    "FACTION", criteria.faction, choices.factions,
+                    { onChange(criteria.copy(faction = it)) }, binder
+                )
+            }
+            item {
+                LibraryFilterSelector(
+                    "RARITY", criteria.rarity, choices.rarities,
+                    { onChange(criteria.copy(rarity = it)) }, binder
+                )
             }
         }
         if (showMore) {
