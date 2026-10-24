@@ -100,6 +100,22 @@ internal fun DuelBinderPage(
                     )
                 )
             )
+            // Short, irregular-grain strokes provide a quiet leather
+            // texture. Fixed procedural positions avoid random flicker on
+            // redraw and keep this page lightweight when scrolling cards.
+            for (i in 0 until 55) {
+                val xFraction = ((i * 47 + 13) % 97) / 97f
+                val yFraction = ((i * 29 + 7) % 101) / 101f
+                val x = size.width * xFraction
+                val y = size.height * yFraction
+                val width = (3 + (i * 7) % 16).dp.toPx()
+                drawLine(
+                    Color(0xFFB98C5C).copy(alpha = if (i % 3 == 0) .052f else .027f),
+                    Offset(x, y),
+                    Offset((x + width).coerceAtMost(size.width), y + .5.dp.toPx()),
+                    .6.dp.toPx()
+                )
+            }
             val seamLeft = 7.dp.toPx()
             val seamRight = size.width - 7.dp.toPx()
             val stitch = BinderPalette.bronze.copy(alpha = .51f)
@@ -119,6 +135,27 @@ internal fun DuelBinderPage(
                         .8.dp.toPx()
                     )
                     y += 13.dp.toPx()
+                }
+            }
+            // Four soft rivets at the ends of the stitched leather leaf.
+            val rivetRadius = 2.2.dp.toPx()
+            for (x in listOf(13.dp.toPx(), size.width - 13.dp.toPx())) {
+                for (y in listOf(14.dp.toPx(), size.height - 14.dp.toPx())) {
+                    drawCircle(
+                        BinderPalette.edge,
+                        rivetRadius * 1.44f,
+                        Offset(x, y)
+                    )
+                    drawCircle(
+                        BinderPalette.bronze.copy(alpha = .79f),
+                        rivetRadius,
+                        Offset(x, y)
+                    )
+                    drawCircle(
+                        BinderPalette.ivory.copy(alpha = .36f),
+                        rivetRadius * .29f,
+                        Offset(x - .4.dp.toPx(), y - .4.dp.toPx())
+                    )
                 }
             }
             drawLine(
