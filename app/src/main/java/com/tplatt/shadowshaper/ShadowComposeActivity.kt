@@ -143,6 +143,20 @@ private fun ShadowTheme(content: @Composable () -> Unit) {
 private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     var page by rememberSaveable { mutableStateOf(activity.intent.getStringExtra("start_page") ?: "home") }
     var detail by remember { mutableStateOf<ShadowData.Card?>(null) }
+    val matchRepository = remember(activity) { ShadowMatchRepository(activity) }
+    var hasUnfinishedMatch by remember { mutableStateOf(matchRepository.load() != null) }
+    // Refresh whenever the launcher returns from a battle (including an
+    // Android process recreation or navigating back to Home).
+    val owner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(owner, matchRepository) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                hasUnfinishedMatch = matchRepository.load() != null
+            }
+        }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
+    }
     val state by vm.state.collectAsState()
     BackHandler(page != "home") { page = "home" }
     Surface(modifier = Modifier.fillMaxSize(), color = Ink) {
@@ -150,6 +164,13 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
             when (page) {
                 "home" -> HomeScreen(
                     onBattle = { activity.startActivity(Intent(activity, ShadowBattleActivity::class.java)) },
+                    onContinue = {
+                        activity.startActivity(
+                            Intent(activity, ShadowBattleActivity::class.java)
+                                .putExtra("resume_last_match", true)
+                        )
+                    },
+                    hasSavedMatch = hasUnfinishedMatch,
                     onOpen = { page = it },
                     catalogCount = vm.catalog.size
                 )
@@ -199,7 +220,13 @@ private fun PageHeading(title: String, description: String, onBack: () -> Unit) 
 }
 
 @Composable
-private fun HomeScreen(onBattle: () -> Unit, onOpen: (String) -> Unit, catalogCount: Int) {
+private fun HomeScreen(
+    onBattle: () -> Unit,
+    onContinue: () -> Unit,
+    hasSavedMatch: Boolean,
+    onOpen: (String) -> Unit,
+    catalogCount: Int
+) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(horizontal = 18.dp, vertical = 20.dp),
@@ -214,7 +241,17 @@ private fun HomeScreen(onBattle: () -> Unit, onOpen: (String) -> Unit, catalogCo
             Text("CARD ARCHIVE & SINGLE-PLAYER SIMULATOR", fontSize = 11.sp, color = Secondary)
             Spacer(Modifier.height(22.dp))
         }
-        item { HomeDestination("⚔", "SIM BATTLE", "Play a six-round match against AI", onBattle) }
+        if (hasSavedMatch) {
+            item {
+                HomeDestination("↻", "CONTINUE BATTLE",
+                    "Resume your unfinished match with its saved board and turn",
+                    onContinue)
+            }
+        }
+        item {
+            HomeDestination("⚔", if (hasSavedMatch) "NEW BATTLE" else "SIM BATTLE",
+                "Play a fresh six-round match against AI", onBattle)
+        }
         item { HomeDestination("▤", "DECK CONSTRUCTION", "Build decks and manage 15-card limits") { onOpen("deck") } }
         item { HomeDestination("◈", "CARD COLLECTION", "Browse $catalogCount recorded cards and their effects") { onOpen("collection") } }
         item { HomeDestination("≡", "RULES", "Rounds, positioning, status and scoring") { onOpen("rules") } }
