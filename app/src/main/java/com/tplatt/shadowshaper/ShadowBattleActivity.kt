@@ -809,7 +809,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     // original right-side jewels, below the opposing score.
                     Row(
                         Modifier.align(Alignment.BottomEnd)
-                            .padding(end = 12.dp, bottom = 78.dp),
+                            .padding(end = 12.dp, bottom = 95.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(2.dp)
                     ) {
