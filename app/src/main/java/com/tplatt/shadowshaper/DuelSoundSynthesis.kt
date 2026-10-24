@@ -175,6 +175,100 @@ internal object DuelSoundSynthesis {
                     signal = .48 * sin(phase) + .32 * sin(phaseB) +
                         .13 * filteredNoise
                 }
+                DuelSound.DRAW_SINGLE -> {
+                    // A bright paper-edge scrape with a soft sci-fi swish.
+                    freq = 610.0 + 470.0 * (1.0 - p)
+                    freqB = 1680.0 - 470.0 * p
+                    val edge = exp(-8.5 * p)
+                    envelope *= (.40 + .60 * edge)
+                    signal = .60 * whiteNoise * edge +
+                        .55 * filteredNoise + .20 * sin(phase) +
+                        .10 * sin(phaseB)
+                }
+                DuelSound.DRAW_MULTI -> {
+                    // Several quick swipes inside one event, not a sustained
+                    // noisy shuffling loop.
+                    freq = 560.0 + 220.0 * p
+                    freqB = 1220.0 + 110.0 * p
+                    val staggered = (1.0 + cos(TWO_PI * p * 3.0)) * .5
+                    envelope *= .34 + .66 * staggered
+                    signal = .56 * filteredNoise +
+                        .38 * whiteNoise * staggered +
+                        .18 * sin(phase) + .14 * sin(phaseB)
+                }
+                DuelSound.SHUFFLE -> {
+                    // Fine-grain two-handed riffle with periodic card edges.
+                    freq = 295.0 + 135.0 * sin(TWO_PI * p * 3.5)
+                    freqB = 940.0 - 250.0 * p
+                    val flutter = .35 + .65 * abs(sin(TWO_PI * t * 24.0))
+                    envelope *= flutter * (.86 - .20 * p)
+                    signal = .61 * whiteNoise * flutter +
+                        .49 * filteredNoise +
+                        .11 * sin(phase) + .06 * sin(phaseB)
+                }
+                DuelSound.OPENING_DEAL -> {
+                    // A tidy set of clipped swishes and subtle UI chimes.
+                    freq = 680.0 + 270.0 * p
+                    freqB = 1140.0 + 180.0 * p
+                    val deal = exp(-9.0 * ((p * 4.0) % 1.0))
+                    envelope *= .42 + .58 * deal
+                    signal = .37 * whiteNoise * deal +
+                        .44 * filteredNoise + .22 * sin(phase) +
+                        .13 * sin(phaseB)
+                }
+                DuelSound.MULLIGAN -> {
+                    // Reserved for a future real redraw action.
+                    freq = 680.0 - 400.0 * p
+                    freqB = 1040.0 - 270.0 * p
+                    envelope *= .56 + .32 * abs(sin(TWO_PI * p * 5.0))
+                    signal = .48 * whiteNoise + .38 * filteredNoise +
+                        .22 * sin(phase) + .13 * sin(phaseB)
+                }
+                DuelSound.DISCARD -> {
+                    // One sharper flick, distinct from an incoming draw.
+                    freq = 810.0 - 610.0 * p
+                    freqB = 1580.0 - 900.0 * p
+                    envelope *= exp(-7.0 * p)
+                    signal = .69 * whiteNoise + .43 * filteredNoise +
+                        .13 * sin(phase) + .08 * sin(phaseB)
+                }
+                DuelSound.CARD_LIFT -> {
+                    freq = 790.0 + 470.0 * p
+                    freqB = 1710.0 - 410.0 * p
+                    envelope *= exp(-5.0 * p)
+                    signal = .52 * filteredNoise + .29 * whiteNoise +
+                        .22 * sin(phase) + .10 * sin(phaseB)
+                }
+                DuelSound.TARGET_LOCK -> {
+                    // Brief high-precision holographic reticle confirmation.
+                    freq = 560.0 + 220.0 * (if (p < .50) 0.0 else 1.0)
+                    freqB = freq * 1.51
+                    envelope *= exp(-1.5 * p)
+                    signal = .54 * sin(phase) + .27 * sin(phaseB) +
+                        .12 * sin(phaseB * 2.0) + .06 * filteredNoise
+                }
+                DuelSound.ABILITY_TRIGGER -> {
+                    freq = 400.0 + 620.0 * p
+                    freqB = freq * 1.49
+                    envelope *= (.43 + .57 * sin(PI * p))
+                    signal = .43 * sin(phase) + .29 * sin(phaseB) +
+                        .18 * filteredNoise + .12 * sin(phase * 2.13)
+                }
+                DuelSound.CARD_BREAK -> {
+                    // Short crystalline crack followed by dissolving static.
+                    freq = 490.0 * exp(-3.0 * p) + 125.0
+                    freqB = 1180.0 * exp(-2.5 * p)
+                    envelope *= exp(-5.3 * p)
+                    signal = .63 * whiteNoise + .48 * filteredNoise +
+                        .27 * sin(phase) + .22 * sin(phaseB)
+                }
+                DuelSound.DECK_EMPTY -> {
+                    freq = if (p < .46) 510.0 else 385.0
+                    freqB = freq * 1.21
+                    envelope *= exp(-2.8 * p)
+                    signal = .56 * sin(phase) + .26 * sin(phaseB) +
+                        .08 * filteredNoise
+                }
             }
             phase += TWO_PI * freq / RATE
             phaseB += TWO_PI * freqB / RATE
