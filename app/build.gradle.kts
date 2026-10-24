@@ -26,6 +26,11 @@ android {
     buildFeatures {
         compose = true
     }
+    // Allow MediaPlayer to stream the user's Ogg/Opus music directly from the
+    // installed APK via AssetFileDescriptor without a large cache duplicate.
+    androidResources {
+        noCompress += "opus"
+    }
 }
 
 dependencies {
