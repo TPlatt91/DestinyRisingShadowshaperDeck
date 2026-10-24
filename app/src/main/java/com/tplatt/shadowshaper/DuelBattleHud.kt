@@ -203,10 +203,9 @@ internal fun DuelUtilityPill(hand: Int, deck: Int) {
 }
 
 /**
- * Faceted command medallion, a game control rather than a default material
- * button. It exposes the SAME enabled/label/onClick contract as before.
- * In particular: CANCEL still exits target selection; MOVE still prompts
- * the real movement choice; END TURN still goes through the coordinator.
+ * Minimal circular command control: an understated sci-fi objective reticle
+ * rather than a bronze mechanical cog. The full 78dp surface is interactive,
+ * but ONLY through the existing coordinator's enabled/label/onClick contract.
  */
 @Composable
 internal fun DuelGoldTurnDial(
@@ -217,32 +216,33 @@ internal fun DuelGoldTurnDial(
     val cancelling = label.contains("CANCEL", ignoreCase = true)
     val moving = label.contains("MOVE", ignoreCase = true)
     val accent = when {
-        cancelling -> Color(0xFF94D5F5)
-        moving -> Color(0xFFCAD7E5)
-        else -> Color(0xFFF3CF83)
+        cancelling -> Color(0xFF93D2E3)
+        moving -> Color(0xFFCEDCE0)
+        else -> Color(0xFFDEC28A)
     }
-    val muted = Color(0xFF817F76)
-    val metal = if (enabled) accent else muted
+    val muted = Color(0xFF74828A)
+    val rim = if (enabled) accent else muted
     val interactivity = remember { MutableInteractionSource() }
     val pressed by interactivity.collectIsPressedAsState()
     val glint = rememberInfiniteTransition(label = "turn dial")
     val dialLight by glint.animateFloat(
-        initialValue = .48f,
-        targetValue = 1f,
+        initialValue = .52f,
+        targetValue = .90f,
         animationSpec = infiniteRepeatable(
-            tween(durationMillis = 1850), repeatMode = RepeatMode.Reverse
+            tween(durationMillis = 2150), repeatMode = RepeatMode.Reverse
         ),
         label = "gold bezel glow"
     )
+
     Box(
         Modifier
             .size(78.dp)
             .graphicsLayer {
-                val pressScale = if (pressed && enabled) .955f else 1f
+                val pressScale = if (pressed && enabled) .967f else 1f
                 scaleX = pressScale
                 scaleY = pressScale
             }
-            .shadow(8.dp, CircleShape)
+            .shadow(5.dp, CircleShape)
             .clickable(
                 enabled = enabled,
                 interactionSource = interactivity,
@@ -261,114 +261,106 @@ internal fun DuelGoldTurnDial(
         contentAlignment = Alignment.Center
     ) {
         Canvas(Modifier.size(76.dp)) {
-            val center = Offset(size.width / 2f, size.height / 2f)
-            val radius = size.minDimension * .472f
-            val glow = if (enabled) dialLight else .18f
+            val c = Offset(size.width * .5f, size.height * .5f)
+            val radius = size.minDimension * .47f
+            val highlight = if (enabled) dialLight else .22f
 
-            // Diffuse edge, brushed-metal bezel, faceted inner core.
-            drawCircle(Color(0xB5080E15), radius * 1.06f, center)
+            // Broad dark recess with a white-metal outer rim. Gold appears
+            // only where the command is active, following Destiny's spare HUD.
             drawCircle(
-                brush = Brush.sweepGradient(
-                    listOf(
-                        Color(0xFF443C2E), metal.copy(alpha = .90f),
-                        Color(0xFF554536), Color(0xFFB29A70),
-                        Color(0xFF272D31), metal.copy(alpha = .94f),
-                        Color(0xFF443C2E)
-                    ),
-                    center = center
-                ),
-                radius = radius,
-                center = center
+                Color(0xD80A1015),
+                radius = radius * 1.02f,
+                center = c
             )
             drawCircle(
-                color = Color(0xFF0A1118),
-                radius = radius * .886f,
-                center = center
+                brush = Brush.sweepGradient(
+                    colors = listOf(
+                        Color(0xFF4E585D),
+                        rim.copy(alpha = .65f),
+                        Color(0xFF8D9898),
+                        Color(0xFF374047),
+                        rim.copy(alpha = .84f),
+                        Color(0xFF4E585D)
+                    ),
+                    center = c
+                ),
+                radius = radius,
+                center = c
             )
             drawCircle(
                 brush = Brush.radialGradient(
-                    colors = listOf(
-                        if (cancelling) Color(0xFF2C5870) else Color(0xFF684C2B),
-                        if (cancelling) Color(0xFF173747) else Color(0xFF3D3025),
-                        Color(0xFF101921)
-                    ),
-                    center = Offset(center.x - radius * .25f, center.y - radius * .37f),
-                    radius = radius * 1.39f
+                    listOf(Color(0xFF263139), Color(0xFF131D25), Color(0xFF0A1118)),
+                    center = Offset(c.x - radius * .22f, c.y - radius * .25f),
+                    radius = radius * 1.2f
                 ),
-                radius = radius * .78f,
-                center = center
+                radius = radius * .895f,
+                center = c
+            )
+            drawCircle(
+                color = rim.copy(alpha = .45f + highlight * .30f),
+                radius = radius * .89f,
+                center = c,
+                style = Stroke(width = 1.dp.toPx())
             )
 
-            drawCircle(
-                color = metal.copy(alpha = .66f + .30f * glow),
-                radius = radius * .88f,
-                center = center,
-                style = Stroke(width = (1f + glow * .55f).dp.toPx())
+            // Fixed segments are intentional decoration, not a false clock.
+            drawArc(
+                color = rim.copy(alpha = if (enabled) .61f + .30f * highlight else .33f),
+                startAngle = -131f,
+                sweepAngle = 76f,
+                useCenter = false,
+                topLeft = Offset(c.x - radius * .99f, c.y - radius * .99f),
+                size = androidx.compose.ui.geometry.Size(radius * 1.98f, radius * 1.98f),
+                style = Stroke(1.9.dp.toPx())
             )
-            drawCircle(
-                color = metal.copy(alpha = .31f),
-                radius = radius * .735f,
-                center = center,
-                style = Stroke(.8.dp.toPx())
+            drawArc(
+                color = rim.copy(alpha = .48f),
+                startAngle = 48f,
+                sweepAngle = 77f,
+                useCenter = false,
+                topLeft = Offset(c.x - radius * .99f, c.y - radius * .99f),
+                size = androidx.compose.ui.geometry.Size(radius * 1.98f, radius * 1.98f),
+                style = Stroke(1.5.dp.toPx())
             )
-            // Six radial accents and precision-machined ordinal teeth.
-            for (index in 0 until 24) {
-                val a = 2.0 * PI * index / 24.0 - PI / 2.0
-                val dx = cos(a).toFloat()
-                val dy = sin(a).toFloat()
-                val major = index % 4 == 0
-                val inner = radius * (if (major) .87f else .924f)
-                val outer = radius * (if (major) 1.025f else .973f)
+
+            // Four understated alignment ticks and a small focal diamond,
+            // original geometry rather than Bungie brand marks.
+            for (index in 0 until 4) {
+                val angle = 2.0 * PI * index / 4.0 - PI / 2.0
+                val direction = Offset(cos(angle).toFloat(), sin(angle).toFloat())
                 drawLine(
-                    color = metal.copy(alpha = if (major) .90f else .54f),
-                    start = center + Offset(dx * inner, dy * inner),
-                    end = center + Offset(dx * outer, dy * outer),
-                    strokeWidth = (if (major) 1.45f else .73f).dp.toPx()
+                    color = rim.copy(alpha = .79f),
+                    start = c + direction * (radius * .91f),
+                    end = c + direction * (radius * 1.02f),
+                    strokeWidth = 1.2.dp.toPx()
                 )
             }
-            // Short arcs imply a precision-engineered mechanism; they do not
-            // falsely indicate a time limit or change real game turns.
-            drawArc(
-                color = metal.copy(alpha = .37f + .36f * glow),
-                startAngle = 209f,
-                sweepAngle = 73f,
-                useCenter = false,
-                topLeft = Offset(center.x - radius * .96f, center.y - radius * .96f),
-                size = androidx.compose.ui.geometry.Size(radius * 1.92f, radius * 1.92f),
-                style = Stroke(1.7.dp.toPx())
-            )
-            drawArc(
-                color = metal.copy(alpha = .40f),
-                startAngle = 24f,
-                sweepAngle = 85f,
-                useCenter = false,
-                topLeft = Offset(center.x - radius * .96f, center.y - radius * .96f),
-                size = androidx.compose.ui.geometry.Size(radius * 1.92f, radius * 1.92f),
-                style = Stroke(1.15.dp.toPx())
-            )
-            val topY = center.y - radius * .59f
-            val mark = Path().apply {
-                moveTo(center.x, topY - 2.dp.toPx())
-                lineTo(center.x + 3.dp.toPx(), topY)
-                lineTo(center.x, topY + 2.dp.toPx())
-                lineTo(center.x - 3.dp.toPx(), topY)
+            val y = c.y - radius * .62f
+            val diamond = Path().apply {
+                moveTo(c.x, y - 2.5.dp.toPx())
+                lineTo(c.x + 2.6.dp.toPx(), y)
+                lineTo(c.x, y + 2.5.dp.toPx())
+                lineTo(c.x - 2.6.dp.toPx(), y)
                 close()
             }
-            drawPath(mark, metal.copy(alpha = if (enabled) .90f else .38f))
+            drawPath(
+                diamond,
+                color = rim.copy(alpha = if (enabled) .82f else .36f)
+            )
             drawLine(
-                color = metal.copy(alpha = .64f),
-                start = Offset(center.x - radius * .34f, center.y + radius * .54f),
-                end = Offset(center.x + radius * .34f, center.y + radius * .54f),
-                strokeWidth = .9.dp.toPx()
+                color = rim.copy(alpha = .52f),
+                start = Offset(c.x - radius * .29f, c.y + radius * .52f),
+                end = Offset(c.x + radius * .29f, c.y + radius * .52f),
+                strokeWidth = .75.dp.toPx()
             )
         }
         Text(
             label,
-            color = if (enabled) Color(0xFFFFF2D9) else Color(0xFFC6C4BE),
+            color = if (enabled) Color(0xFFF4F3EE) else Color(0xFF9BA7AA),
             fontSize = if (label.length > 7) 10.sp else 11.sp,
             lineHeight = 12.sp,
-            letterSpacing = .85.sp,
-            fontWeight = FontWeight.Black,
+            letterSpacing = .7.sp,
+            fontWeight = FontWeight.ExtraBold,
             textAlign = TextAlign.Center,
             maxLines = 2
         )
