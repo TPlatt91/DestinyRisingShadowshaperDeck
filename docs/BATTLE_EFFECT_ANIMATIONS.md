@@ -48,3 +48,20 @@ In a physical match, try these:
 6. Toggle Full / Reduced / Off while viewing the board and restart the app to confirm the setting is retained.
 
 The code is pushed and source-level integration checks have passed. **No Android SDK compile, Gradle unit-test execution or physical-device rendering is claimed from this environment.** No GitHub Actions have been run.
+
+
+## High-visibility effects pass — 24 October 2026
+
+Following reports that the first implementation was difficult to see on real miniatures, the Full visual mode now uses much stronger, source-timed choreography:
+
+- **Scorched:** a vivid dual-layer orange rim, flames that curve upward from both card edges, 13 animated embers, and a larger orange damage burst; the badge briefly reads **SCORCHED** or **BURN**.
+- **Suppressed:** twin traveling violet lightning zigzags, white electrical hotspots and crackling top corners, plus a temporary **JAMMED** activation stamp.
+- **Inspired:** luminous green Power strip across the card base, seven rising energy streaks/particles, strong rim and a temporary **INSPIRED** stamp.
+- **Overshield:** bright cyan beveled protective geometry, corner highlights, two moving edge scan bars and a temporary **SHIELD** stamp. Actual prevention creates a larger **BLOCKED** burst.
+- **Power transfer:** **1050ms** curved path with a 13dp diffuse halo, 4.5dp glowing filament, white-hot core, rotating particles, source flare, target impact rings and a visible `+Power` target pulse. This replaces the earlier 630ms, approximately 1.7dp line.
+
+**Legibility and speed:** Existing artwork, card text, miniature stats and input hitboxes are unchanged. Large status stamps are deliberately temporary (850ms), with persistent energy confined to the outer card bands. Ordinary cards without an active status run no persistent motion; Reduced disables that motion and uses a subdued static rim and shorter activation, while Off renders none of the new FX.
+
+Source-level guarding was added to `DuelEffectEventsTest.kt`. The Kotlin/Android build, rendering performance and appearance still require an actual local `run_local_engine_checks.bat` run and phone review. No remote GitHub Actions tests have been triggered.
+
+**Visual QA:** On a portrait phone, check both sides' cards during Scorched, Suppressed, Inspired and Overshield; verify the effect can be recognized at a glance without reading the status dots. Trigger The Disfavored's +2 with a friendly Hive card and confirm that the new golden projectile reaches the recipient. Toggle Reduced and Off to confirm the animation workload decreases while gameplay remains identical.
