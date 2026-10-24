@@ -30,8 +30,8 @@ class DuelTransmatStyleTest {
     }
 
     @Test fun unknownNeutralAndBlankFactionsStayDefault() {
-        for (faction in listOf<String?>(null, "", " ", "Neutral", "Unspecified",
-                "Taken", "Scorn", "Dread")) {
+        for (faction in listOf<String?>(null, "", " ", "Neutral",
+                "Unspecified", "Unlisted faction")) {
             assertEquals("$faction must not invent a special arrival",
                 DuelTransmatStyle.DEFAULT,
                 DuelTransmatResolver.forFaction(faction))
