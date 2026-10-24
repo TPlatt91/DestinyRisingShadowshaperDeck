@@ -305,3 +305,20 @@ The narrow-border v2 asset unexpectedly changed the source imagery, which the us
 5. `DuelHitTestingTest.kt` gains six JVM tests for visual-center drops, direct pointer hits, small edge tolerance, occupied illegal cells, CPU/off-board rejections, and the seventh slot. `DuelVisualParityGuardTest.kt` checks live eligibility, match-reset key, gesture ownership and drop helper usage.
 
 **Verification required:** These changes were pushed without running GitHub Actions. Local Android compilation and drag verification on a real phone remain pending via `run_local_engine_checks.bat`. This code path fixes the recorded class of failure but should not be described as device-certified until that verification is successful.
+
+
+## Battle HUD, card-size and cinematic visual effects pass — 23 October 2026
+
+The user requested a new direct GitHub implementation pass while preserving portrait orientation, seven positions per row, their ORIGINAL `shadow_arena_original_portrait_hq.webp` picture, and all ShadowEngine gameplay logic. No GitHub Actions may run.
+
+### Visual changes pushed
+- **Larger playable unit art**: `DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION` increased from 0.80 to **0.86** (inside the unchanged central stone slab). Miniature card fit insets were reduced to 0.6dp, and rows now have 1dp between columns. `ShadowBattleActivity` applies a modest 1.035× graphics-only scale to field cards. The seven underlying slot rectangles, hit-testing coordinates and real rules remain unchanged.
+- **Cards and impact**: `DuelBoardAnimations.kt` animates true placements/summons from 72% scale and 38% opacity, with a 510ms light ring. Surviving units now respond to actual `currentPower` differences with brief red damage / green buff flashes, a diagonal impact streak and floating signed Power change, without printing false attack events or changing Power. Shadow elevation improved for field thumbnails; Inspired/Suppressed/Scorched badges shimmer in a small corner instead of hiding card art.
+- **Actual Power/Light HUD**: `DuelBattleHud.kt` now animates score diamond number changes with a matching outline pulse, animates Light orb values and blue rim, and uses a restrained pulsing gold bezel for enabled End Turn. Player and CPU counts remain calculated solely from the live coordinator; callbacks are unchanged. CPU and player deck indicators now show small stacks of the locally bundled REAL cover art and true remaining deck counts, with no fake card.
+- **Turn/ability vignettes**: `DuelCinematicOverlays.kt` provides engraved, blue-black/gold round banners and color-specific event ribbons for existing engine-journal damage, destroyed, summoned, buffs, shield, suppressed and scorched events. Failed summon messages are explicitly NOT celebrated. All animations are presentation-only and dismissed automatically, not extra game phases.
+- **Gameplay/asset preservation**: `ShadowRules.COLUMNS=7`, portrait orientation lock, user-provided original rubble/stone bitmap and all battle engine card effects remain untouched. Hand drag/drop callbacks remain intact.
+
+### Local regression coverage / verification limits
+- Added `DuelVisualEventTest.kt` for classification of actual journal messages, prevented damage, failed summon and generic turn records.
+- Extended `DuelVisualParityGuardTest.kt` to require the correct image, card-slot loop, visual-only unit animation, actual Power deltas, card art scaling and connected HUD/overlay components.
+- All touched files passed a delimiter/quote structural scan. **The new revision has NOT been compiled on the user's Android machine or device.** Run the existing `run_local_engine_checks.bat` locally and inspect the updated APK before asserting animation or pixel parity. No GitHub Actions or workflows were used.
