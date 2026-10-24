@@ -216,6 +216,9 @@ private fun ShadowBattleScreen(
     var pendingPosition by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var inspectedUnit by remember { mutableStateOf<ShadowEngine.Unit?>(null) }
     var inspectedCard by remember { mutableStateOf<ShadowData.Card?>(null) }
+    // An index is necessary even when the hand contains multiple copies
+    // referencing the exact same catalog Card instance.
+    var inspectedHandIndex by remember { mutableIntStateOf(-1) }
     var message by remember { mutableStateOf("Tap a card, then choose an empty position.") }
     var turnAnnouncement by remember { mutableStateOf<String?>(null) }
     var effectAnnouncement by remember { mutableStateOf<String?>(null) }
@@ -1081,7 +1084,10 @@ private fun ShadowBattleScreen(
                                         selectedIndex = if (selectedIndex == index) -1 else index
                                         pendingPosition = null
                                     },
-                                    onLongClick = { inspectedCard = card }
+                                    onLongClick = {
+                                        inspectedHandIndex = index
+                                        inspectedCard = card
+                                    }
                                 ),
                             border = BorderStroke(1.dp,
                                 if (selectedIndex == index) BattleGold else Color(0xFF73543D)),
@@ -1641,11 +1647,34 @@ private fun ShadowBattleScreen(
         val unit = inspectedUnit
         val card = inspectedCard ?: unit?.card
         if (card != null) {
+            val hand = engine?.human?.hand.orEmpty()
+            // Board-unit inspection is intentionally unchanged; swiping
+            // applies ONLY to hand cards after their long-press viewer opens.
+            val handIndex = if (unit == null && inspectedCard != null &&
+                inspectedHandIndex in hand.indices) inspectedHandIndex else -1
             DuelCardInspection(
                 card = card,
                 unit = unit,
                 power = unit?.let { engine?.power(it) } ?: card.numericPower(),
-                onClose = { inspectedUnit = null; inspectedCard = null }
+                onClose = {
+                    inspectedUnit = null
+                    inspectedCard = null
+                    inspectedHandIndex = -1
+                },
+                browseIndex = handIndex,
+                browseCount = if (handIndex >= 0) hand.size else 0,
+                onPrevious = {
+                    DuelCardSwipeNavigation.adjacent(handIndex, hand.size, -1)?.let {
+                        inspectedHandIndex = it
+                        inspectedCard = hand[it]
+                    }
+                },
+                onNext = {
+                    DuelCardSwipeNavigation.adjacent(handIndex, hand.size, 1)?.let {
+                        inspectedHandIndex = it
+                        inspectedCard = hand[it]
+                    }
+                }
             )
         }
     }
