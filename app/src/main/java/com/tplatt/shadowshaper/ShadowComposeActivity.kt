@@ -792,6 +792,15 @@ private fun DeckScreen(
                 onValueChange = { editName = it },
                 label = { Text("Deck name") },
                 singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = DuelPopupColors.white,
+                    unfocusedTextColor = DuelPopupColors.white,
+                    cursorColor = DuelPopupColors.gold,
+                    focusedBorderColor = DuelPopupColors.gold,
+                    unfocusedBorderColor = DuelPopupColors.border,
+                    focusedLabelColor = DuelPopupColors.gold,
+                    unfocusedLabelColor = DuelPopupColors.muted
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
             Row(
@@ -829,6 +838,15 @@ private fun DeckScreen(
                 minLines = 6,
                 maxLines = 12,
                 label = { Text("Paste deck list") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = DuelPopupColors.white,
+                    unfocusedTextColor = DuelPopupColors.white,
+                    cursorColor = DuelPopupColors.gold,
+                    focusedBorderColor = DuelPopupColors.gold,
+                    unfocusedBorderColor = DuelPopupColors.border,
+                    focusedLabelColor = DuelPopupColors.gold,
+                    unfocusedLabelColor = DuelPopupColors.muted
+                ),
                 modifier = Modifier.fillMaxWidth()
             )
             DuelPopupMenuRow(
