@@ -113,6 +113,10 @@ class ShadowComposeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        // Begin the same soundtrack on the landing page. Deck Construction,
+        // Card Collection and Rules remain inside this Activity, so music
+        // continues between tabs and into Skirmish without restarting.
+        DuelMusicSession.get(applicationContext)
         @Suppress("DEPRECATION")
         window.statusBarColor = android.graphics.Color.rgb(8, 13, 20)
         @Suppress("DEPRECATION")
