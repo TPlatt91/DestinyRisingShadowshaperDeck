@@ -538,7 +538,10 @@ internal fun DuelPopupSoundSettings(
     enabled: Boolean,
     volume: Float,
     onEnabledChange: (Boolean) -> Unit,
-    onVolumeChange: (Float) -> Unit
+    onVolumeChange: (Float) -> Unit,
+    title: String = "SOUND EFFECTS",
+    subtitle: String = "IN-GAME AUDIO",
+    volumeLabel: String = "SFX VOLUME"
 ) {
     val cut = CutCornerShape(topStart = 2.dp, topEnd = 11.dp,
         bottomStart = 11.dp, bottomEnd = 2.dp)
@@ -553,14 +556,14 @@ internal fun DuelPopupSoundSettings(
     ) {
         Column(Modifier.weight(1f)) {
             Text(
-                "SOUND EFFECTS",
+                title,
                 color = DuelPopupColors.white,
                 fontWeight = FontWeight.Bold,
                 fontSize = 12.sp,
                 letterSpacing = 1.1.sp
             )
             Text(
-                "IN-GAME AUDIO",
+                subtitle,
                 color = DuelPopupColors.muted,
                 fontSize = 9.sp,
                 letterSpacing = .6.sp
@@ -585,7 +588,7 @@ internal fun DuelPopupSoundSettings(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(
-            "SFX VOLUME",
+            volumeLabel,
             color = DuelPopupColors.muted,
             fontSize = 10.sp,
             fontWeight = FontWeight.Bold,
