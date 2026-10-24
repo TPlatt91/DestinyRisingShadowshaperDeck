@@ -69,4 +69,52 @@ class ShadowLandingPageGuardTest {
         assertFalse(landing.contains("R.drawable."))
         assertFalse(landing.contains("ImageView"))
     }
+    @Test fun landingHasNoRedundantSoloAiOrCatalogFooterCopy() {
+        val landing = source("ShadowLandingPage.kt")
+        val home = source("ShadowComposeActivity.kt")
+        assertFalse(landing.contains("SOLO AGAINST AI"))
+        assertFalse(landing.contains("UNVERIFIED EFFECTS ARE IDENTIFIED"))
+        assertFalse(landing.contains("CARDS ARCHIVED"))
+        assertFalse(landing.contains("catalogCount"))
+        assertFalse(home.contains("catalogCount = vm.catalog.size"))
+        assertTrue(landing.contains("\"A TACTICAL CARD GAME\""))
+        assertTrue(landing.contains("LandingFooter()"))
+        // The number of cards is still available inside Card Collection.
+        assertTrue(home.contains("${filtered.size} / ${vm.catalog.size}"))
+    }
+
+    @Test fun titleAndMenuUseSciFiTypographyWithoutExternalFontFiles() {
+        val landing = source("ShadowLandingPage.kt")
+        assertTrue(landing.contains("FontFamily.SansSerif"))
+        assertTrue(landing.contains("FontFamily.Monospace"))
+        assertTrue(landing.contains("FontWeight.Light"))
+        assertTrue(landing.contains("FontWeight.SemiBold"))
+        assertTrue(landing.contains("letterSpacing = 5.sp"))
+        assertTrue(landing.contains("TextStyle(shadow = Shadow("))
+        assertTrue(landing.contains("\"DESTINY: RISING\""))
+        assertTrue(landing.contains("\"SHADOW\""))
+        assertTrue(landing.contains("\"SHAPER\""))
+        assertTrue(landing.contains("\"DUELS\""))
+        assertTrue(landing.contains("onClick = onSkirmish"))
+        assertTrue(landing.contains("onClick = onDeckConstruction"))
+        assertTrue(landing.contains("onClick = onCardCollection"))
+        assertTrue(landing.contains("onClick = onRules"))
+    }
+
+    @Test fun landingMotionUsesSubtleCanvasAnimationsNotHeavyMedia() {
+        val landing = source("ShadowLandingPage.kt")
+        assertTrue(landing.contains("rememberInfiniteTransition("))
+        assertTrue(landing.contains("durationMillis = 22000"))
+        assertTrue(landing.contains("LinearEasing"))
+        assertTrue(landing.contains("LandingAtmosphere(glow, orbitalPhase"))
+        assertTrue(landing.contains("rotate(rotation, pivot = c)"))
+        assertTrue(landing.contains("val scannerY ="))
+        assertTrue(landing.contains("title transmat reveal"))
+        assertTrue(landing.contains("alpha = reveal"))
+        assertTrue(landing.contains("if (hasSavedMatch)"))
+        assertFalse(landing.contains("ImageView"))
+        assertFalse(landing.contains("R.drawable."))
+        assertFalse(landing.contains("http://"))
+    }
+
 }
