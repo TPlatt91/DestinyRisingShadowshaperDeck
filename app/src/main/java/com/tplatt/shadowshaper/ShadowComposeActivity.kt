@@ -180,8 +180,7 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
                     hasSavedMatch = hasUnfinishedMatch,
                     onDeckConstruction = { page = "deck" },
                     onCardCollection = { page = "collection" },
-                    onRules = { page = "rules" },
-                    catalogCount = vm.catalog.size
+                    onRules = { page = "rules" }
                 )
                 "deck" -> DeckScreen(
                     vm = vm, state = state,
