@@ -39,7 +39,7 @@ class DuelEffectEventsTest {
         return unit
     }
 
-    @Test fun scourgedStatusActuallyRecordsApplyAndDamageTick() {
+    @Test fun scorchedStatusActuallyRecordsApplyAndDamageTick() {
         val e = engine()
         val target = put(e, "Thrall", e.human)
         val caster = put(e, "Ayuela", e.cpu, ShadowRules.BACK_ROW)
@@ -52,6 +52,25 @@ class DuelEffectEventsTest {
         assertTrue(target.power < originalPower)
         assertTrue(e.visualEvents.any {
             it.kind == DuelEffectKind.SCORCH_TICK && it.target === target && it.amount == 1
+        })
+    }
+
+    @Test fun scorchAbsorbedByOvershieldDoesNotPretendDamageOccurred() {
+        val e = engine()
+        val target = put(e, "Thrall", e.human)
+        val caster = put(e, "Ayuela", e.cpu, ShadowRules.BACK_ROW)
+        target.overshield = true
+        e.addScorch(target, caster, damage = 1, turns = 2)
+
+        e.effects.endSide(e.human)
+
+        assertEquals(2, target.power)
+        assertFalse(target.overshield)
+        assertTrue(e.visualEvents.any {
+            it.kind == DuelEffectKind.OVERSHIELD_BLOCKED && it.target === target
+        })
+        assertFalse(e.visualEvents.any {
+            it.kind == DuelEffectKind.SCORCH_TICK && it.target === target
         })
     }
 
