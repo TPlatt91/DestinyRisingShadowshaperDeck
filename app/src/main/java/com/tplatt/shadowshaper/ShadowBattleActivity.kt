@@ -159,7 +159,19 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     val catalog = remember { ShadowData.load(context) }
     val saves = remember { ShadowDeckRepository(context) }
     val practice = remember(catalog) { ShadowData.opponentDeck(catalog) }
+    val matchRepository = remember(context) { ShadowMatchRepository(context) }
+    val savedAtLaunch = remember(matchRepository) { matchRepository.load() }
+    var resumeChoice by remember { mutableStateOf(
+        savedAtLaunch != null &&
+            !((context as? android.app.Activity)?.intent
+                ?.getBooleanExtra("resume_last_match", false) ?: false)
+    ) }
+    var restoringError by remember { mutableStateOf<String?>(null) }
+    var chosenDeckName by remember { mutableStateOf("Starter Practice Deck") }
+    var selectedCpuFaction by remember { mutableStateOf("Mixed") }
+    var freshOpeningAudio by remember { mutableStateOf(true) }
     var coordinator by remember { mutableStateOf<ShadowBattleCoordinator?>(null) }
+    var inspectingFinalBoard by remember { mutableStateOf(false) }
     val current = coordinator
     val snapshotState = current?.state?.collectAsState()
     val snapshot = snapshotState?.value
@@ -173,7 +185,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         mutableStateOf<DuelDrawAudioSnapshot?>(null)
     }
 
-    var deckDialog by remember { mutableStateOf(true) }
+    var deckDialog by remember { mutableStateOf(savedAtLaunch == null) }
     var factionDialog by remember { mutableStateOf(false) }
     var openingDialog by remember { mutableStateOf(false) }
     var endConfirmation by remember { mutableStateOf(false) }
@@ -204,6 +216,50 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     val density = LocalDensity.current
     val floatingCardHeightPx = with(density) { 130.dp.toPx() }
     val slotBounds = remember { mutableStateMapOf<String, Rect>() }
+    fun resumeMatch(saved: ShadowSavedMatch) {
+        try {
+            val restored = ShadowBattleCoordinator(catalog, saved.engine.seed)
+            restored.resume(saved.engine)
+            // Persistence reattaches only AFTER restoring, so the restored
+            // deck is not accidentally shuffled or overwritten.
+            restored.setCheckpointListener { live ->
+                matchRepository.save(saved.copy(engine = ShadowMatchCodec.capture(live)))
+            }
+            coordinator = restored
+            chosenDeck = saved.playerDeck
+            chosenCover = saved.coverId
+            chosenDeckName = saved.deckName
+            selectedCpuFaction = saved.cpuFaction
+            freshOpeningAudio = false
+            selectedIndex = -1
+            pendingPosition = null
+            draggedIndex = -1
+            inspectedUnit = null
+            inspectedCard = null
+            openingDialog = false
+            deckDialog = false
+            factionDialog = false
+            resumeChoice = false
+            inspectingFinalBoard = false
+            message = "Match restored. Continue playing."
+        } catch (exception: Exception) {
+            matchRepository.clear()
+            resumeChoice = false
+            deckDialog = true
+            restoringError = "Saved match could not be recovered: ${exception.message}"
+        }
+    }
+
+    // Resume directly only when the player explicitly selected CONTINUE on
+    // the launcher. Ordinary Battle always asks Continue or Start New.
+    LaunchedEffect(savedAtLaunch) {
+        if (savedAtLaunch != null &&
+            (context as? android.app.Activity)?.intent
+                ?.getBooleanExtra("resume_last_match", false) == true) {
+            resumeMatch(savedAtLaunch)
+        }
+    }
+
     val validDecks = remember(catalog, deckDialog) {
         buildList {
             if (ShadowDeckRules.validate(practice, catalog).isEmpty())
@@ -218,10 +274,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     // A legal deck explicitly selected in Deck Construction should continue
     // directly to opponent choice, without forcing a second deck selection.
     LaunchedEffect(requestedDeck) {
-        if (!requestedDeck.isNullOrBlank()) {
+        if (!requestedDeck.isNullOrBlank() && !resumeChoice && coordinator == null) {
             val saved = validDecks.firstOrNull { it.first == requestedDeck }
             if (saved != null) {
                 chosenDeck = saved.second
+                chosenDeckName = requestedDeck
                 chosenCover = if (requestedDeck == "Starter Practice Deck") "default" else saves.cover(requestedDeck)
                 deckDialog = false
                 factionDialog = true
@@ -241,8 +298,26 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             return
         }
         try {
+            // Every NEW match gets a fresh RNG seed and new, independently
+            // shuffled player and CPU draw piles. Replays never inherit the
+            // previous match's depleted hand, board or timed effects.
+            selectedCpuFaction = faction
+            freshOpeningAudio = true
+            candidate.setCheckpointListener { live ->
+                matchRepository.save(
+                    ShadowSavedMatch(
+                        deckName = chosenDeckName,
+                        coverId = chosenCover,
+                        playerDeck = LinkedHashMap(chosenDeck),
+                        cpuFaction = faction,
+                        engine = ShadowMatchCodec.capture(live)
+                    )
+                )
+            }
             candidate.start(chosenDeck, cpu)
             coordinator = candidate
+            inspectingFinalBoard = false
+            showLog = false
             latestHumanLaunch = null
             pendingFingerRelease = null
             selectedIndex = -1
@@ -346,8 +421,18 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         } else message = e.lastActionError
     }
 
-    BackHandler(settingsDialog || engine != null) {
-        if (settingsDialog) settingsDialog = false else exitConfirmation = true
+    BackHandler(settingsDialog || inspectingFinalBoard || engine != null) {
+        when {
+            settingsDialog -> settingsDialog = false
+            inspectedUnit != null || inspectedCard != null -> {
+                inspectedUnit = null
+                inspectedCard = null
+            }
+            showLog -> showLog = false
+            inspectingFinalBoard -> inspectingFinalBoard = false
+            snapshot?.finished == true -> Unit
+            else -> exitConfirmation = true
+        }
     }
 
     // CPU acts once per coroutine tick so the user sees individual plays.
@@ -390,8 +475,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     // Engine.start() really shuffles both decks and deals an opening hand.
     // Run only once for this match, after asynchronously loaded samples have
     // become available. Do not invent a mulligan or discard gameplay event.
-    LaunchedEffect(current) {
-        if (current != null) {
+    LaunchedEffect(current, freshOpeningAudio) {
+        if (current != null && freshOpeningAudio) {
             var attempts = 0
             while (!sounds.isReady(DuelSound.SHUFFLE) && attempts < 32) {
                 delay(45)
