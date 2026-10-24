@@ -290,7 +290,7 @@ private fun CardTile(card: ShadowData.Card, copies: Int, onClick: () -> Unit) {
     }
 }
 
-// Shared stone-metal library browser used by Deck Construction and Collection.
+// Plain collection browser; Deck Construction uses the recessed leather binder sleeves.
 @Composable
 private fun LibraryCardFace(
     card: ShadowData.Card,
