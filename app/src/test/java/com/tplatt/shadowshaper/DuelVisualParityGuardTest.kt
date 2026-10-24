@@ -42,7 +42,7 @@ class DuelVisualParityGuardTest {
         assertFalse(stone.contains("ContentScale.FillBounds"))
         assertTrue(stone.contains("scaleX = 1.12f"))
         assertTrue(stone.contains("scaleY = 1.12f"))
-        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.80f"))
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.86f"))
         assertTrue(metrics.contains("screenWidthDp.coerceAtLeast(250) * 0.82f"))
     }
 
@@ -64,7 +64,7 @@ class DuelVisualParityGuardTest {
         val stone = source("DuelStoneArena.kt")
         val metrics = source("DuelLayoutMetrics.kt")
         val visuals = source("ShadowBattleVisuals.kt")
-        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.80f"))
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.86f"))
         assertTrue(battle.contains("DuelLayoutMetrics.PORTRAIT_LANE_WIDTH_FRACTION"))
         assertTrue(stone.contains("column in 1 until ShadowRules.COLUMNS"))
         assertFalse(battle.contains("Text(heading.replace"))
