@@ -413,7 +413,8 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     LaunchedEffect(
         current, snapshot?.revision, snapshot?.round, snapshot?.playerTurn,
         snapshot?.playerPower, snapshot?.cpuPower,
-        snapshot?.playerLight, snapshot?.cpuLight, snapshot?.finished
+        snapshot?.playerLight, snapshot?.cpuLight,
+        snapshot?.playerHand, snapshot?.cpuHand, snapshot?.finished
     ) {
         if (current != null && snapshot != null) {
             val journalNow = current.engine.journal.toList()
