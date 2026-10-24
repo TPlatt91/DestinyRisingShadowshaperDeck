@@ -36,3 +36,5 @@ Regression coverage in `ShadowMatchPersistenceTest.kt` (pure JVM snapshot serial
 These source changes have not been Android-compiled or phone-tested in this environment; code inspections alone cannot certify all UI behavior.
 
 **Complete review log:** `ShadowEngine.log()` now records both the original rolling 90-event journal (for fast HUD notifications) and `fullJournal` (entire match). The result and in-battle Log dialog, the copied diagnostic report and resume checkpoint use the complete history; no printed effect or turn timing is affected.
+
+**Restored animation continuity:** The renderer remembers the snapshot's placement revision on Continue. Units that already existed before app closure are drawn immediately in their settled positions (no replay of old transmat/landing audio). Any unit placed or summoned AFTER restoring has a later revision, and receives the normal faction transmat, card fall/bounce, and impact sound. Starting a fresh match resets that baseline.
