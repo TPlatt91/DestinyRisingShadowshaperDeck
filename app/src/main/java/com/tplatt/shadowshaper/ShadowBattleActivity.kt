@@ -54,12 +54,16 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.Slider
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -145,6 +149,11 @@ private val BattleDanger = Color(0xFFDDA89A)
 @Composable
 private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRules: () -> Unit) {
     val context = LocalContext.current
+    val sounds = remember(context) { DuelSoundPlayer(context.applicationContext) }
+    var audioEnabled by remember(sounds) { mutableStateOf(sounds.enabled) }
+    var audioVolume by remember(sounds) { mutableFloatStateOf(sounds.volume) }
+    LaunchedEffect(sounds) { sounds.prepare() }
+    DisposableEffect(sounds) { onDispose { sounds.close() } }
     val screenConfig = LocalConfiguration.current
     val compactLayout = screenConfig.screenWidthDp < 790
     val catalog = remember { ShadowData.load(context) }
@@ -155,6 +164,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     val snapshotState = current?.state?.collectAsState()
     val snapshot = snapshotState?.value
     val engine = current?.engine
+    // Remember delivered journal entries and turn status per match, so
+    // recomposition never replays SFX for earlier combat.
+    var lastAudioJournal by remember(current) { mutableStateOf<List<String>?>(null) }
+    var lastAudioTurn by remember(current) { mutableStateOf<Pair<Int, Boolean>?>(null) }
+    var matchOutcomePlayed by remember(current) { mutableStateOf(false) }
 
     var deckDialog by remember { mutableStateOf(true) }
     var factionDialog by remember { mutableStateOf(false) }
@@ -367,6 +381,39 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
+    // Listen only to actual state changes; never play unconfirmed clicks as
+    // a card landing. Card arrival/impact SFX are synchronized separately in
+    // DuelAnimatedUnit with its 170ms transmat + 760ms landing timeline.
+    LaunchedEffect(
+        current, snapshot?.revision, snapshot?.round, snapshot?.playerTurn,
+        snapshot?.playerPower, snapshot?.cpuPower,
+        snapshot?.playerLight, snapshot?.cpuLight, snapshot?.finished
+    ) {
+        if (current != null && snapshot != null) {
+            val journalNow = current.engine.journal.toList()
+            val prior = lastAudioJournal
+            if (prior != null) {
+                DuelSoundEvents.newLines(prior, journalNow)
+                    .mapNotNull(DuelSoundEvents::forJournalLine)
+                    .takeLast(4)
+                    .forEach(sounds::play)
+            }
+            lastAudioJournal = journalNow
+            val key = snapshot.round to snapshot.playerTurn
+            if (lastAudioTurn != null && key != lastAudioTurn && !snapshot.finished) {
+                sounds.play(DuelSound.TURN)
+            }
+            lastAudioTurn = key
+            if (snapshot.finished && !matchOutcomePlayed) {
+                matchOutcomePlayed = true
+                sounds.play(
+                    if (snapshot.playerPower > snapshot.cpuPower) DuelSound.WIN
+                    else DuelSound.LOSE
+                )
+            }
+        }
+    }
+
     Box(Modifier.fillMaxSize().safeDrawingPadding().onGloballyPositioned {
         val position = it.boundsInWindow().topLeft
         if (rootTopLeftInWindow != position) rootTopLeftInWindow = position
@@ -529,6 +576,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                                 firstVisibleRevision == engine.placementRevision
                                         val fit = DuelLayoutMetrics.fittingCard(maxWidth.value, maxHeight.value)
                                         DuelAnimatedUnit(
+                                            sounds = sounds,
                                             unit = unit,
                                             currentPower = engine.power(unit),
                                             placementRevision = engine.placementRevision,
@@ -821,6 +869,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 }
                                 .combinedClickable(
                                     onClick = {
+                                        sounds.play(DuelSound.CARD_SELECT)
                                         selectedIndex = if (selectedIndex == index) -1 else index
                                         pendingPosition = null
                                     },
@@ -983,6 +1032,37 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         title = { Text("SHADOW SHAPER DUELS") },
         text = {
             Column {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text("SOUND EFFECTS", fontSize = 12.sp, color = BattleCream)
+                    Switch(
+                        checked = audioEnabled,
+                        onCheckedChange = { value ->
+                            audioEnabled = value
+                            sounds.enabled = value
+                            if (value) sounds.play(DuelSound.UI_TAP)
+                        }
+                    )
+                }
+                Text(
+                    "SFX VOLUME  ${(audioVolume * 100f).toInt()}%",
+                    color = BattleFaded, fontSize = 11.sp
+                )
+                Slider(
+                    value = audioVolume,
+                    onValueChange = { value ->
+                        audioVolume = value
+                        sounds.volume = value
+                    },
+                    valueRange = 0f..1f,
+                    enabled = audioEnabled
+                )
+                TextButton(
+                    onClick = { sounds.play(DuelSound.CARD_SELECT) },
+                    enabled = audioEnabled
+                ) { Text("TEST SOUND") }
                 TextButton(onClick = { settingsDialog = false }) { Text("RESUME") }
                 TextButton(onClick = { settingsDialog = false; deckDialog = true }) { Text("NEW MATCH") }
                 TextButton(onClick = { settingsDialog = false; onRules() }) { Text("RULES") }
