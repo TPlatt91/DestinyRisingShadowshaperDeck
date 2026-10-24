@@ -51,6 +51,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items as lazyRowItems
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -63,6 +64,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -912,9 +914,9 @@ private fun CardDetailsDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.94f).widthIn(max = 540.dp),
-            color = Panel,
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, Gold)
+            color = Color(0xFF0C1620),
+            shape = CutCornerShape(13.dp),
+            border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)
         ) {
             Column {
                 Row(
@@ -926,8 +928,13 @@ private fun CardDetailsDialog(
                         fontSize = 19.sp, modifier = Modifier.weight(1f),
                         maxLines = 2, overflow = TextOverflow.Ellipsis
                     )
-                    TextButton(onClick = onDismiss) { Text("CLOSE ×", color = Gold) }
+                    DuelPopupAction(
+                        label = "CLOSE",
+                        onClick = onDismiss,
+                        modifier = Modifier.width(88.dp)
+                    )
                 }
+                DuelPopupRule()
                 Column(
                     modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         .padding(horizontal = 15.dp, vertical = 8.dp),
@@ -1016,9 +1023,9 @@ private fun CardDetailsDialog(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(0.98f).fillMaxHeight(0.96f),
-                color = Ink,
-                shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, Gold)
+                color = Color(0xFF0B151F),
+                shape = CutCornerShape(12.dp),
+                border = BorderStroke(1.2.dp, DuelPopupColors.goldSoft)
             ) {
                 Column(Modifier.fillMaxSize()) {
                     Row(
@@ -1030,9 +1037,11 @@ private fun CardDetailsDialog(
                             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
                             maxLines = 2
                         )
-                        TextButton(onClick = { enlarged = false }) {
-                            Text("CLOSE ×", color = Gold)
-                        }
+                        DuelPopupAction(
+                            label = "CLOSE",
+                            onClick = { enlarged = false },
+                            modifier = Modifier.width(88.dp)
+                        )
                     }
                     BoxWithConstraints(
                         modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),
