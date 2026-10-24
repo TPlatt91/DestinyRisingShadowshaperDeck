@@ -27,7 +27,19 @@ data class ShadowBattleSnapshot(
 )
 
 class ShadowBattleCoordinator(catalog: Map<String, ShadowData.Card>, seed: Long) {
-    @JvmField val engine = ShadowEngine(catalog, seed)
+    @JvmField var engine = ShadowEngine(catalog, seed)
+    private var checkpoint: ((ShadowEngine) -> Unit)? = null
+
+    fun setCheckpointListener(listener: ((ShadowEngine) -> Unit)?) {
+        checkpoint = listener
+    }
+
+    fun resume(saved: ShadowMatchState) {
+        // Restore field/identity graph directly. Never call start() here:
+        // that would reshuffle and reroll all subsequent random effects.
+        engine = ShadowMatchCodec.restore(saved, engine.catalog)
+        _state.value = snapshot()
+    }
     private val _state = MutableStateFlow(snapshot())
     val state: StateFlow<ShadowBattleSnapshot> = _state.asStateFlow()
 
@@ -47,7 +59,10 @@ class ShadowBattleCoordinator(catalog: Map<String, ShadowData.Card>, seed: Long)
         lastError = engine.lastActionError
     )
 
-    private fun publish() { _state.value = snapshot() }
+    private fun publish() {
+        _state.value = snapshot()
+        checkpoint?.invoke(engine)
+    }
 
     fun start(player: Map<String, Int>, computer: Map<String, Int>) {
         engine.start(player, computer)
