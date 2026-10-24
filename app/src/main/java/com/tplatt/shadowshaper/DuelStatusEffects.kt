@@ -175,11 +175,11 @@ internal fun DuelCardStatusFx(
                             val height = h * (.16f + .12f * ((i % 3) / 2f))
                             val tongue = Path().apply {
                                 moveTo(x, baseY + height * .20f)
-                                quadraticTo(
+                                quadraticBezierTo(
                                     x + dir * w * .17f, baseY - height * .18f,
                                     x + dir * w * .045f, baseY - height
                                 )
-                                quadraticTo(
+                                quadraticBezierTo(
                                     x + dir * w * .10f, baseY - height * .24f,
                                     x, baseY + height * .20f
                                 )
