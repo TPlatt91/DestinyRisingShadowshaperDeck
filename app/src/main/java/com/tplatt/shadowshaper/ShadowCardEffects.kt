@@ -380,10 +380,21 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     }
                 }
             }
-            "The Disfavored" -> if (target.row == ShadowRules.FRONT_ROW &&
-                claimDisfavoredTrigger(target)) {
-                val others = faction(own, "Hive").filter { it !== target }
-                if (others.isNotEmpty()) buff(others[rng.nextInt(others.size)], 2)
+            "The Disfavored" -> if (activeInRow(target.card, target.row)) {
+                // Only an ALIVE, different Hive ally may receive the +2.
+                // During chained damage/Power events, defeated board units
+                // can exist briefly until sweep() runs. Selecting one of
+                // those stale occupants made the buff appear to disappear.
+                val recipients = faction(own, "Hive").filter {
+                    it !== target && isPresent(it) && power(it) > 0
+                }
+                if (recipients.isNotEmpty() && claimDisfavoredTrigger(target)) {
+                    val recipient = recipients[rng.nextInt(recipients.size)]
+                    buff(recipient, 2)
+                    log("The Disfavored ▶ +2 Power to " + recipient.card.name)
+                } else if (recipients.isEmpty()) {
+                    log("The Disfavored: no other surviving Hive ally to buff.")
+                }
             }
             "The Speaker" -> if (target.row == ShadowRules.BACK_ROW)
                 buff(at(own, target.row, target.column + 1), 2)
