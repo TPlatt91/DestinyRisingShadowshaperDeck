@@ -140,7 +140,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             "Umbliks Prime" -> {
                 val recipient = picked ?: actor
                 if (rng.nextBoolean()) {
-                    buff(recipient, 6)
+                    buff(recipient, 6, actor)
                     log("Umbliks Prime: heads, +6 Power to " + recipient.card.name)
                 } else log("Umbliks Prime: tails, no Power bonus.")
             }
@@ -162,17 +162,17 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 if (actor.row == 1) buff(at(me, actor.row, actor.column + 1), 2, actor)
             "Finnala" -> {
                 if (actor.row == 1 && picked != null) {
-                    buff(picked, 8)
+                    buff(picked, 8, actor)
                     actor.power -= 3
                     log("Finnala: -3 Power (self penalty; not damage).")
                 }
             }
-            "Attal" -> if (picked != null) buff(picked, power(picked))
+            "Attal" -> if (picked != null) buff(picked, power(picked), actor)
             "Maru" -> for (unit in all(me)) {
                 if (unit !== actor && unit.row == actor.row) buff(unit, 2, actor)
             }
-            "Vanok" -> faction(me, "Fallen").forEach { buff(it, 2) }
-            "Kabr" -> all(me).filter { it.card.name == "Guerrilla" }.forEach { buff(it, 3) }
+            "Vanok" -> faction(me, "Fallen").forEach { buff(it, 2, actor) }
+            "Kabr" -> all(me).filter { it.card.name == "Guerrilla" }.forEach { buff(it, 3, actor) }
             "Bazinet" -> if (actor.row == ShadowRules.BACK_ROW) {
                 // "All opposing units with a bonus" is selected at
                 // activation, not re-evaluated after each hit. Saladin,
@@ -186,23 +186,23 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             }
             "Radegast" -> if (hasFaction(foe, "Fallen")) {
                 for (unit in all(me)) if (unit.row == actor.row &&
-                    unit.card.name == "Guerrilla") buff(unit, 4)
+                    unit.card.name == "Guerrilla") buff(unit, 4, actor)
             }
             "Chinnawat" -> if (actor.row == 1 && picked != null) {
                 for (unit in all(me))
-                    if (unit === picked || adjacent(unit, picked)) buff(unit, 1)
+                    if (unit === picked || adjacent(unit, picked)) buff(unit, 1, actor)
             }
             "Lady Skorri" -> if (!rowEmpty(foe, 0))
-                buff(at(me, actor.row, actor.column - 1), 5)
-            "Estela" -> buff(picked, 2 * countRow(foe, 1))
+                buff(at(me, actor.row, actor.column - 1), 5, actor)
+            "Estela" -> buff(picked, 2 * countRow(foe, 1), actor)
             "Sabikis" -> if (actor.row == 0 && picked != null) {
                 val left = at(me, picked.row, picked.column - 1)
-                if (left != null) buff(picked, power(left))
+                if (left != null) buff(picked, power(left), actor)
             }
             "Buhr" -> if (partnerInColumn(actor)) {
-                all(me).filter { it.column == actor.column }.forEach { buff(it, 3) }
+                all(me).filter { it.column == actor.column }.forEach { buff(it, 3, actor) }
             }
-            "Vigile" -> if (actor.row == 1) buff(picked, 2)
+            "Vigile" -> if (actor.row == 1) buff(picked, 2, actor)
             "Gladiator" -> if (actor.row == ShadowRules.FRONT_ROW && picked != null) {
                 for (unit in all(me)) {
                     if (unit === picked || adjacent(unit, picked)) {
