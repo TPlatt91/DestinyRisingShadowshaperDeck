@@ -367,15 +367,14 @@ private fun LibraryFilterSelector(
 
 @Composable
 private fun LibrarySearchBar(
-    query: String,
-    onQuery: (String) -> Unit,
-    faction: String,
-    onFaction: (String) -> Unit,
-    rarity: String,
-    onRarity: (String) -> Unit,
+    criteria: ShadowLibraryCriteria,
+    onChange: (ShadowLibraryCriteria) -> Unit,
+    choices: ShadowLibraryOptions,
     binder: Boolean = false
 ) {
-    // Portrait-friendly: full-width search and a separate compact filter row.
+    // Keep extra controls collapsible so the portrait gallery and binder retain
+    // their original card-art area. All selectors can be scrolled on small phones.
+    var showMore by rememberSaveable { mutableStateOf(false) }
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 6.dp, vertical = 4.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -395,34 +394,99 @@ private fun LibrarySearchBar(
             contentAlignment = Alignment.CenterStart
         ) {
             BasicTextField(
-                value = query, onValueChange = onQuery,
+                value = criteria.search,
+                onValueChange = { onChange(criteria.copy(search = it)) },
                 singleLine = true,
                 textStyle = TextStyle(color = Cream, fontSize = 12.sp),
                 modifier = Modifier.fillMaxWidth(),
                 decorationBox = { inner ->
                     Box {
-                        if (query.isBlank())
+                        if (criteria.search.isBlank())
                             Text("⌕  Search cards", color = Secondary, fontSize = 12.sp)
                         inner()
                     }
                 }
             )
         }
-        Row(
-            Modifier.fillMaxWidth(),
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(5.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            LibraryFilterSelector(
-                "FACTION", faction,
-                listOf("All", "Humans", "Fallen", "Hive", "Cabal"), onFaction,
-                binder = binder
-            )
-            LibraryFilterSelector(
-                "RARITY", rarity,
-                listOf("All", "Rare", "Legendary", "Mythic", "Exotic"), onRarity,
-                binder = binder
-            )
+            item {
+                LibraryFilterSelector(
+                    "FACTION", criteria.faction, choices.factions,
+                    { onChange(criteria.copy(faction = it)) }, binder
+                )
+            }
+            item {
+                LibraryFilterSelector(
+                    "RARITY", criteria.rarity, choices.rarities,
+                    { onChange(criteria.copy(rarity = it)) }, binder
+                )
+            }
+            item {
+                TextButton(
+                    onClick = { showMore = !showMore },
+                    modifier = Modifier.height(36.dp)
+                        .background(
+                            if (binder) Color(0xFF211710) else Color(0xFF302925),
+                            RoundedCornerShape(2.dp)
+                        )
+                        .border(
+                            1.dp, if (binder) BinderPalette.brass else Color(0xFF645549),
+                            RoundedCornerShape(2.dp)
+                        ),
+                    contentPadding = PaddingValues(horizontal = 9.dp)
+                ) {
+                    val count = criteria.advancedCount
+                    Text(
+                        "FILTERS${if (count > 0) " ($count)" else ""} ${if (showMore) "▴" else "▾"}",
+                        fontSize = 11.sp, color = if (count > 0) Gold else Cream
+                    )
+                }
+            }
+        }
+        if (showMore) {
+            LazyRow(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                item {
+                    LibraryFilterSelector(
+                        "KEYWORD", criteria.keyword, choices.keywords,
+                        { onChange(criteria.copy(keyword = it)) }, binder
+                    )
+                }
+                item {
+                    LibraryFilterSelector(
+                        "LIGHT", criteria.light, choices.light,
+                        { onChange(criteria.copy(light = it)) }, binder
+                    )
+                }
+                item {
+                    LibraryFilterSelector(
+                        "POWER", criteria.power, choices.power,
+                        { onChange(criteria.copy(power = it)) }, binder
+                    )
+                }
+                item {
+                    LibraryFilterSelector(
+                        "TYPE", criteria.type, choices.types,
+                        { onChange(criteria.copy(type = it)) }, binder
+                    )
+                }
+                if (criteria.hasSelection) {
+                    item {
+                        TextButton(
+                            onClick = { onChange(ShadowLibraryCriteria()) },
+                            modifier = Modifier.height(36.dp),
+                            contentPadding = PaddingValues(horizontal = 8.dp)
+                        ) { Text("CLEAR ALL", color = Gold, fontSize = 11.sp) }
+                    }
+                }
+            }
         }
     }
 }
@@ -432,16 +496,30 @@ private fun CollectionScreen(
     vm: ShadowDeckViewModel, state: ShadowDeckUiState,
     onBack: () -> Unit, onCard: (ShadowData.Card) -> Unit
 ) {
+    val context = LocalContext.current
+    val glossary = remember(context) { ShadowKeywordGlossary.all(context) }
+    val choices = remember(vm.alphabetical, glossary) {
+        ShadowLibraryFiltering.options(vm.alphabetical, glossary)
+    }
     var query by rememberSaveable { mutableStateOf("") }
     var faction by rememberSaveable { mutableStateOf("All") }
     var rarity by rememberSaveable { mutableStateOf("All") }
-    val filtered = remember(query, faction, rarity, vm.alphabetical) {
-        vm.alphabetical.filter { card ->
-            (faction == "All" || card.faction.equals(faction, true)) &&
-                (rarity == "All" || card.rarity.equals(rarity, true)) &&
-                (query.isBlank() || listOf(card.name, card.effect, card.faction, card.rarity)
-                    .any { it.contains(query.trim(), ignoreCase = true) })
-        }
+    var keyword by rememberSaveable { mutableStateOf("All") }
+    var light by rememberSaveable { mutableStateOf("All") }
+    var powerFilter by rememberSaveable { mutableStateOf("All") }
+    var cardType by rememberSaveable { mutableStateOf("All") }
+    val criteria = ShadowLibraryCriteria(query, faction, rarity, keyword, light, powerFilter, cardType)
+    val updateCriteria: (ShadowLibraryCriteria) -> Unit = { next ->
+        query = next.search
+        faction = next.faction
+        rarity = next.rarity
+        keyword = next.keyword
+        light = next.light
+        powerFilter = next.power
+        cardType = next.type
+    }
+    val filtered = remember(criteria, vm.alphabetical, glossary) {
+        vm.alphabetical.filter { ShadowLibraryFiltering.matches(it, criteria, glossary) }
     }
     Column(
         Modifier.fillMaxSize().background(Color(0xFF141415))
@@ -459,8 +537,7 @@ private fun CollectionScreen(
             Text("${filtered.size} / ${vm.catalog.size} CARDS",
                 color = Gold, fontSize = 12.sp)
         }
-        LibrarySearchBar(query, { query = it }, faction, { faction = it },
-            rarity, { rarity = it })
+        LibrarySearchBar(criteria, updateCriteria, choices)
         Box(
             Modifier.fillMaxSize().padding(8.dp)
                 .background(Color(0xFF272423), RoundedCornerShape(3.dp))
@@ -487,6 +564,11 @@ private fun DeckScreen(
     onCard: (ShadowData.Card) -> Unit, onBattle: () -> Unit
 ) {
     val context = LocalContext.current
+    val glossary = remember(context) { ShadowKeywordGlossary.all(context) }
+    val playableCatalog = remember(vm.alphabetical) { vm.alphabetical.filter { it.isPlayable } }
+    val choices = remember(playableCatalog, glossary) {
+        ShadowLibraryFiltering.options(playableCatalog, glossary)
+    }
     var deckMenu by remember { mutableStateOf(false) }
     var deckDialog by remember { mutableStateOf("") }
     var editName by remember { mutableStateOf("") }
@@ -497,6 +579,10 @@ private fun DeckScreen(
     var addSearch by rememberSaveable { mutableStateOf("") }
     var addFaction by rememberSaveable { mutableStateOf("All") }
     var addRarity by rememberSaveable { mutableStateOf("All") }
+    var addKeyword by rememberSaveable { mutableStateOf("All") }
+    var addLight by rememberSaveable { mutableStateOf("All") }
+    var addPower by rememberSaveable { mutableStateOf("All") }
+    var addType by rememberSaveable { mutableStateOf("All") }
     var showDeckPane by rememberSaveable { mutableStateOf(false) }
     var savePressed by remember(state.selected, state.cards) { mutableStateOf(false) }
     val importFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
@@ -527,12 +613,20 @@ private fun DeckScreen(
     }
     val legality = vm.legality()
     val deckCards = state.cards.keys.mapNotNull { vm.catalog[it] }.sortedBy { it.name }
-    val suggestions = vm.alphabetical.filter { card ->
-        card.isPlayable &&
-            (addFaction == "All" || card.faction.equals(addFaction, true)) &&
-            (addRarity == "All" || card.rarity.equals(addRarity, true)) &&
-            (addSearch.isBlank() || listOf(card.name, card.effect)
-                .any { it.contains(addSearch.trim(), ignoreCase = true) })
+    val galleryCriteria = ShadowLibraryCriteria(
+        addSearch, addFaction, addRarity, addKeyword, addLight, addPower, addType
+    )
+    val updateGalleryCriteria: (ShadowLibraryCriteria) -> Unit = { next ->
+        addSearch = next.search
+        addFaction = next.faction
+        addRarity = next.rarity
+        addKeyword = next.keyword
+        addLight = next.light
+        addPower = next.power
+        addType = next.type
+    }
+    val suggestions = remember(galleryCriteria, playableCatalog, glossary) {
+        playableCatalog.filter { ShadowLibraryFiltering.matches(it, galleryCriteria, glossary) }
     }
 
     // Three-column PORTRAIT binder: full-size gallery, with current deck
@@ -590,10 +684,7 @@ private fun DeckScreen(
                             .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 8.dp)
                     ) {
                 LibrarySearchBar(
-                    addSearch, { addSearch = it },
-                    addFaction, { addFaction = it },
-                    addRarity, { addRarity = it },
-                    binder = true
+                    galleryCriteria, updateGalleryCriteria, choices, binder = true
                 )
                 Row(
                     Modifier.fillMaxWidth()
