@@ -368,7 +368,9 @@ internal fun DuelPopupAction(
     }
     Box(
         modifier
-            .heightIn(min = if (style == DuelPopupActionStyle.QUIET) 43.dp else 50.dp)
+            // Explicit height prevents the decorative fillMaxSize Canvas
+            // from expanding its parent Row to the entire Dialog height.
+            .height(if (style == DuelPopupActionStyle.QUIET) 43.dp else 50.dp)
             .graphicsLayer {
                 val scale = if (pressed && enabled) .983f else 1f
                 scaleX = scale
