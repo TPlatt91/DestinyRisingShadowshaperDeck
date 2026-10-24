@@ -255,7 +255,7 @@ internal fun DuelPowerTransferBeam(
     modifier: Modifier = Modifier
 ) {
     val travel = remember { Animatable(1f) }
-    LaunchedEffect(event?.serial) {
+    LaunchedEffect(event?.serial, event?.source, event?.target) {
         if (event?.kind == DuelEffectKind.POWER_TRANSFER) {
             travel.snapTo(0f)
             travel.animateTo(1f, tween(630, easing = LinearEasing))
@@ -264,6 +264,11 @@ internal fun DuelPowerTransferBeam(
     if (event == null || event.kind != DuelEffectKind.POWER_TRANSFER) return
     Canvas(modifier) {
         val source = event.source ?: return@Canvas
+        val target = event.target
+        // Slot bounds can remain in the map briefly after a unit dies,
+        // relocates or is replaced. Never draw a transfer to stale artwork.
+        if (source.owner.board[source.row][source.column] !== source ||
+            target.owner.board[target.row][target.column] !== target) return@Canvas
         val fromId = (if (source.owner.human) "0" else "1") +
             "-${source.row}-${source.column}"
         val to = event.target
