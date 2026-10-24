@@ -31,6 +31,7 @@ internal data class ShadowMatchState(
     val humanEmptyDrawTotal: Int,
     val cpuEmptyDrawTotal: Int,
     val journal: List<String>,
+    val fullJournal: List<String>,
     val human: SideState,
     val cpu: SideState,
     val units: List<UnitState>,
@@ -190,6 +191,7 @@ internal object ShadowMatchCodec {
             humanEmptyDrawTotal = e.humanEmptyDrawTotal,
             cpuEmptyDrawTotal = e.cpuEmptyDrawTotal,
             journal = e.journal.toList(),
+            fullJournal = e.fullJournal.toList(),
             human = sideState(e.human), cpu = sideState(e.cpu),
             units = states,
             pendingUnit = register(e.pendingMovedUnit),
@@ -292,6 +294,8 @@ internal object ShadowMatchCodec {
         e.cpuEmptyDrawTotal = state.cpuEmptyDrawTotal
         e.journal.clear()
         e.journal.addAll(state.journal)
+        e.fullJournal.clear()
+        e.fullJournal.addAll(state.fullJournal)
         e.pendingMovedUnit = unit(state.pendingUnit)
         e.pendingMoveCaster = state.pendingCaster?.let(::side)
         return e
