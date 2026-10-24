@@ -31,12 +31,12 @@ Fixes:
 
 ### Playback and control behavior
 
-- The music plays **during Skirmish**, including the in-battle menus and match results. It loops the chosen track indefinitely at a default 27% volume, balanced below game effects.
+- The music plays **across the entire app**: landing page, Deck Construction, Card Collection, Rules and Skirmish, including in-battle menus and match results. It loops the chosen track indefinitely at a default 27% volume, balanced below game effects.
 - Battle Settings now includes **Background Music** on/off and **Music Volume** slider, distinct from **Sound Effects / SFX Volume**. **Select Music Track** opens a scrollable list of all thirteen songs, grouped by Destiny / Destiny 2 labels. Choosing a different song switches immediately, without touching the SFX bank or combat logic.
 - Selected track, enabled state and music volume live in app-private SharedPreferences. The selection persists across matches/app restarts.
 - `DuelBackgroundMusic.kt` uses MediaPlayer with asynchronous `prepareAsync`, an Ogg/Opus `AssetFileDescriptor`, a looping track, AudioFocusRequest handling/ducking and explicit pause on Activity onPause/onBackground. Music is released on Activity destruction. Calls fail gracefully when the device cannot decode the asset and status is visible in Settings; no network requests or external file permissions.
 - `app/build.gradle.kts` includes `androidResources { noCompress += "opus" }`, so the APK stores the long-form music uncompressed for direct streaming without duplicating the approximately 50MB soundtrack into a local cache.
-- Audio playback stops when leaving Skirmish; the launcher, Deck Construction and Card Collection remain silent. System media volume still affects the final loudness.
+- Audio playback **continues when leaving Skirmish** and returning to the landing page, Deck Construction, Card Collection, or Rules, without resetting track progress. It pauses only when the whole app leaves the foreground. System media volume still affects the final loudness.
 
 ### Regression and verification
 
@@ -45,7 +45,15 @@ Fixes:
 No GitHub Actions were run. Compile and install locally, then:
 1. Open a Vandal or another card in Skirmish. Verify full artwork is visible, and scroll to read its complete printed effect and keywords. Close must not expand the header.
 2. Open Menu > Sound Settings. Turn music off/on, choose a different expansion, adjust its volume, and test SFX separately.
-3. Exit and relaunch Skirmish. Confirm last music preference persists and playback pauses when app is minimized or another app takes audio focus.
+3. Leave Skirmish for Home, Deck Construction, Card Collection and Rules. Confirm the same song continues without restarting. Minimize the entire app: music pauses. Resume the app: the selected soundtrack continues. Confirm saved music preferences persist after process restart.
 4. If an Android device does not support these `.opus` tracks, Settings will show a playback error; local conversion to compatible AAC or Ogg Vorbis would be the appropriate follow-up (not implemented in this change).
 
 The code has not been Android-compiled or on-device audio-tested in this environment. Asset filenames have been verified against the actual GitHub directory, not inferred from a generic DLC list.
+
+## App-wide soundtrack continuity update
+
+**Ownership:** `DuelMusicSession.kt` is an application-wide singleton that registers one `Application.ActivityLifecycleCallbacks` listener. Both `ShadowComposeActivity` and `ShadowBattleActivity` obtain the same `DuelBackgroundMusic` object in `onCreate` rather than constructing/releasing independent MediaPlayers. This preserves the current track, its playback position, loop, preferences and audio focus across navigation.
+
+**Lifecycle:** The music starts when either application Activity starts, and a short 300ms transition grace period avoids unnecessary pauses between app screens. When no Shadow Shaper Activity remains visible, it calls `onBackground()` to pause music and abandon audio focus. The soundtrack does not run as an Android background audio service. `DuelSoundPlayer` / SoundPool gameplay effects remain independent of the shared music.
+
+**Tests:** `DuelMusicSessionGuardTest.kt` and the updated `DuelMusicAndInspectorGuardTest.kt` check that the main app and Skirmish share one player, that entering another activity does not close it, and that the track selection/volume/mute controls remain independent of SFX. These are source tests; continuous actual audio still requires a phone test.
