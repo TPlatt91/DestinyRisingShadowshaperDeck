@@ -110,6 +110,10 @@ internal class DuelSoundPlayer(context: Context) {
         isPrepared = true
     }
 
+    /** Allows opening-hand audio to wait for async SoundPool decoding. */
+    fun isReady(sound: DuelSound): Boolean =
+        !released && ids[sound]?.let { it in readyIds } == true
+
     /** Limit rapid identical events, especially multi-token or chain effects. */
     fun play(sound: DuelSound) {
         if (released || !enabled) return
