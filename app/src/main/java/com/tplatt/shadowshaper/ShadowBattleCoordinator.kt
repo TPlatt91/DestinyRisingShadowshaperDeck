@@ -22,6 +22,9 @@ data class ShadowBattleSnapshot(
     val cpuHand: Int,
     val unresolvedEffects: Int,
     val revision: Int,
+    // Recompose the visual layer even when a status changes without Power.
+    // The event stream is transient and intentionally omitted from saves.
+    val visualRevision: Long,
     val pendingRelocation: Boolean,
     val lastError: String
 )
@@ -55,6 +58,7 @@ class ShadowBattleCoordinator(catalog: Map<String, ShadowData.Card>, seed: Long)
         cpuHand = engine.cpu.hand.size,
         unresolvedEffects = engine.unresolvedEffects,
         revision = engine.placementRevision,
+        visualRevision = engine.visualSerial,
         pendingRelocation = engine.pendingMovedUnit != null,
         lastError = engine.lastActionError
     )
