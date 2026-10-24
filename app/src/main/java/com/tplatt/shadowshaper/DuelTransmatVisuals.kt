@@ -34,7 +34,6 @@ internal fun DuelTransmatArrival(
 
         val c = Offset(size.width * .5f, size.height * .55f)
         val radius = size.width * .69f
-        val spread = (p / .65f).coerceIn(0f, 1f)
         when (style) {
             DuelTransmatStyle.DEFAULT -> defaultTransmat(c, radius, p, alpha)
             DuelTransmatStyle.HIVE -> hiveTransmat(c, radius, p, alpha)
@@ -249,7 +248,7 @@ private fun DrawScope.vexTransmat(
             else shape.lineTo(pos.x, pos.y)
         }
         drawPath(
-            shape, gold.copy(alpha = a * if (index == 0) .83f else .48f),
+            shape, gold.copy(alpha = a * (if (index == 0) .83f else .48f)),
             style = Stroke(width = if (index == 0) 1.55.dp.toPx() else .85.dp.toPx())
         )
     }
