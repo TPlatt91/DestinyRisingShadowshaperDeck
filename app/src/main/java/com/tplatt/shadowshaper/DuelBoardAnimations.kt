@@ -53,7 +53,8 @@ internal fun DuelAnimatedUnit(
     placementRevision: Int,
     isNewestPlacement: Boolean,
     modifier: Modifier = Modifier,
-    entryFromHand: Offset? = null
+    entryFromHand: Offset? = null,
+    sounds: DuelSoundPlayer? = null
 ) {
     // Initial 0 prevents a one-frame settled-card flash at first placement.
     val landing = remember(unit) {
@@ -80,6 +81,14 @@ internal fun DuelAnimatedUnit(
             precharging = true
             landing.snapTo(0f)
             transmat.snapTo(0f)
+            sounds?.play(DuelSoundEvents.transmatFor(unit.card.faction))
+            // Schedule the solid card impact at the same moment as the
+            // slam keyframe; do not change engine placement timing.
+            launch {
+                delay(DuelTransmatResolver.PRECHARGE_MS +
+                    (DuelLandingMotion.DURATION_MS * .72f).toLong())
+                sounds?.play(DuelSound.CARD_LAND)
+            }
             // Spawn the faction portal BEFORE the Hearthstone-style card
             // travels/falls. Both timelines are draw-only and never block
             // the engine's already-committed play.
