@@ -1,6 +1,7 @@
 package com.tplatt.shadowshaper
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import java.io.File
 
@@ -70,7 +71,7 @@ class DuelRowAbilityCueTest {
             source = ShadowData.VIDEO_SOURCE
         )
         assertEquals(DuelRowGlow.STANDARD, cue(card))
-        assertEquals(null, DuelRowAbilityCue.abilityRow(cue(card)))
+        assertNull(DuelRowAbilityCue.abilityRow(cue(card)))
     }
 
     @Test fun noAbilityAndMixedMetadataUseStandardPlacement() {
@@ -94,11 +95,11 @@ class DuelRowAbilityCueTest {
         val screen = listOf(
             File("src/main/java/com/tplatt/shadowshaper/ShadowBattleActivity.kt"),
             File("app/src/main/java/com/tplatt/shadowshaper/ShadowBattleActivity.kt")
-        ).first(File::isFile).readText()
+        ).firstOrNull { it.isFile }?.readText() ?: error("Missing battle UI source")
         val visuals = listOf(
             File("src/main/java/com/tplatt/shadowshaper/ShadowBattleVisuals.kt"),
             File("app/src/main/java/com/tplatt/shadowshaper/ShadowBattleVisuals.kt")
-        ).first(File::isFile).readText()
+        ).firstOrNull { it.isFile }?.readText() ?: error("Missing battle visual source")
         assertEquals(true, screen.contains("DuelRowAbilityCue.forCard("))
         assertEquals(true, screen.contains("engine.isPlayablePlacement(engine.human, selectedIndex, row, col)"))
         assertEquals(true, screen.contains("glow = if (legal) rowGlow else DuelRowGlow.STANDARD"))
