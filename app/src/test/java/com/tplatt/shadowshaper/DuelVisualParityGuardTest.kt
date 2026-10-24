@@ -96,4 +96,39 @@ class DuelVisualParityGuardTest {
         assertFalse(battle.contains("if (snapshot.playerTurn && !snapshot.finished &&"))
     }
 
+    @Test fun improvedBattleEffectsStayVisualAndUseLiveCardPower() {
+        val animations = source("DuelBoardAnimations.kt")
+        val overlays = source("DuelCinematicOverlays.kt")
+        val visuals = source("ShadowBattleVisuals.kt")
+        val hud = source("DuelBattleHud.kt")
+        val battle = source("ShadowBattleActivity.kt")
+        assertTrue(animations.contains("currentPower - previousPower"))
+        assertTrue(animations.contains("isNewestPlacement && placementRevision > 0"))
+        assertTrue(animations.contains("DuelCardFrame("))
+        assertTrue(animations.contains("powerDelta"))
+        assertTrue(animations.contains("impact.snapTo(1f)"))
+        assertTrue(visuals.contains("unit status"))
+        assertTrue(hud.contains("DuelDeckCounter("))
+        assertTrue(hud.contains("animateIntAsState("))
+        assertTrue(hud.contains("gold bezel glow"))
+        assertTrue(battle.contains("DuelCinematicTurnBanner("))
+        assertTrue(battle.contains("DuelCinematicEventRibbon("))
+        assertTrue(overlays.contains("DuelVisualEvent.kind(message)"))
+        assertFalse(animations.contains("engine.play("))
+        assertFalse(animations.contains("engine.damage("))
+    }
+
+    @Test fun largerUnitArtKeepsSevenLegalSlotsAndUserStoneBackground() {
+        val battle = source("ShadowBattleActivity.kt")
+        val metrics = source("DuelLayoutMetrics.kt")
+        val stone = source("DuelStoneArena.kt")
+        assertTrue(metrics.contains("PORTRAIT_LANE_WIDTH_FRACTION = 0.86f"))
+        assertTrue(metrics.contains("WIDTH_INSET_DP = 0.6f"))
+        assertTrue(battle.contains("for (col in 0 until ShadowRules.COLUMNS)"))
+        assertTrue(battle.contains("scaleX = 1.035f"))
+        assertTrue(battle.contains("onGloballyPositioned { slotBounds[id]"))
+        assertTrue(stone.contains("R.drawable.shadow_arena_original_portrait_hq"))
+        assertFalse(stone.contains("shadow_arena_narrow_ruins_v2"))
+    }
+
 }
