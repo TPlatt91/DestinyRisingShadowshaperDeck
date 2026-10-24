@@ -175,6 +175,37 @@ class DuelEffectEventsTest {
         assertEquals(2, unit.power)
     }
 
+    @Test fun prominentCinematicEffectsHaveDistinctMotionAndStillRespectReducedOff() {
+        fun read(name: String): String = listOf(
+            File("src/main/java/com/tplatt/shadowshaper/$name"),
+            File("app/src/main/java/com/tplatt/shadowshaper/$name")
+        ).firstOrNull { it.isFile }?.readText() ?: error("Missing $name")
+        val visual = read("DuelStatusEffects.kt")
+        assertTrue(visual.contains("DuelEffectKind.SCORCH_APPLIED -> \"SCORCHED\""))
+        assertTrue(visual.contains("DuelEffectKind.SUPPRESSED -> \"JAMMED\""))
+        assertTrue(visual.contains("DuelEffectKind.INSPIRED -> \"INSPIRED\""))
+        assertTrue(visual.contains("DuelEffectKind.OVERSHIELD_APPLIED -> \"SHIELD\""))
+        assertTrue(visual.contains("DuelEffectKind.OVERSHIELD_BLOCKED -> \"BLOCKED\""))
+        assertTrue(visual.contains("quadraticBezierTo(")) // Animated Scorch flames
+        assertTrue(visual.contains("unit.scorchTurns > 0 && !unit.suppressed"))
+        assertTrue(visual.contains("if (unit.suppressed)"))
+        assertTrue(visual.contains("if (unit.inspired && !unit.suppressed)"))
+        assertTrue(visual.contains("if (unit.overshield)"))
+        assertTrue(visual.contains("rememberInfiniteTransition("))
+        assertTrue(visual.contains("tween(2200, easing = LinearEasing)"))
+        assertTrue(visual.contains("tween(1050, easing = LinearEasing)"))
+        assertTrue(visual.contains("val steps = 14"))
+        assertTrue(visual.contains("strokeWidth = 13.dp.toPx()"))
+        assertTrue(visual.contains("burst.animateTo("))
+        assertTrue(visual.contains("if (mode == DuelFxMode.OFF) return"))
+        assertTrue(visual.contains("mode == DuelFxMode.FULL && hasStatus"))
+        assertTrue(visual.contains("if (mode == DuelFxMode.FULL)"))
+        // Rendered impacts may be dramatic; the rules must not be changed.
+        assertFalse(visual.contains("unit.power +="))
+        assertFalse(visual.contains("unit.overshield ="))
+        assertFalse(visual.contains("engine.buff("))
+    }
+
     @Test fun frontendConsumesEventsWithoutMakingStatusChangesItself() {
         fun read(name: String): String = listOf(
             File("src/main/java/com/tplatt/shadowshaper/$name"),
