@@ -53,7 +53,8 @@ class DuelResumeUiGuardTest {
         assertTrue(result.contains("onReviewLog: () -> Unit"))
         assertTrue(battle.contains("inspectingFinalBoard = true"))
         assertTrue(battle.contains("inspectingFinalBoard = false"))
-        assertTrue(battle.contains("\"‹  RESULTS\""))
+        assertTrue(battle.contains("reviewingBoard = inspectingFinalBoard"))
+        assertTrue(source("DuelBattleChrome.kt").contains("Return to match results"))
         assertTrue(battle.contains("if (!snapshot.finished &&"))
         assertTrue(battle.contains("snapshot?.finished == true && !inspectingFinalBoard"))
         assertTrue(battle.contains("!showLog && inspectedUnit == null && inspectedCard == null"))
@@ -66,8 +67,8 @@ class DuelResumeUiGuardTest {
     @Test fun journalCanBeReviewedAndCardsInspectedWithoutFinishingEarly() {
         val battle = source("ShadowBattleActivity.kt")
         assertTrue(battle.contains("else if (unit != null) Modifier.clickable { inspectedUnit = unit }"))
-        assertTrue(battle.contains("if (showLog && engine != null) AlertDialog("))
-        assertTrue(battle.contains("engine.fullJournal.forEach"))
+        assertTrue(battle.contains("if (showLog && engine != null) {"))
+        assertTrue(battle.contains("engine.fullJournal.forEachIndexed"))
         assertTrue(battle.contains("onClose = { inspectedUnit = null; inspectedCard = null }"))
         assertTrue(battle.contains("snapshot?.finished == true -> Unit"))
     }
