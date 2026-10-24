@@ -18,19 +18,19 @@ The main menu contains **exactly four** primary destinations in the user's reque
 ## Visual design
 
 - Original cinematic blue-black/graphite gradients in place of the previous flat brown list.
-- Top DESTINY: RISING eyebrow, much stronger SHADOW SHAPER / DUELS title typography, subtle geometric orbit/survey device and etched border line.
+- Top DESTINY: RISING telemetry label, typographically restrained SHADOW / SHAPER wordmark and bronze DUELS line. System sans-serif light/semibold with deliberately spaced capitals, monospaced technical micro-labels, and a very faint glow replace Android-default heavy text; no copyrighted Destiny font files are bundled.
 - Deep navy menu panels with chamfered corners, subdued metallic gold accents, distinct vector glyphs (crossed blades, a deck stack, a card archive diamond, an open rulebook), numbered tactical captions, clear subtitles, and right-facing navigation chevrons.
 - SKIRMISH gets a restrained brighter gold highlight; the other cards remain clean and subordinate.
-- Pressed tiles compress slightly (under 3%), while each tile enters with a brief staggered reveal. A gently animated background glow adds motion without distracting from the navigation.
+- Pressed tiles compress slightly (under 3%), while each tile enters with a brief staggered reveal. The header arrives with a one-time translucent downward reveal. A 22-second loop slowly rotates the perimeter calibration marks of the orbital crest while a faint diagonal scanning highlight crosses the vector background; a separate, gentle glow pulse adds depth without obscuring navigation.
 - Android system status/nav bars match the dark palette. Existing `safeDrawingPadding()` keeps content below the status bar and clear of gesture navigation.
 - Compact portrait phones can scroll vertically and the larger headers adapt typography below 355dp width. All navigation entries have a minimum 94dp height and verbal semantics for accessibility.
-- Footer displays the live number of cards loaded from the game's catalog, not a hardcoded count, and retains the card-verification disclosure.
-- All visuals use local code and inexpensive Compose Canvas geometry. No data/network access, new remote asset, permissions, third-party SDK or external font package was added.
+- The landing page deliberately omits the redundant **SOLO AGAINST AI** wording, the **SHADOW SHAPER DUELS / N CARDS ARCHIVED** footer, and the **UNVERIFIED EFFECTS ARE IDENTIFIED IN CARD DETAILS** disclaimer. A minimal decorative divider remains below the destinations. The actual card count stays visible in Card Collection, and evidence status stays in card details where it is relevant.
+- All visuals use local code and inexpensive Compose Canvas geometry. Slow timing, static star placement and simple vector paths avoid large animated textures and repeated bitmap decode. No data/network access, new remote asset, permissions, third-party SDK or external font package was added.
 
 ## Implementation / tests
 
-- `ShadowLandingPage.kt`: all visual composition, canvas backdrop/sigil/glyphs, tile interactions, and optional Continue ribbon.
+- `ShadowLandingPage.kt`: all visual composition, canvas backdrop/sigil/glyphs, header reveal, slow orbital/scanner animations, typography, tile interactions, and optional Continue ribbon.
 - `ShadowComposeActivity.kt`: home route delegated to this new page, old brown HomeScreen/HomeDestination implementation deleted; unchanged destination callbacks and saved-match availability refresh.
-- `ShadowLandingPageGuardTest.kt`: pure-JVM structural checks for the four exact destinations, optional saved-match ribbon, unchanged page navigation, portrait lock, and original offline artwork.
+- `ShadowLandingPageGuardTest.kt`: pure-JVM structural checks for the four exact destinations, optional saved-match ribbon, unchanged page navigation, portrait lock, removed text, typography, animations and original offline artwork.
 
-**Verification:** Changes committed. Structural source audit and navigation-guard assertions pass; Android compilation and actual phone rendering have NOT been run in the repository environment. Pull and build locally with the normal Android Studio assembleDebug workflow (do not run GitHub Actions). Test both with and without a saved game, then test a narrow portrait device.
+**Verification:** Changes committed. Structural source checks are included but local Gradle compilation, JVM test execution and actual phone rendering have NOT been run in this environment. Pull and build locally with the normal Android Studio assembleDebug workflow (do not run GitHub Actions). Test both with and without a saved game, then test a narrow portrait device.
