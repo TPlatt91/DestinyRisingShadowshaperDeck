@@ -97,9 +97,12 @@ import kotlinx.coroutines.launch
 
 /** Compose portrait battle UI. Rules and AI are resolved by the shared engine. */
 class ShadowBattleActivity : ComponentActivity() {
+    private var backgroundMusic: DuelBackgroundMusic? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        backgroundMusic = DuelBackgroundMusic(applicationContext)
         // The original Destiny: Rising duel occupies the whole display,
         // without an Android status/navigation band consuming arena space.
         // Immersive-STICKY still allows a swipe to reveal system bars.
@@ -124,12 +127,29 @@ class ShadowBattleActivity : ComponentActivity() {
             )) {
                 ShadowBattleScreen(
                     requestedDeck = intent.getStringExtra("selected_deck"),
+                    music = requireNotNull(backgroundMusic),
                     onExit = { finish() },
                     onRules = { startActivity(Intent(this, ShadowComposeActivity::class.java)
                         .putExtra("start_page", "rules")) }
                 )
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        backgroundMusic?.onForeground()
+    }
+
+    override fun onPause() {
+        backgroundMusic?.onBackground()
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        backgroundMusic?.close()
+        backgroundMusic = null
+        super.onDestroy()
     }
 }
 
@@ -144,11 +164,20 @@ private val BattleDanger = Color(0xFFDDA89A)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRules: () -> Unit) {
+private fun ShadowBattleScreen(
+    requestedDeck: String?,
+    onExit: () -> Unit,
+    onRules: () -> Unit,
+    music: DuelBackgroundMusic
+) {
     val context = LocalContext.current
     val sounds = remember(context) { DuelSoundPlayer(context.applicationContext) }
     var audioEnabled by remember(sounds) { mutableStateOf(sounds.enabled) }
     var audioVolume by remember(sounds) { mutableFloatStateOf(sounds.volume) }
+    var musicEnabled by remember(music) { mutableStateOf(music.enabled) }
+    var musicVolume by remember(music) { mutableFloatStateOf(music.volume) }
+    var musicTrackId by remember(music) { mutableStateOf(music.selectedTrackId) }
+    var musicPickerDialog by remember { mutableStateOf(false) }
     LaunchedEffect(sounds) { sounds.prepare() }
     DisposableEffect(sounds) { onDispose { sounds.close() } }
     val screenConfig = LocalConfiguration.current
@@ -1297,6 +1326,37 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 }
             )
             DuelPopupRule()
+            DuelPopupSoundSettings(
+                enabled = musicEnabled,
+                volume = musicVolume,
+                onEnabledChange = { value ->
+                    musicEnabled = value
+                    music.enabled = value
+                },
+                onVolumeChange = { value ->
+                    musicVolume = value
+                    music.volume = value
+                },
+                title = "BACKGROUND MUSIC",
+                subtitle = "SKIRMISH SOUNDTRACK",
+                volumeLabel = "MUSIC VOLUME"
+            )
+            DuelPopupMenuRow(
+                label = "SELECT MUSIC TRACK",
+                description = music.selectedTrack.title.uppercase(),
+                highlighted = true,
+                onClick = {
+                    settingsDialog = false
+                    musicPickerDialog = true
+                }
+            )
+            Text(
+                if (music.enabled) "PLAYBACK  •  ${music.status}" else "PLAYBACK  •  OFF",
+                color = DuelPopupColors.muted,
+                fontSize = 10.sp,
+                letterSpacing = .45.sp
+            )
+            DuelPopupRule()
             DuelPopupMenuRow(
                 label = "TEST SOUND",
                 description = "PREVIEW BATTLE AUDIO",
@@ -1335,6 +1395,42 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 label = "CLOSE",
                 modifier = Modifier.fillMaxWidth(),
                 onClick = { settingsDialog = false }
+            )
+        }
+    }
+
+    if (musicPickerDialog) {
+        DuelPopupDialog(
+            title = "SELECT MUSIC",
+            subtitle = "DESTINY  /  DESTINY 2\nSelect a soundtrack for your skirmish.",
+            symbol = DuelPopupSymbol.ORBIT,
+            onDismissRequest = {
+                musicPickerDialog = false
+                settingsDialog = true
+            }
+        ) {
+            DuelMusicCatalog.tracks.forEach { track ->
+                DuelPopupMenuRow(
+                    label = track.title.uppercase(),
+                    description = track.series +
+                        if (track.id == musicTrackId) "  /  CURRENTLY SELECTED" else "",
+                    highlighted = track.id == musicTrackId,
+                    onClick = {
+                        musicTrackId = track.id
+                        music.selectedTrackId = track.id
+                        musicPickerDialog = false
+                        settingsDialog = true
+                    }
+                )
+            }
+            DuelPopupRule()
+            DuelPopupAction(
+                label = "BACK TO SETTINGS",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = {
+                    musicPickerDialog = false
+                    settingsDialog = true
+                }
             )
         }
     }
