@@ -489,7 +489,7 @@ private fun LandingAction(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     title,
-                    fontSize = if (title.length > 15) 17.sp else 20.sp,
+                    fontSize = if (title.length > 15) 16.sp else 20.sp,
                     lineHeight = 22.sp,
                     letterSpacing = .5.sp,
                     fontWeight = FontWeight.ExtraBold,
@@ -500,9 +500,9 @@ private fun LandingAction(
                 Spacer(Modifier.height(4.dp))
                 Text(
                     subtitle,
-                    fontSize = 9.sp,
-                    lineHeight = 12.sp,
-                    letterSpacing = .45.sp,
+                    fontSize = 10.sp,
+                    lineHeight = 13.sp,
+                    letterSpacing = .2.sp,
                     color = landingMuted,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
