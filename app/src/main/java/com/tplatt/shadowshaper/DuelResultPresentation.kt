@@ -46,6 +46,9 @@ internal fun DuelMatchResult(
     cpuPower: Int,
     unresolvedEffects: Int,
     onRematch: () -> Unit,
+    onSelectDecks: () -> Unit,
+    onInspectBoard: () -> Unit,
+    onReviewLog: () -> Unit,
     onHome: () -> Unit
 ) {
     val result = ShadowRules.result(playerPower, cpuPower)
@@ -74,7 +77,7 @@ internal fun DuelMatchResult(
             )
         ) {
             Card(
-                modifier = Modifier.fillMaxWidth(0.66f),
+                modifier = Modifier.fillMaxWidth(0.90f),
                 shape = RoundedCornerShape(12.dp),
                 colors = CardDefaults.cardColors(containerColor = DuelPalette.tableLow),
                 border = BorderStroke(2.dp, accent)
@@ -114,13 +117,30 @@ internal fun DuelMatchResult(
                         )
                     }
                     Spacer(Modifier.height(12.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedButton(onClick = onHome) {
-                            Text("HOME")
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedButton(onClick = onInspectBoard) {
+                            Text("VIEW BOARD", fontSize = 11.sp)
                         }
+                        OutlinedButton(onClick = onReviewLog) {
+                            Text("BATTLE LOG", fontSize = 11.sp)
+                        }
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Button(onClick = onRematch) {
-                            Text("NEW MATCH")
+                            Text("BATTLE AGAIN", fontSize = 11.sp)
                         }
+                        OutlinedButton(onClick = onSelectDecks) {
+                            Text("SELECT DECKS", fontSize = 11.sp)
+                        }
+                    }
+                    OutlinedButton(onClick = onHome) {
+                        Text("HOME", fontSize = 11.sp)
                     }
                 }
             }
