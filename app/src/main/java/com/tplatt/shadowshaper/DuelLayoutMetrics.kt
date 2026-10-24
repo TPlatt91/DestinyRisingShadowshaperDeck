@@ -12,11 +12,11 @@ internal data class DuelCardDimensions(val width: Float, val height: Float)
 internal object DuelLayoutMetrics {
     const val CARD_WIDTH_TO_HEIGHT = 0.72f
     // Preserve the original natural rock borders in the supplied image.
-    // Modestly widen real card slots compared with the original 70% grid;
+    // Slightly widen real card slots inside the unchanged original stone picture;
     // hit testing, row guides, and art all share this same lane width.
-    const val PORTRAIT_LANE_WIDTH_FRACTION = 0.80f
-    private const val WIDTH_INSET_DP = 2f
-    private const val HEIGHT_INSET_DP = 2f
+    const val PORTRAIT_LANE_WIDTH_FRACTION = 0.86f
+    private const val WIDTH_INSET_DP = 0.6f
+    private const val HEIGHT_INSET_DP = 0.6f
 
     fun fittingCard(slotWidth: Float, slotHeight: Float): DuelCardDimensions {
         if (slotWidth <= 0f || slotHeight <= 0f)
