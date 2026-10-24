@@ -63,4 +63,78 @@ class DuelHitTestingTest {
         )
     }
 
+    @Test fun visibleCardCenterReachesLegalSlotEvenWhenFingerIsBelowIt() {
+        val legal = setOf(DuelDropCell(1, 2))
+        // The floating artwork is drawn 64% of a card above the finger,
+        // so its actual center lands 14% of the card height above the touch.
+        assertEquals(
+            DuelDropCell(1, 2),
+            DuelHitTesting.playerSlotForDrop(
+                Offset(240f, 192f), cells, 130f, legal
+            )
+        )
+    }
+
+    @Test fun fingertipDirectlyInsideLegalPositionAlwaysWins() {
+        assertEquals(
+            DuelDropCell(1, 2),
+            DuelHitTesting.playerSlotForDrop(
+                Offset(240f, 140f), cells, 130f, setOf(DuelDropCell(1, 2))
+            )
+        )
+    }
+
+    @Test fun releaseJustOutsideGlowingEdgeCanStillDropSameCard() {
+        // The visible card center is two px beyond the right edge. The
+        // tolerance is limited to part of a single real slot rectangle.
+        assertEquals(
+            DuelDropCell(1, 2),
+            DuelHitTesting.playerSlotForDrop(
+                Offset(272f, 180f), cells, 130f, setOf(DuelDropCell(1, 2))
+            )
+        )
+    }
+
+    @Test fun dragCannotSnapOntoOccupiedOrIllegalHumanPosition() {
+        val occupied = cells + ("0-1-1" to Rect(120f, 100f, 190f, 180f))
+        assertNull(
+            DuelHitTesting.playerSlotForDrop(
+                Offset(160f, 145f), occupied, 130f,
+                setOf(DuelDropCell(1, 2))
+            )
+        )
+    }
+
+    @Test fun dragCannotDropOnCpuSideOrOutsideAnyHighlightedSlot() {
+        assertNull(
+            DuelHitTesting.playerSlotForDrop(
+                Offset(240f, 40f), cells, 130f,
+                setOf(DuelDropCell(1, 2))
+            )
+        )
+        assertNull(
+            DuelHitTesting.playerSlotForDrop(
+                Offset(900f, 900f), cells, 130f,
+                setOf(DuelDropCell(1, 2))
+            )
+        )
+        assertNull(
+            DuelHitTesting.playerSlotForDrop(
+                Offset(240f, 140f), cells, 130f,
+                emptySet()
+            )
+        )
+    }
+
+    @Test fun playerCanDragDirectlyIntoLegalSeventhColumn() {
+        val last = mapOf("0-1-6" to Rect(350f, 100f, 400f, 180f))
+        assertEquals(
+            DuelDropCell(1, 6),
+            DuelHitTesting.playerSlotForDrop(
+                Offset(380f, 147f), last, 130f, setOf(DuelDropCell(1, 6))
+            )
+        )
+    }
+
+
 }
