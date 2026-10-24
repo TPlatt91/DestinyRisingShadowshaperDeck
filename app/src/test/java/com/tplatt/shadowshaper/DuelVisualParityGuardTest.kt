@@ -118,6 +118,27 @@ class DuelVisualParityGuardTest {
         assertFalse(animations.contains("engine.damage("))
     }
 
+    @Test fun placedCardsFallIntoTheirRealSlotsWithoutChangingBattleRules() {
+        val battle = source("ShadowBattleActivity.kt")
+        val animated = source("DuelBoardAnimations.kt")
+        val timeline = source("DuelLandingMotion.kt")
+        assertTrue(battle.contains("recordSuccessfulLaunch("))
+        assertTrue(battle.contains("pendingFingerRelease = dragPosition"))
+        assertTrue(battle.contains("entryFromHand = if (owner === engine.human)"))
+        assertTrue(battle.contains("latestHumanLaunch?.takeIf"))
+        assertTrue(animated.contains("DuelLandingMotion.at("))
+        assertTrue(animated.contains("landing.animateTo("))
+        assertTrue(animated.contains("animatedRevision != placementRevision"))
+        assertTrue(animated.contains("isNewestPlacement && placementRevision > 0"))
+        assertTrue(animated.contains("landingImpact"))
+        assertTrue(animated.contains("powerDelta"))
+        assertTrue(timeline.contains("DURATION_MS = 760"))
+        assertTrue(timeline.contains("offsetY = h * (.08f - .13f * bounce)"))
+        assertFalse(animated.contains("engine.play("))
+        assertFalse(animated.contains("engine.damage("))
+        assertFalse(animated.contains("engine.endTurn("))
+    }
+
     @Test fun largerUnitArtKeepsSevenLegalSlotsAndUserStoneBackground() {
         val battle = source("ShadowBattleActivity.kt")
         val metrics = source("DuelLayoutMetrics.kt")
