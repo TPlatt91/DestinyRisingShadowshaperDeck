@@ -27,10 +27,16 @@ internal class DuelSoundPlayer(context: Context) {
         .setUsage(AudioAttributes.USAGE_GAME)
         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
         .build()
-    private val pool = SoundPool.Builder()
-        .setMaxStreams(6)
-        .setAudioAttributes(attributes)
-        .build()
+    private val pool: SoundPool? = try {
+        SoundPool.Builder()
+            .setMaxStreams(6)
+            .setAudioAttributes(attributes)
+            .build()
+    } catch (_: Exception) {
+        // If the device's audio subsystem is unavailable, retain silent
+        // functionality rather than preventing the battle from starting.
+        null
+    }
     private val ids = ConcurrentHashMap<DuelSound, Int>()
     private val readyIds = Collections.newSetFromMap(ConcurrentHashMap<Int, Boolean>())
     private val lastPlayed = ConcurrentHashMap<DuelSound, Long>()
@@ -48,7 +54,7 @@ internal class DuelSoundPlayer(context: Context) {
         }
 
     init {
-        pool.setOnLoadCompleteListener { _, sampleId, status ->
+        pool?.setOnLoadCompleteListener { _, sampleId, status ->
             if (!released && status == 0) readyIds.add(sampleId)
         }
     }
@@ -70,7 +76,7 @@ internal class DuelSoundPlayer(context: Context) {
     }
 
     suspend fun prepare() {
-        if (released || isPrepared) return
+        if (released || isPrepared || pool == null) return
         // Prepare files off the UI thread. The cache is safe for offline use.
         val prepared = withContext(Dispatchers.IO) {
             val folder = File(app.cacheDir, "shadow_sound_v1")
@@ -94,7 +100,9 @@ internal class DuelSoundPlayer(context: Context) {
         if (released) return
         for ((sound, file) in prepared) {
             try {
-                ids[sound] = pool.load(file.absolutePath, 1)
+                pool.load(file.absolutePath, 1).takeIf { it > 0 }?.let {
+                    ids[sound] = it
+                }
             } catch (_: Exception) {
                 // Sound is optional; keep actual card gameplay intact.
             }
@@ -118,7 +126,7 @@ internal class DuelSoundPlayer(context: Context) {
             }) return
         lastPlayed[sound] = now
         try {
-            pool.play(id, requestedVolume, requestedVolume, 1, 0, 1f)
+            pool?.play(id, requestedVolume, requestedVolume, 1, 0, 1f)
         } catch (_: Exception) {
             // Audio failures never block the renderer or action callbacks.
         }
@@ -129,6 +137,6 @@ internal class DuelSoundPlayer(context: Context) {
         readyIds.clear()
         ids.clear()
         lastPlayed.clear()
-        try { pool.release() } catch (_: Exception) { }
+        try { pool?.release() } catch (_: Exception) { }
     }
 }
