@@ -40,6 +40,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -62,6 +63,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -90,6 +92,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /** Compose portrait battle UI. Rules and AI are resolved by the shared engine. */
 class ShadowBattleActivity : ComponentActivity() {
@@ -173,6 +176,12 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var dragPosition by remember { mutableStateOf(Offset.Zero) }
     var rootTopLeftInWindow by remember { mutableStateOf(Offset.Zero) }
     val cardBounds = remember { mutableStateMapOf<Int, Rect>() }
+    // A card drag must win horizontal gesture recognition over the hand list.
+    // Visible navigation controls scroll the list when it overflows.
+    val handListState = rememberLazyListState()
+    val handScrollScope = rememberCoroutineScope()
+    val density = LocalDensity.current
+    val floatingCardHeightPx = with(density) { 130.dp.toPx() }
     val slotBounds = remember { mutableStateMapOf<String, Rect>() }
     val validDecks = remember(catalog, deckDialog) {
         buildList {
@@ -667,6 +676,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         fontWeight = FontWeight.Bold, maxLines = 1)
                 }
                 LazyRow(
+                    state = handListState,
+                    // Horizontal scrolling previously stole a card's drag
+                    // after touch slop. Navigation buttons below handle
+                    // overflowing hands; every visible card owns its drag.
+                    userScrollEnabled = false,
                     modifier = Modifier.weight(1f).fillMaxHeight(),
                     contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -692,17 +706,29 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 .pointerInput(index, card.name) {
                                     detectDragGestures(
                                         onDragStart = { start ->
-                                            if (snapshot.playerTurn && !snapshot.finished &&
+                                            // pointerInput is keyed by card identity, not
+                                            // the snapshot revision. Read the live engine
+                                            // instead of a stale snapshot captured when
+                                            // the card first entered the LazyRow.
+                                            val canPlace = engine.humanTurn &&
+                                                !engine.finished &&
                                                 pendingPosition == null &&
                                                 engine.pendingMovedUnit == null &&
-                                                engine.affordable(engine.human, index)) {
+                                                (0 until ShadowRules.ROWS).any { row ->
+                                                    (0 until ShadowRules.COLUMNS).any { col ->
+                                                        engine.isPlayablePlacement(
+                                                            engine.human, index, row, col
+                                                        )
+                                                    }
+                                                }
+                                            if (canPlace) {
                                                 draggedIndex = index
                                                 selectedIndex = index
                                                 dragPosition =
                                                     (cardBounds[index]?.topLeft ?: Offset.Zero) + start
                                             } else {
                                                 draggedIndex = -1
-                                                message = "Resolve the current action or choose an affordable card."
+                                                message = "Card cannot be played now. Resolve any pending action."
                                             }
                                         },
                                         onDrag = { change, delta ->
@@ -713,10 +739,31 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                         },
                                         onDragEnd = {
                                             if (draggedIndex == index) {
-                                                val drop = DuelHitTesting.playerSlotAt(dragPosition, slotBounds)
+                                                // Use the live board here too. The visible
+                                                // glowing positions are precisely the cells
+                                                // returned by this engine legality check.
+                                                val legalSlots = buildSet {
+                                                    for (row in 0 until ShadowRules.ROWS) {
+                                                        for (col in 0 until ShadowRules.COLUMNS) {
+                                                            if (engine.isPlayablePlacement(
+                                                                    engine.human, index, row, col
+                                                                )) add(DuelDropCell(row, col))
+                                                        }
+                                                    }
+                                                }
+                                                val drop = DuelHitTesting.playerSlotForDrop(
+                                                    dragPosition,
+                                                    slotBounds,
+                                                    floatingCardHeightPx,
+                                                    legalSlots
+                                                )
                                                 draggedIndex = -1
-                                                if (drop != null) playAt(drop.row, drop.column)
-                                                else message = "Drag onto a glowing empty slot in your field."
+                                                if (drop != null) {
+                                                    selectedIndex = index
+                                                    playAt(drop.row, drop.column)
+                                                } else {
+                                                    message = "Release the card over a glowing empty slot."
+                                                }
                                             }
                                         },
                                         onDragCancel = { draggedIndex = -1 }
@@ -744,7 +791,42 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         }
                     }
                 }
-
+                if (engine.human.hand.size > 4) {
+                    Column(
+                        modifier = Modifier.width(23.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Box(
+                            Modifier.size(width = 23.dp, height = 37.dp)
+                                .clickable {
+                                    handScrollScope.launch {
+                                        handListState.animateScrollToItem(
+                                            (handListState.firstVisibleItemIndex - 1)
+                                                .coerceAtLeast(0)
+                                        )
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("‹", color = BattleGold, fontSize = 23.sp)
+                        }
+                        Box(
+                            Modifier.size(width = 23.dp, height = 37.dp)
+                                .clickable {
+                                    handScrollScope.launch {
+                                        handListState.animateScrollToItem(
+                                            (handListState.firstVisibleItemIndex + 1)
+                                                .coerceAtMost(engine.human.hand.lastIndex)
+                                        )
+                                    }
+                                },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("›", color = BattleGold, fontSize = 23.sp)
+                        }
+                    }
+                }
             }
         } else {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
