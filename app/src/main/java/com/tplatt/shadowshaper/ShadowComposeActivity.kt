@@ -51,7 +51,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items as lazyRowItems
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -63,6 +63,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -202,12 +203,19 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
             onAdd = { vm.add(card) }, onRemove = { vm.remove(card.name) })
     }
     if (state.message != null) {
-        AlertDialog(
-            onDismissRequest = vm::clearMessage,
-            title = { Text("Deck update") },
-            text = { Text(state.message ?: "") },
-            confirmButton = { TextButton(onClick = vm::clearMessage) { Text("OK") } }
-        )
+        DuelPopupDialog(
+            title = "DECK UPDATE",
+            subtitle = state.message.orEmpty(),
+            symbol = DuelPopupSymbol.CARDS,
+            onDismissRequest = vm::clearMessage
+        ) {
+            DuelPopupAction(
+                label = "ACKNOWLEDGE",
+                onClick = vm::clearMessage,
+                modifier = Modifier.fillMaxWidth(),
+                style = DuelPopupActionStyle.PRIMARY
+            )
+        }
     }
 }
 
@@ -723,96 +731,179 @@ private fun DeckScreen(
         }
     }
     if (coverDialog) {
-        AlertDialog(
-            onDismissRequest = { coverDialog = false },
-            title = { Text("SHADOW SHAPER CARD BACK") },
-            text = {
-                Column(
-                    Modifier.heightIn(max = 380.dp)
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    Text("Choose one of the nine original covers. Your selection is saved with this deck.",
-                        color = Secondary, fontSize = 12.sp)
-                    DuelCoverCatalog.choices.forEach { option ->
-                        Row(
-                            Modifier.fillMaxWidth()
-                                .clickable {
-                                    vm.selectCover(option.id)
-                                    coverDialog = false
-                                }
-                                .padding(vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(14.dp)
-                        ) {
-                            DuelCardCover(option.id, Modifier.width(42.dp).height(61.dp))
-                            Text(option.title, color = if (state.cover == option.id) Gold else Cream,
-                                fontWeight = if (state.cover == option.id)
-                                    FontWeight.Bold else FontWeight.Normal,
-                                modifier = Modifier.weight(1f))
-                            if (state.cover == option.id) Text("✓", color = Gold)
+        DuelPopupDialog(
+            title = "CHOOSE CARD BACK",
+            subtitle = "Choose from the original card-back designs. " +
+                "Your selection remains saved with this deck.",
+            symbol = DuelPopupSymbol.CARDS,
+            onDismissRequest = { coverDialog = false }
+        ) {
+            DuelCoverCatalog.choices.forEach { option ->
+                Row(
+                    Modifier.fillMaxWidth()
+                        .background(Color(0xFF15232D), RoundedCornerShape(3.dp))
+                        .border(
+                            .65.dp,
+                            if (state.cover == option.id)
+                                DuelPopupColors.gold else DuelPopupColors.border,
+                            RoundedCornerShape(3.dp)
+                        )
+                        .clickable {
+                            vm.selectCover(option.id)
+                            coverDialog = false
                         }
+                        .padding(horizontal = 9.dp, vertical = 7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    DuelCardCover(option.id, Modifier.width(40.dp).height(58.dp))
+                    Text(
+                        option.title,
+                        color = if (state.cover == option.id)
+                            DuelPopupColors.gold else DuelPopupColors.white,
+                        fontWeight = if (state.cover == option.id)
+                            FontWeight.Bold else FontWeight.Medium,
+                        modifier = Modifier.weight(1f),
+                        fontSize = 12.sp
+                    )
+                    if (state.cover == option.id) {
+                        Text("✓", color = DuelPopupColors.gold)
                     }
                 }
-            },
-            confirmButton = {
-                TextButton(onClick = { coverDialog = false }) { Text("CLOSE") }
             }
-        )
+            DuelPopupRule()
+            DuelPopupAction(
+                label = "CLOSE",
+                onClick = { coverDialog = false },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
     if (deckDialog.isNotBlank()) {
-        AlertDialog(
-            onDismissRequest = { deckDialog = "" },
-            title = { Text(if (deckDialog == "New") "New deck" else "Rename deck") },
-            text = {
-                OutlinedTextField(value = editName, onValueChange = { editName = it },
-                    label = { Text("Deck name") }, singleLine = true)
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    if (deckDialog == "New") vm.create(editName) else vm.rename(editName)
-                    deckDialog = ""
-                }) { Text("SAVE") }
-            },
-            dismissButton = { TextButton(onClick = { deckDialog = "" }) { Text("CANCEL") } }
-        )
+        DuelPopupDialog(
+            title = if (deckDialog == "New") "CREATE DECK" else "RENAME DECK",
+            subtitle = "ASSIGN A NAME TO YOUR CONSTRUCTED LOADOUT",
+            symbol = DuelPopupSymbol.CARDS,
+            onDismissRequest = { deckDialog = "" }
+        ) {
+            OutlinedTextField(
+                value = editName,
+                onValueChange = { editName = it },
+                label = { Text("Deck name") },
+                singleLine = true,
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = DuelPopupColors.white,
+                    unfocusedTextColor = DuelPopupColors.white,
+                    cursorColor = DuelPopupColors.gold,
+                    focusedBorderColor = DuelPopupColors.gold,
+                    unfocusedBorderColor = DuelPopupColors.border,
+                    focusedLabelColor = DuelPopupColors.gold,
+                    unfocusedLabelColor = DuelPopupColors.muted
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "CANCEL",
+                    modifier = Modifier.weight(1f),
+                    onClick = { deckDialog = "" }
+                )
+                DuelPopupAction(
+                    label = "SAVE",
+                    modifier = Modifier.weight(1f),
+                    style = DuelPopupActionStyle.PRIMARY,
+                    onClick = {
+                        if (deckDialog == "New") vm.create(editName) else vm.rename(editName)
+                        deckDialog = ""
+                    }
+                )
+            }
+        }
     }
     if (pasteDialog) {
-        AlertDialog(
-            onDismissRequest = { pasteDialog = false },
-            title = { Text("Import deck") },
-            text = {
-                Column {
-                    Text("Accepts lines such as 2x Ayuela, one card per line.",
-                        color = Secondary, fontSize = 12.sp)
-                    OutlinedTextField(
-                        value = importText, onValueChange = { importText = it },
-                        minLines = 6, maxLines = 12,
-                        label = { Text("Paste deck list") }
-                    )
-                    TextButton(onClick = {
-                        pasteDialog = false
-                        importFile.launch(arrayOf("text/plain", "text/*"))
-                    }) { Text("Choose text file instead") }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    vm.importText(importText)
+        DuelPopupDialog(
+            title = "IMPORT DECK",
+            subtitle = "Paste a text deck list, or choose a text file. " +
+                "Example: 2x Ayuela.",
+            symbol = DuelPopupSymbol.CARDS,
+            onDismissRequest = { pasteDialog = false }
+        ) {
+            OutlinedTextField(
+                value = importText,
+                onValueChange = { importText = it },
+                minLines = 6,
+                maxLines = 12,
+                label = { Text("Paste deck list") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = DuelPopupColors.white,
+                    unfocusedTextColor = DuelPopupColors.white,
+                    cursorColor = DuelPopupColors.gold,
+                    focusedBorderColor = DuelPopupColors.gold,
+                    unfocusedBorderColor = DuelPopupColors.border,
+                    focusedLabelColor = DuelPopupColors.gold,
+                    unfocusedLabelColor = DuelPopupColors.muted
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+            DuelPopupMenuRow(
+                label = "CHOOSE TEXT FILE",
+                description = "IMPORT FROM DEVICE STORAGE",
+                onClick = {
                     pasteDialog = false
-                }) { Text("IMPORT") }
-            },
-            dismissButton = { TextButton(onClick = { pasteDialog = false }) { Text("CANCEL") } }
-        )
+                    importFile.launch(arrayOf("text/plain", "text/*"))
+                }
+            )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "CANCEL",
+                    modifier = Modifier.weight(1f),
+                    onClick = { pasteDialog = false }
+                )
+                DuelPopupAction(
+                    label = "IMPORT",
+                    modifier = Modifier.weight(1f),
+                    style = DuelPopupActionStyle.PRIMARY,
+                    onClick = {
+                        vm.importText(importText)
+                        pasteDialog = false
+                    }
+                )
+            }
+        }
     }
-    if (confirmDelete) AlertDialog(
-        onDismissRequest = { confirmDelete = false },
-        title = { Text("Delete ${state.selected}?") },
-        text = { Text("This saved deck will be deleted. The card collection remains unchanged.") },
-        confirmButton = {
-            TextButton(onClick = { vm.delete(); confirmDelete = false }) { Text("DELETE", color = Warn) }
-        },
-        dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("CANCEL") } }
-    )
+    if (confirmDelete) {
+        DuelPopupDialog(
+            title = "DELETE THIS DECK?",
+            subtitle = "${state.selected} will be deleted. " +
+                "Your card collection will not be affected.",
+            symbol = DuelPopupSymbol.WARNING,
+            onDismissRequest = { confirmDelete = false }
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "CANCEL",
+                    modifier = Modifier.weight(1f),
+                    onClick = { confirmDelete = false }
+                )
+                DuelPopupAction(
+                    label = "DELETE",
+                    modifier = Modifier.weight(1f),
+                    style = DuelPopupActionStyle.DANGER,
+                    onClick = { vm.delete(); confirmDelete = false }
+                )
+            }
+        }
+    }
+
 }
 
 @Composable
@@ -840,9 +931,9 @@ private fun CardDetailsDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.94f).widthIn(max = 540.dp),
-            color = Panel,
-            shape = RoundedCornerShape(16.dp),
-            border = BorderStroke(1.dp, Gold)
+            color = Color(0xFF0C1620),
+            shape = CutCornerShape(13.dp),
+            border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)
         ) {
             Column {
                 Row(
@@ -854,8 +945,13 @@ private fun CardDetailsDialog(
                         fontSize = 19.sp, modifier = Modifier.weight(1f),
                         maxLines = 2, overflow = TextOverflow.Ellipsis
                     )
-                    TextButton(onClick = onDismiss) { Text("CLOSE ×", color = Gold) }
+                    DuelPopupAction(
+                        label = "CLOSE",
+                        onClick = onDismiss,
+                        modifier = Modifier.width(88.dp)
+                    )
                 }
+                DuelPopupRule()
                 Column(
                     modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
                         .padding(horizontal = 15.dp, vertical = 8.dp),
@@ -944,9 +1040,9 @@ private fun CardDetailsDialog(
         ) {
             Surface(
                 modifier = Modifier.fillMaxWidth(0.98f).fillMaxHeight(0.96f),
-                color = Ink,
-                shape = RoundedCornerShape(10.dp),
-                border = BorderStroke(1.dp, Gold)
+                color = Color(0xFF0B151F),
+                shape = CutCornerShape(12.dp),
+                border = BorderStroke(1.2.dp, DuelPopupColors.goldSoft)
             ) {
                 Column(Modifier.fillMaxSize()) {
                     Row(
@@ -958,9 +1054,11 @@ private fun CardDetailsDialog(
                             fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
                             maxLines = 2
                         )
-                        TextButton(onClick = { enlarged = false }) {
-                            Text("CLOSE ×", color = Gold)
-                        }
+                        DuelPopupAction(
+                            label = "CLOSE",
+                            onClick = { enlarged = false },
+                            modifier = Modifier.width(88.dp)
+                        )
                     }
                     BoxWithConstraints(
                         modifier = Modifier.fillMaxWidth().weight(1f).padding(8.dp),

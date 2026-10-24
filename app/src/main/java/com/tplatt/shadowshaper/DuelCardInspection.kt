@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CutCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Text
@@ -57,9 +58,9 @@ internal fun DuelCardInspection(
     ) {
         Card(
             modifier = Modifier.fillMaxWidth(0.96f).fillMaxHeight(0.94f),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = DuelPalette.tableLow),
-            border = BorderStroke(2.dp, DuelPalette.rim)
+            shape = CutCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 14.dp, bottomEnd = 14.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1620)),
+            border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
@@ -78,10 +79,14 @@ internal fun DuelCardInspection(
                             fontSize = 12.sp, fontWeight = FontWeight.Bold
                         )
                     }
-                    TextButton(onClick = onClose) {
-                        Text("CLOSE ×", color = DuelPalette.gold)
-                    }
+                    DuelPopupAction(
+                        label = "CLOSE",
+                        onClick = onClose,
+                        modifier = Modifier.width(88.dp),
+                        style = DuelPopupActionStyle.SECONDARY
+                    )
                 }
+                DuelPopupRule()
                 Column(
                     Modifier.fillMaxWidth().weight(1f)
                         .verticalScroll(rememberScrollState())
