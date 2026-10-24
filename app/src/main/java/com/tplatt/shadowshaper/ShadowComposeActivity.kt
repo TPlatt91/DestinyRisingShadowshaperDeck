@@ -1076,6 +1076,12 @@ private fun CardDetailsDialog(
 ) {
     // Swipe between cards without collapsing the enlarged artwork viewer.
     var enlarged by remember { mutableStateOf(false) }
+    val detailScroll = rememberScrollState()
+    LaunchedEffect(card.name) {
+        // Every newly inspected card starts at its art/Power, not halfway
+        // through the previous card's printed effects.
+        detailScroll.scrollTo(0)
+    }
     val context = LocalContext.current
     val keywords = remember(card.name) {
         ShadowKeywordGlossary.onCard(card, ShadowKeywordGlossary.all(context))
@@ -1119,7 +1125,7 @@ private fun CardDetailsDialog(
                 )
                 DuelPopupRule()
                 Column(
-                    modifier = Modifier.weight(1f).verticalScroll(rememberScrollState())
+                    modifier = Modifier.weight(1f).verticalScroll(detailScroll)
                         .padding(horizontal = 15.dp, vertical = 8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
