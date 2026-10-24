@@ -46,7 +46,11 @@ internal fun DuelCardInspection(
     card: ShadowData.Card,
     unit: ShadowEngine.Unit?,
     power: Int,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    browseIndex: Int = -1,
+    browseCount: Int = 0,
+    onPrevious: () -> Unit = {},
+    onNext: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val keywords = remember(card.name) {
@@ -57,7 +61,12 @@ internal fun DuelCardInspection(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.88f),
+            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.88f)
+                .duelSwipeToBrowse(
+                    enabled = unit == null && browseIndex >= 0 && browseCount > 1,
+                    onPrevious = onPrevious,
+                    onNext = onNext
+                ),
             shape = CutCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 14.dp, bottomEnd = 14.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1620)),
             border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)
@@ -88,6 +97,13 @@ internal fun DuelCardInspection(
                         style = DuelPopupActionStyle.SECONDARY
                     )
                 }
+                DuelCardPagerControls(
+                    index = browseIndex,
+                    count = if (unit == null) browseCount else 0,
+                    onPrevious = onPrevious,
+                    onNext = onNext,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
                 DuelPopupRule()
                 Column(
                     Modifier.fillMaxWidth().weight(1f)
