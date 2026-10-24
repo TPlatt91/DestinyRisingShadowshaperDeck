@@ -337,7 +337,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         if (current != null && snapshot != null && !snapshot.finished && !snapshot.playerTurn &&
             !openingDialog && !settingsDialog && inspectedUnit == null && inspectedCard == null &&
             !showLog && !deckDialog && !factionDialog) {
-            delay(540)
+            // Let the prior 760ms materialization / landing finish before
+            // the next AI card enters. AI decisions and card rules are unchanged.
+            delay(900)
             if (!current.cpuPlayOne()) current.endTurn()
         }
     }
