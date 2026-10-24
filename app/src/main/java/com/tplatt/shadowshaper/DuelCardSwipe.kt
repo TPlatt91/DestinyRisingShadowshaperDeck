@@ -34,9 +34,6 @@ internal object DuelCardSwipeNavigation {
         return if (horizontalPixels < 0f) 1 else -1
     }
 
-    /** Hand swipes must dominate vertical movement so drag-to-play survives. */
-    fun handDirection(dx: Float, dy: Float, minimumPixels: Float): Int =
-        if (abs(dx) > abs(dy) * 1.45f) direction(dx, minimumPixels) else 0
 }
 
 /**
