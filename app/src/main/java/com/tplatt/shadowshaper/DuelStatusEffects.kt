@@ -35,7 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.PI
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -386,7 +385,7 @@ internal fun DuelCardStatusFx(
             Text(
                 text = label,
                 color = DuelFxPalette.forEvent(active),
-                fontSize = 9.sp,
+                fontSize = 7.sp,
                 fontWeight = FontWeight.Black,
                 maxLines = 1,
                 modifier = Modifier.align(Alignment.Center)
