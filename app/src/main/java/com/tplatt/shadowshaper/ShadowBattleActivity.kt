@@ -514,12 +514,24 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                         label = if (legal || relocating || targeting) "+" else ""
                                     )
                                     if (unit != null) {
+                                        // Remember when each specific unit
+                                        // first entered this rendered slot.
+                                        // Multi-unit abilities may summon
+                                        // several cards before Compose draws
+                                        // the board; animate all newcomers,
+                                        // not merely engine.lastPlacedColumn.
+                                        val firstVisibleRevision = remember(current, unit) {
+                                            engine.placementRevision
+                                        }
+                                        val newlyVisible =
+                                            firstVisibleRevision > 0 &&
+                                                firstVisibleRevision == engine.placementRevision
                                         val fit = DuelLayoutMetrics.fittingCard(maxWidth.value, maxHeight.value)
                                         DuelAnimatedUnit(
                                             unit = unit,
                                             currentPower = engine.power(unit),
                                             placementRevision = engine.placementRevision,
-                                            isNewestPlacement = DuelPlacementCue.isNewlyPlaced(
+                                            isNewestPlacement = newlyVisible || DuelPlacementCue.isNewlyPlaced(
                                                 placementRevision = engine.placementRevision,
                                                 lastSide = engine.lastPlacedSide,
                                                 lastRow = engine.lastPlacedRow,
