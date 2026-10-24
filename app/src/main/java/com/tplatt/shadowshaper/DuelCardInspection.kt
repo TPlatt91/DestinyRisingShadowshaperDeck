@@ -57,14 +57,16 @@ internal fun DuelCardInspection(
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
         Card(
-            modifier = Modifier.fillMaxWidth(0.96f).fillMaxHeight(0.94f),
+            modifier = Modifier.fillMaxWidth(0.94f).fillMaxHeight(0.88f),
             shape = CutCornerShape(topStart = 14.dp, topEnd = 14.dp, bottomStart = 14.dp, bottomEnd = 14.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFF0C1620)),
             border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)
         ) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 3.dp),
+                    Modifier.fillMaxWidth()
+                        .height(61.dp)
+                        .padding(horizontal = 12.dp, vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(Modifier.weight(1f)) {
