@@ -34,7 +34,7 @@ class ShadowBattleCoordinator(catalog: Map<String, ShadowData.Card>, seed: Long)
         checkpoint = listener
     }
 
-    fun resume(saved: ShadowMatchState) {
+    internal fun resume(saved: ShadowMatchState) {
         // Restore field/identity graph directly. Never call start() here:
         // that would reshuffle and reroll all subsequent random effects.
         engine = ShadowMatchCodec.restore(saved, engine.catalog)
