@@ -71,13 +71,39 @@ class DuelBinderDeckGuardTest {
         assertTrue(screen.contains("enabled = legality.isEmpty()"))
     }
 
-    @Test fun collectionRetainsOriginalCardGalleryPresentation() {
+    @Test fun collectionUsesTheSameLeatherBinderAsDeckConstruction() {
         val screen = source("ShadowComposeActivity.kt")
-        assertTrue(screen.contains("private fun CollectionScreen("))
-        assertTrue(screen.contains("LibraryCardFace(card, state.cards[card.name] ?: 0, { onCard(card) })"))
-        assertTrue(screen.contains("binder: Boolean = false"))
-        assertTrue(screen.contains("private fun LibraryFilterSelector("))
-        assertTrue(screen.contains("private fun LibrarySearchBar("))
+        val collection = screen.substringAfter("private fun CollectionScreen(")
+            .substringBefore("private fun DeckScreen(")
+        assertTrue(collection.contains("BinderPalette.edge"))
+        assertTrue(collection.contains("BinderPalette.leatherDark"))
+        assertTrue(collection.contains("DuelBinderPage(Modifier.fillMaxSize())"))
+        assertTrue(collection.contains("DuelBinderCardSleeve("))
+        assertTrue(collection.contains("CardArtPreview(card, artModifier)"))
+        assertTrue(collection.contains("GridCells.Fixed(3)"))
+        assertTrue(collection.contains("binder = true"))
+        assertTrue(collection.contains("LibrarySearchBar("))
+        assertTrue(collection.contains("filtered.size"))
+        assertTrue(collection.contains("onInspect = { onCard(card) }"))
+        assertTrue(collection.contains("state.cards[card.name] ?: 0"))
+        assertFalse(collection.contains("onAdd ="))
+        assertFalse(collection.contains("isPlayable"))
+        assertFalse(screen.contains("LibraryCardFace("))
         assertTrue(screen.contains("CardDetailsDialog("))
+    }
+
+    @Test fun binderGalleryAndCollectionUseTheSameSharedDrawingComponents() {
+        val screen = source("ShadowComposeActivity.kt")
+        val collection = screen.substringAfter("private fun CollectionScreen(")
+            .substringBefore("private fun DeckScreen(")
+        val deck = screen.substringAfter("private fun DeckScreen(")
+        assertTrue(collection.contains("DuelBinderPage(Modifier.fillMaxSize())"))
+        assertTrue(deck.contains("DuelBinderPage(Modifier.fillMaxSize())"))
+        assertTrue(collection.contains("DuelBinderCardSleeve("))
+        assertTrue(deck.contains("DuelBinderCardSleeve("))
+        assertTrue(collection.contains("binder = true"))
+        assertTrue(deck.contains("binder = true"))
+        assertTrue(deck.contains("onAdd = { vm.add(card) }"))
+        assertFalse(collection.contains("onAdd = { vm.add(card) }"))
     }
 }
