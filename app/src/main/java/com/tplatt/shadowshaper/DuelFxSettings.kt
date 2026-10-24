@@ -22,7 +22,7 @@ internal class DuelFxSettings(context: Context) {
     )
 
     var mode: DuelFxMode
-        get() = DuelFxMode.entries.firstOrNull {
+        get() = DuelFxMode.values().firstOrNull {
             it.name == preferences.getString("fx_mode", "FULL")
         } ?: DuelFxMode.FULL
         set(value) {
