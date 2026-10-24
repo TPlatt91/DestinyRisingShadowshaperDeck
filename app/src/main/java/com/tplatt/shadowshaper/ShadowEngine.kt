@@ -72,7 +72,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     @JvmField val human = Player(true)
     @JvmField val cpu = Player(false)
     @JvmField val journal = ArrayList<String>()
-    @JvmField val rng = Random(seed)
+    @JvmField var rng = Random(seed)
     @JvmField var lastActionError = ""
     @JvmField var humanFirst = false
     @JvmField var humanTurn = false
