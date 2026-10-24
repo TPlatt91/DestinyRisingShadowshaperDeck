@@ -162,8 +162,10 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
     Surface(modifier = Modifier.fillMaxSize(), color = Ink) {
         Column(Modifier.fillMaxSize().safeDrawingPadding()) {
             when (page) {
-                "home" -> HomeScreen(
-                    onBattle = { activity.startActivity(Intent(activity, ShadowBattleActivity::class.java)) },
+                "home" -> ShadowLandingPage(
+                    onSkirmish = {
+                        activity.startActivity(Intent(activity, ShadowBattleActivity::class.java))
+                    },
                     onContinue = {
                         activity.startActivity(
                             Intent(activity, ShadowBattleActivity::class.java)
@@ -171,7 +173,9 @@ private fun CompanionNavigation(vm: ShadowDeckViewModel, activity: Activity) {
                         )
                     },
                     hasSavedMatch = hasUnfinishedMatch,
-                    onOpen = { page = it },
+                    onDeckConstruction = { page = "deck" },
+                    onCardCollection = { page = "collection" },
+                    onRules = { page = "rules" },
                     catalogCount = vm.catalog.size
                 )
                 "deck" -> DeckScreen(
@@ -216,80 +220,6 @@ private fun PageHeading(title: String, description: String, onBack: () -> Unit) 
             Text(title, fontSize = 20.sp, fontWeight = FontWeight.Bold, color = Cream)
         }
         Text(description, fontSize = 12.sp, color = Secondary, modifier = Modifier.padding(start = 8.dp, bottom = 3.dp))
-    }
-}
-
-@Composable
-private fun HomeScreen(
-    onBattle: () -> Unit,
-    onContinue: () -> Unit,
-    hasSavedMatch: Boolean,
-    onOpen: (String) -> Unit,
-    catalogCount: Int
-) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        contentPadding = PaddingValues(horizontal = 18.dp, vertical = 20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Text("DESTINY: RISING", color = Gold, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
-            Spacer(Modifier.height(9.dp))
-            Text("SHADOW SHAPER\nDUELS", fontSize = 37.sp, lineHeight = 40.sp,
-                color = Cream, fontWeight = FontWeight.Black)
-            Spacer(Modifier.height(7.dp))
-            Text("CARD ARCHIVE & SINGLE-PLAYER SIMULATOR", fontSize = 11.sp, color = Secondary)
-            Spacer(Modifier.height(22.dp))
-        }
-        if (hasSavedMatch) {
-            item {
-                HomeDestination("↻", "CONTINUE BATTLE",
-                    "Resume your unfinished match with its saved board and turn",
-                    onContinue)
-            }
-        }
-        item {
-            HomeDestination("⚔", if (hasSavedMatch) "NEW BATTLE" else "SIM BATTLE",
-                "Play a fresh six-round match against AI", onBattle)
-        }
-        item { HomeDestination("▤", "DECK CONSTRUCTION", "Build decks and manage 15-card limits") { onOpen("deck") } }
-        item { HomeDestination("◈", "CARD COLLECTION", "Browse $catalogCount recorded cards and their effects") { onOpen("collection") } }
-        item { HomeDestination("≡", "RULES", "Rounds, positioning, status and scoring") { onOpen("rules") } }
-        item {
-            Spacer(Modifier.height(18.dp))
-            Text("KOTLIN + JETPACK COMPOSE  •  SOLO AGAINST AI",
-                fontSize = 10.sp, color = Secondary, textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth())
-            Text("Unverified card effects are labeled in the card viewer.",
-                fontSize = 11.sp, color = Secondary, textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(top = 6.dp))
-        }
-    }
-}
-
-@Composable
-private fun HomeDestination(icon: String, title: String, subtitle: String, onClick: () -> Unit) {
-    Card(
-        onClick = onClick, shape = RoundedCornerShape(16.dp),
-        border = BorderStroke(1.dp, Color(0xFF785C41)),
-        colors = CardDefaults.cardColors(containerColor = Panel)
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Box(
-                Modifier.size(54.dp).background(Raised, RoundedCornerShape(12.dp)),
-                contentAlignment = Alignment.Center
-            ) { Text(icon, color = Gold, fontSize = 24.sp) }
-            Column(Modifier.weight(1f)) {
-                Text(title, color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(5.dp))
-                Text(subtitle, color = Secondary, fontSize = 12.sp)
-            }
-            Text("›", color = Gold, fontSize = 25.sp)
-        }
     }
 }
 
