@@ -123,6 +123,39 @@ class DuelEffectEventsTest {
         assertTrue(DuelEffectEvents.forUnit(e.visualEvents, first, 115L).size == 5)
     }
 
+    @Test fun coordinatorPublishesShieldActivationEvenWithoutPowerChange() {
+        val initial = engine()
+        val coordinator = ShadowBattleCoordinator(initial.catalog, 14L)
+        val e = coordinator.engine
+        val ally = put(e, "Thrall", e.human)
+        val rossi = put(e, "Rossi-11", e.human, ShadowRules.BACK_ROW, 1)
+        coordinator.resetViewSnapshot()
+        val before = coordinator.state.value
+
+        e.effects.onPlayed(rossi, ShadowEngine.Target(e.human, ally.row, ally.column))
+        coordinator.resetViewSnapshot()
+        val after = coordinator.state.value
+
+        assertEquals(before.playerPower, after.playerPower)
+        assertEquals(before.revision, after.revision)
+        assertTrue(after.visualRevision > before.visualRevision)
+        assertEquals(DuelEffectKind.OVERSHIELD_APPLIED, e.visualEvents.last().kind)
+    }
+
+    @Test fun fxQualityModeCyclesAndDoesNotChangeEngineState() {
+        assertEquals(DuelFxMode.REDUCED, DuelFxMode.FULL.next())
+        assertEquals(DuelFxMode.OFF, DuelFxMode.REDUCED.next())
+        assertEquals(DuelFxMode.FULL, DuelFxMode.OFF.next())
+        val e = engine()
+        val unit = put(e, "Thrall", e.human)
+        val score = e.score(e.human)
+        val mode = DuelFxMode.FULL.next().next()
+        assertEquals(DuelFxMode.OFF, mode)
+        assertEquals(score, e.score(e.human))
+        assertEquals(0L, e.visualSerial)
+        assertEquals(2, unit.power)
+    }
+
     @Test fun frontendConsumesEventsWithoutMakingStatusChangesItself() {
         fun read(name: String): String = listOf(
             File("src/main/java/com/tplatt/shadowshaper/$name"),
@@ -142,6 +175,10 @@ class DuelEffectEventsTest {
         assertTrue(battle.contains("effectEvents = engine.visualEvents.filter { it.target === unit }"))
         assertTrue(battle.contains("DuelEffectEvents.lastTransfer(it.visualEvents)"))
         assertTrue(coordinator.contains("visualRevision = engine.visualSerial"))
+        assertTrue(battle.contains("DuelFxSettings(context)"))
+        assertTrue(battle.contains("fxMode = fxMode"))
+        assertTrue(battle.contains("label = \"BATTLE EFFECTS\""))
+        assertTrue(fx.contains("if (mode == DuelFxMode.OFF) return"))
         assertFalse(fx.contains("unit.overshield ="))
         assertFalse(fx.contains("unit.power +="))
     }
