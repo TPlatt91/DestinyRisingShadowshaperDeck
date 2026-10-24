@@ -170,6 +170,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var chosenDeckName by remember { mutableStateOf("Starter Practice Deck") }
     var selectedCpuFaction by remember { mutableStateOf("Mixed") }
     var freshOpeningAudio by remember { mutableStateOf(true) }
+    // Existing restored board units should not re-enter visually. Units
+    // placed AFTER this revision should animate normally on resumed games.
+    var resumedAtRevision by remember { mutableIntStateOf(-1) }
     var coordinator by remember { mutableStateOf<ShadowBattleCoordinator?>(null) }
     var inspectingFinalBoard by remember { mutableStateOf(false) }
     val current = coordinator
@@ -231,6 +234,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             chosenDeckName = saved.deckName
             selectedCpuFaction = saved.cpuFaction
             freshOpeningAudio = false
+            resumedAtRevision = restored.engine.placementRevision
             selectedIndex = -1
             pendingPosition = null
             draggedIndex = -1
@@ -303,6 +307,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             // previous match's depleted hand, board or timed effects.
             selectedCpuFaction = faction
             freshOpeningAudio = true
+            resumedAtRevision = -1
             candidate.setCheckpointListener { live ->
                 matchRepository.save(
                     ShadowSavedMatch(
@@ -731,7 +736,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                             unit = unit,
                                             currentPower = engine.power(unit),
                                             placementRevision = engine.placementRevision,
-                                            isNewestPlacement = !snapshot.finished && freshOpeningAudio &&
+                                            isNewestPlacement = !snapshot.finished &&
+                                                (resumedAtRevision < 0 ||
+                                                    engine.placementRevision > resumedAtRevision) &&
                                                 (newlyVisible || DuelPlacementCue.isNewlyPlaced(
                                                 placementRevision = engine.placementRevision,
                                                 lastSide = engine.lastPlacedSide,
