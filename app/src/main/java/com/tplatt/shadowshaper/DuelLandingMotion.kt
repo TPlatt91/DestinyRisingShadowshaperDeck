@@ -21,6 +21,18 @@ internal data class DuelLandingFrame(
     val impact: Float
 )
 
+/** A rendered launch position, not a game entity or additional board slot. */
+internal data class DuelHandLaunch(
+    val placementRevision: Int,
+    val row: Int,
+    val column: Int,
+    val offsetX: Float,
+    val offsetY: Float
+) {
+    fun matches(revision: Int, row: Int, column: Int): Boolean =
+        placementRevision == revision && this.row == row && this.column == column
+}
+
 internal object DuelLandingMotion {
     const val DURATION_MS = 760
     private fun unit(value: Float): Float = value.coerceIn(0f, 1f)
