@@ -39,6 +39,8 @@ internal object DuelVisualEvent {
     fun kind(message: String): DuelVisualEventKind {
         val event = message.uppercase()
         return when {
+            "SUMMON RESTRICTED" in event || "NO OPEN SLOT" in event ->
+                DuelVisualEventKind.OTHER
             "OVERSHIELD" in event || "DAMAGE PREVENTED" in event ->
                 DuelVisualEventKind.SHIELD
             "DAMAGE " in event || "DESTROYED" in event ||
@@ -96,8 +98,7 @@ internal fun DuelCinematicTurnBanner(text: String) {
             val cx = size.width / 2f
             val cy = size.height / 2f
             val gold = Color(0xFFDFBE82)
-            val fade = Color(0x00C0A578)
-            drawRect(
+                drawRect(
                 brush = Brush.horizontalGradient(
                     listOf(Color.Transparent, Color(0xDD111A27), Color.Transparent)
                 ),
@@ -126,13 +127,13 @@ internal fun DuelCinematicTurnBanner(text: String) {
                 )
             }
             drawLine(
-                brush = Brush.horizontalGradient(listOf(fade, gold, fade)),
+                color = gold.copy(alpha = .68f),
                 start = Offset(0f, cy - 22.dp.toPx()),
                 end = Offset(size.width, cy - 22.dp.toPx()),
                 strokeWidth = .9.dp.toPx()
             )
             drawLine(
-                brush = Brush.horizontalGradient(listOf(fade, gold, fade)),
+                color = gold.copy(alpha = .68f),
                 start = Offset(0f, cy + 22.dp.toPx()),
                 end = Offset(size.width, cy + 22.dp.toPx()),
                 strokeWidth = .9.dp.toPx()
