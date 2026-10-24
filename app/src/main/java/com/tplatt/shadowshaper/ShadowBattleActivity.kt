@@ -311,15 +311,15 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
-    // Short on-screen announcements make turn/ability changes visible without
-    // making the player read the entire event log on every action.
+    // Cinematic but short: use existing engine turn/event data. The game
+    // continues to advance exclusively through the battle coordinator.
     LaunchedEffect(current, snapshot?.round, snapshot?.playerTurn) {
         if (snapshot == null || current == null || snapshot.finished) {
             turnAnnouncement = null
         } else {
             turnAnnouncement = "ROUND ${snapshot.round}  •  " +
                 if (snapshot.playerTurn) "YOUR TURN" else "OPPONENT TURN"
-            delay(850)
+            delay(1100)
             turnAnnouncement = null
         }
     }
@@ -845,25 +845,15 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         enter = fadeIn(), exit = fadeOut(),
         modifier = Modifier.align(Alignment.Center).zIndex(12f)
     ) {
-        Box(Modifier.background(Color(0xE929221F), RoundedCornerShape(10.dp))
-            .border(2.dp, DuelPalette.gold, RoundedCornerShape(10.dp))
-            .padding(horizontal = 32.dp, vertical = 14.dp),
-            contentAlignment = Alignment.Center) {
-            Text(turnAnnouncement.orEmpty(), color = DuelPalette.gold,
-                fontSize = 19.sp, fontWeight = FontWeight.Black, letterSpacing = 2.sp)
-        }
+        DuelCinematicTurnBanner(turnAnnouncement.orEmpty())
     }
     AnimatedVisibility(
-        visible = effectAnnouncement != null && turnAnnouncement == null,
+        visible = effectAnnouncement != null && turnAnnouncement == null &&
+            !openingDialog && !deckDialog && !factionDialog,
         enter = fadeIn(), exit = fadeOut(),
-        modifier = Modifier.align(Alignment.TopCenter).padding(top = 53.dp).zIndex(9f)
+        modifier = Modifier.align(Alignment.TopCenter).padding(top = 41.dp).zIndex(9f)
     ) {
-        Text(effectAnnouncement.orEmpty(),
-            modifier = Modifier.background(Color(0xEB261D19), RoundedCornerShape(7.dp))
-                .border(1.dp, DuelPalette.rim, RoundedCornerShape(7.dp))
-                .padding(horizontal = 14.dp, vertical = 6.dp),
-            color = DuelPalette.cream, fontSize = 11.sp, maxLines = 2,
-            textAlign = TextAlign.Center)
+        DuelCinematicEventRibbon(effectAnnouncement.orEmpty())
     }
     if (pendingPosition != null || engine?.pendingMovedUnit != null) {
         Box(
