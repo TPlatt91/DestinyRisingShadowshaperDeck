@@ -49,6 +49,8 @@ class ShadowMatchPersistenceTest {
         e.rng.nextInt(10000)
         e.rng.nextDouble()
         e.journal.addAll(listOf("MATCH SEED: 727272", "YOU ▶ Test Card 2"))
+        e.fullJournal.addAll(e.journal)
+        e.fullJournal.add("EARLY MATCH EVENT")
         val snapshot = serializedCopy(ShadowMatchCodec.capture(e))
         val resumed = ShadowMatchCodec.restore(snapshot, catalog)
         assertEquals(3, resumed.round)
@@ -59,6 +61,7 @@ class ShadowMatchPersistenceTest {
         assertEquals(e.human.drawPile.map { it.name }, resumed.human.drawPile.map { it.name })
         assertEquals(e.cpu.drawPile.map { it.name }, resumed.cpu.drawPile.map { it.name })
         assertEquals(e.journal, resumed.journal)
+        assertEquals(e.fullJournal, resumed.fullJournal)
         repeat(30) { assertEquals(e.rng.nextInt(), resumed.rng.nextInt()) }
     }
 
