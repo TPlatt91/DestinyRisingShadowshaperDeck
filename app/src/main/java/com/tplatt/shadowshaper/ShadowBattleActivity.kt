@@ -162,6 +162,10 @@ private fun ShadowBattleScreen(
     var musicEnabled by remember(music) { mutableStateOf(music.enabled) }
     var musicVolume by remember(music) { mutableFloatStateOf(music.volume) }
     var musicTrackId by remember(music) { mutableStateOf(music.selectedTrackId) }
+    // FX intensity persists across skirmishes. This is presentation-only;
+    // no visual preference ever enters the saved match or battle rules.
+    val fxSettings = remember(context) { DuelFxSettings(context) }
+    var fxMode by remember(fxSettings) { mutableStateOf(fxSettings.mode) }
     var musicPickerDialog by remember { mutableStateOf(false) }
     LaunchedEffect(sounds) { sounds.prepare() }
     DisposableEffect(sounds) { onDispose { sounds.close() } }
@@ -777,6 +781,7 @@ private fun ShadowBattleScreen(
                                             unit = unit,
                                             currentPower = engine.power(unit),
                                             effectEvents = engine.visualEvents.filter { it.target === unit },
+                                            fxMode = fxMode,
                                             placementRevision = engine.placementRevision,
                                             isNewestPlacement = !snapshot.finished &&
                                                 (resumedAtRevision < 0 ||
@@ -1139,7 +1144,9 @@ private fun ShadowBattleScreen(
     // Draw source-to-recipient beams across measured legal slots.
     // Visual events come from the engine; placement and turns never wait.
     DuelPowerTransferBeam(
-        event = engine?.let { DuelEffectEvents.lastTransfer(it.visualEvents) },
+        event = if (fxMode == DuelFxMode.FULL)
+            engine?.let { DuelEffectEvents.lastTransfer(it.visualEvents) }
+        else null,
         boundsInWindow = slotBounds,
         rootTopLeftInWindow = rootTopLeftInWindow,
         modifier = Modifier.fillMaxSize().zIndex(7f)
@@ -1398,6 +1405,20 @@ private fun ShadowBattleScreen(
                 color = DuelPopupColors.muted,
                 fontSize = 10.sp,
                 letterSpacing = .45.sp
+            )
+            DuelPopupRule()
+            DuelPopupMenuRow(
+                label = "BATTLE EFFECTS",
+                description = when (fxMode) {
+                    DuelFxMode.FULL -> "FULL / ANIMATED STATUS AND POWER STREAMS"
+                    DuelFxMode.REDUCED -> "REDUCED / STATIC AURAS AND BRIEF CUES"
+                    DuelFxMode.OFF -> "OFF / KEEP STATUS ICONS"
+                },
+                highlighted = fxMode == DuelFxMode.FULL,
+                onClick = {
+                    fxMode = fxMode.next()
+                    fxSettings.mode = fxMode
+                }
             )
             DuelPopupRule()
             DuelPopupMenuRow(
