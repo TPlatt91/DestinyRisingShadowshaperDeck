@@ -109,4 +109,35 @@ class DuelPopupChromeGuardTest {
         assertTrue(chrome.contains("role = Role.Button"))
         assertTrue(chrome.contains("DuelPopupActionStyle.PRIMARY"))
     }
+    @Test fun deckManagementAndCollectionPopupsMatchBattleChrome() {
+        val compose = source("ShadowComposeActivity.kt")
+        assertFalse(compose.contains("AlertDialog("))
+        assertTrue(compose.contains("title = \"DECK UPDATE\""))
+        assertTrue(compose.contains("title = \"CHOOSE CARD BACK\""))
+        assertTrue(compose.contains("title = \"CREATE DECK\""))
+        assertTrue(compose.contains("title = \"RENAME DECK\""))
+        assertTrue(compose.contains("title = \"IMPORT DECK\""))
+        assertTrue(compose.contains("title = \"DELETE THIS DECK?\""))
+        assertTrue(compose.contains("DuelPopupDialog("))
+        assertTrue(compose.contains("OutlinedTextFieldDefaults.colors("))
+        assertTrue(compose.contains("importFile.launch(arrayOf(\"text/plain\", \"text/*\"))"))
+        assertTrue(compose.contains("vm.selectCover(option.id)"))
+        assertTrue(compose.contains("vm.create(editName)"))
+        assertTrue(compose.contains("vm.rename(editName)"))
+        assertTrue(compose.contains("vm.importText(importText)"))
+        assertTrue(compose.contains("vm.delete(); confirmDelete = false"))
+        assertTrue(compose.contains("DuelCardCover(option.id"))
+    }
+
+    @Test fun enlargedLibraryArtworkKeepsAllCardActions() {
+        val compose = source("ShadowComposeActivity.kt")
+        assertTrue(compose.contains("CutCornerShape(13.dp)"))
+        assertTrue(compose.contains("border = BorderStroke(1.3.dp, DuelPopupColors.goldSoft)"))
+        assertTrue(compose.contains("CardArtPreview("))
+        assertTrue(compose.contains("ShadowKeywordDefinitions("))
+        assertTrue(compose.contains("onRemove, enabled = copies > 0"))
+        assertTrue(compose.contains("onAdd, enabled = card.isPlayable"))
+        assertTrue(compose.contains("onDismissRequest = { enlarged = false }"))
+    }
+
 }
