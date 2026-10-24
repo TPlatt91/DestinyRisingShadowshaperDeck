@@ -64,7 +64,7 @@ class DuelResumeUiGuardTest {
         val battle = source("ShadowBattleActivity.kt")
         assertTrue(battle.contains("else if (unit != null) Modifier.clickable { inspectedUnit = unit }"))
         assertTrue(battle.contains("if (showLog && engine != null) AlertDialog("))
-        assertTrue(battle.contains("engine.journal.forEach"))
+        assertTrue(battle.contains("engine.fullJournal.forEach"))
         assertTrue(battle.contains("onClose = { inspectedUnit = null; inspectedCard = null }"))
         assertTrue(battle.contains("snapshot?.finished == true -> Unit"))
     }
@@ -80,6 +80,7 @@ class DuelResumeUiGuardTest {
         assertTrue(codec.contains("pendingUnit: Int?"))
         assertTrue(codec.contains("pendingCaster: Int?"))
         assertTrue(codec.contains("val journal: List<String>"))
+        assertTrue(codec.contains("val fullJournal: List<String>"))
         assertTrue(codec.contains("deck = side.drawPile.map { it.name }"))
         assertTrue(codec.contains("hand = side.hand.map { it.name }"))
         assertTrue(codec.contains("e.rng = state.randomState"))
