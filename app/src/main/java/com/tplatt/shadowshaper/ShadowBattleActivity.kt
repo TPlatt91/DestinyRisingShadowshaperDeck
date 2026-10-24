@@ -555,19 +555,11 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        DuelCardCover(
-                            chosenCover, Modifier.width(23.dp).height(34.dp)
+                        DuelDeckCounter(
+                            coverId = chosenCover,
+                            label = "YOUR DECK",
+                            count = engine.human.drawPile.size
                         )
-                        Column {
-                            Text(
-                                "YOUR DECK", color = DuelPalette.gold,
-                                fontSize = 9.sp, fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                "${engine.human.drawPile.size} CARDS",
-                                color = DuelPalette.cream, fontSize = 10.sp
-                            )
-                        }
                         TextButton(
                             onClick = { showLog = true },
                             contentPadding = PaddingValues(horizontal = 5.dp)
