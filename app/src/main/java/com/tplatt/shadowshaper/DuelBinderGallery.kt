@@ -82,9 +82,9 @@ internal fun DuelBinderPage(
                 brush = Brush.verticalGradient(
                     listOf(
                         Color(0xFF513422),
-                        Color(0xFF312116),
-                        Color(0xFF382519),
-                        Color(0xFF211611)
+                        BinderPalette.leather,
+                        BinderPalette.leatherLight,
+                        BinderPalette.leatherDark
                     )
                 )
             )
