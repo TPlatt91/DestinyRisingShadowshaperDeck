@@ -60,11 +60,12 @@ class DuelAudioIntegrationGuardTest {
     @Test fun muteAndVolumeSettingsPersistWithoutChangingGameRules() {
         val runtime = source("DuelSoundPlayer.kt")
         val screen = source("ShadowBattleActivity.kt")
+        val popup = source("DuelPopupChrome.kt")
         assertTrue(runtime.contains("getSharedPreferences("))
         assertTrue(runtime.contains("sound_on"))
         assertTrue(runtime.contains("sfx_volume"))
-        assertTrue(screen.contains("SOUND EFFECTS"))
-        assertTrue(screen.contains("SFX VOLUME"))
+        assertTrue(popup.contains("SOUND EFFECTS"))
+        assertTrue(popup.contains("SFX VOLUME"))
         assertTrue(screen.contains("TEST SOUND"))
         assertTrue(screen.contains("sounds.enabled = value"))
         assertTrue(screen.contains("sounds.volume = value"))
@@ -90,7 +91,7 @@ class DuelAudioIntegrationGuardTest {
 
     @Test fun openingShuffleAndNewActionsPlayOnlyAtConfirmedInteractionPoints() {
         val battle = source("ShadowBattleActivity.kt")
-        assertTrue(battle.contains("LaunchedEffect(current)"))
+        assertTrue(battle.contains("LaunchedEffect(current, freshOpeningAudio)"))
         assertTrue(battle.contains("sounds.isReady(DuelSound.SHUFFLE)"))
         assertTrue(battle.contains("sounds.play(DuelSound.OPENING_DEAL)"))
         assertTrue(battle.contains("sounds.play(DuelSound.CARD_LIFT)"))
