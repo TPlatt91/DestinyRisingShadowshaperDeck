@@ -57,15 +57,17 @@ internal object DuelFxPalette {
 internal fun DuelCardStatusFx(
     unit: ShadowEngine.Unit,
     events: List<DuelEffectEvent>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    mode: DuelFxMode = DuelFxMode.FULL
 ) {
+    if (mode == DuelFxMode.OFF) return
     val pulse = remember(unit) { Animatable(0f) }
     var pulseKind by remember(unit) { mutableStateOf<DuelEffectKind?>(null) }
     var seenSerial by remember(unit) { mutableStateOf(0L) }
     // Do not run idle infinite animations on normal, unmarked cards.
     val hasOngoingStatus = unit.scorchTurns > 0 || unit.overshield ||
         unit.inspired || unit.suppressed
-    val shimmer = if (hasOngoingStatus) {
+    val shimmer = if (mode == DuelFxMode.FULL && hasOngoingStatus) {
         val ambient = rememberInfiniteTransition(label = "status edge shimmer")
         val level by ambient.animateFloat(
             initialValue = .40f,
@@ -89,7 +91,11 @@ internal fun DuelCardStatusFx(
             for (event in fresh.takeLast(6)) {
                 pulseKind = event.kind
                 pulse.snapTo(1f)
-                pulse.animateTo(0f, tween(360, easing = LinearEasing))
+                pulse.animateTo(
+                    0f,
+                    tween(if (mode == DuelFxMode.FULL) 360 else 180,
+                        easing = LinearEasing)
+                )
             }
             pulseKind = null
         }
