@@ -757,6 +757,7 @@ private fun DeckScreen(
             }
         }
     }
+    }
     if (coverDialog) {
         DuelPopupDialog(
             title = "CHOOSE CARD BACK",
