@@ -53,6 +53,7 @@ internal fun DuelAnimatedUnit(
     placementRevision: Int,
     isNewestPlacement: Boolean,
     effectEvents: List<DuelEffectEvent> = emptyList(),
+    fxMode: DuelFxMode = DuelFxMode.FULL,
     modifier: Modifier = Modifier,
     entryFromHand: Offset? = null,
     sounds: DuelSoundPlayer? = null
@@ -226,6 +227,7 @@ internal fun DuelAnimatedUnit(
             DuelCardStatusFx(
                 unit = unit,
                 events = effectEvents,
+                mode = fxMode,
                 modifier = Modifier.fillMaxSize()
             )
 
