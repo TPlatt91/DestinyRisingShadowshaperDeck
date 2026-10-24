@@ -38,12 +38,11 @@ internal class ShadowMatchRepository(context: Context) {
         var stream: java.io.FileOutputStream? = null
         return try {
             stream = file.startWrite()
-            ObjectOutputStream(stream).use { output ->
-                output.writeObject(match)
-                output.flush()
-                // ObjectOutputStream.close() closes the underlying fd;
-                // AtomicFile.finishWrite handles synchronization and commit.
-            }
+            // AtomicFile.finishWrite owns fd sync/close and safe rename;
+            // never close the stream before finishWrite can fsync it.
+            val output = ObjectOutputStream(stream)
+            output.writeObject(match)
+            output.flush()
             file.finishWrite(stream)
             true
         } catch (_: Exception) {
