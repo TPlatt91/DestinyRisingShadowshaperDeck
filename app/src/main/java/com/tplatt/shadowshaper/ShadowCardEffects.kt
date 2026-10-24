@@ -380,7 +380,9 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     }
                 }
             }
-            "The Disfavored" -> if (activeInRow(target.card, target.row)) {
+            "The Disfavored" -> if (
+                target.row == ShadowRules.FRONT_ROW && activeInRow(target.card, target.row)
+            ) {
                 // Only an ALIVE, different Hive ally may receive the +2.
                 // During chained damage/Power events, defeated board units
                 // can exist briefly until sweep() runs. Selecting one of
