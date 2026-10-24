@@ -527,12 +527,15 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     effect.turns--
                     // Individual enemy sources get attribution on each tick.
                     // A first lethal Scorched hit must stop further ticks.
-                    val powerBeforeTick = unit.power
+                    // A shield can absorb Scorch. Otherwise the tick is
+                    // real damage even when Saladin immediately offsets
+                    // the hit with a Power bonus in the same effect chain.
+                    val blockedByShield = unit.overshield
                     dealDirect(effect.source ?: unit, unit, effect.damage)
-                    if (unit.power < powerBeforeTick) {
+                    if (!blockedByShield) {
                         emitVisual(
                             DuelEffectKind.SCORCH_TICK, unit, effect.source,
-                            powerBeforeTick - unit.power
+                            effect.damage
                         )
                     }
                     sweep()
