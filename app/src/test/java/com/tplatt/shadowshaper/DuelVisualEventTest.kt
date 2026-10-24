@@ -35,5 +35,7 @@ class DuelVisualEventTest {
     @Test fun unrecognizedJournalEntriesRemainGeneric() {
         assertEquals(DuelVisualEventKind.OTHER, DuelVisualEvent.kind("Round 2 — 2 play points."))
         assertEquals(DuelVisualEventKind.OTHER, DuelVisualEvent.kind(""))
+        assertEquals(DuelVisualEventKind.OTHER, DuelVisualEvent.kind("SUMMON RESTRICTED: Rock cannot be summoned"))
+        assertEquals(DuelVisualEventKind.OTHER, DuelVisualEvent.kind("SUMMON: No open slot for Thrall"))
     }
 }
