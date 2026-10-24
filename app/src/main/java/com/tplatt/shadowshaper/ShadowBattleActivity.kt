@@ -703,7 +703,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                     translationY = if (selectedIndex == index) (-3).dp.toPx() else 0f
                                 }
                                 .onGloballyPositioned { cardBounds[index] = it.boundsInWindow() }
-                                .pointerInput(index, card.name) {
+                                .pointerInput(current, index, card.name) {
                                     detectDragGestures(
                                         onDragStart = { start ->
                                             // pointerInput is keyed by card identity, not
