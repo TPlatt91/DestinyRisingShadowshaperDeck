@@ -333,14 +333,23 @@ private fun LibraryFilterSelector(
     label: String,
     selection: String,
     choices: List<String>,
-    onSelect: (String) -> Unit
+    onSelect: (String) -> Unit,
+    binder: Boolean = false
 ) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         TextButton(
             onClick = { expanded = true },
-            modifier = Modifier.background(Color(0xFF302925),
-                RoundedCornerShape(2.dp)).border(1.dp, Color(0xFF645549))
+            modifier = Modifier
+                .background(
+                    if (binder) Color(0xFF211710) else Color(0xFF302925),
+                    RoundedCornerShape(2.dp)
+                )
+                .border(
+                    1.dp,
+                    if (binder) BinderPalette.brass else Color(0xFF645549),
+                    RoundedCornerShape(2.dp)
+                )
                 .height(36.dp),
             contentPadding = PaddingValues(horizontal = 9.dp, vertical = 2.dp)
         ) {
@@ -363,7 +372,8 @@ private fun LibrarySearchBar(
     faction: String,
     onFaction: (String) -> Unit,
     rarity: String,
-    onRarity: (String) -> Unit
+    onRarity: (String) -> Unit,
+    binder: Boolean = false
 ) {
     // Portrait-friendly: full-width search and a separate compact filter row.
     Column(
@@ -372,8 +382,15 @@ private fun LibrarySearchBar(
     ) {
         Box(
             Modifier.fillMaxWidth().height(36.dp)
-                .background(Color(0xFF161718), RoundedCornerShape(2.dp))
-                .border(1.dp, Color(0xFF66594D), RoundedCornerShape(2.dp))
+                .background(
+                    if (binder) Color(0xFF130F0C) else Color(0xFF161718),
+                    RoundedCornerShape(2.dp)
+                )
+                .border(
+                    1.dp,
+                    if (binder) BinderPalette.brass else Color(0xFF66594D),
+                    RoundedCornerShape(2.dp)
+                )
                 .padding(horizontal = 9.dp),
             contentAlignment = Alignment.CenterStart
         ) {
@@ -398,11 +415,13 @@ private fun LibrarySearchBar(
         ) {
             LibraryFilterSelector(
                 "FACTION", faction,
-                listOf("All", "Humans", "Fallen", "Hive", "Cabal"), onFaction
+                listOf("All", "Humans", "Fallen", "Hive", "Cabal"), onFaction,
+                binder = binder
             )
             LibraryFilterSelector(
                 "RARITY", rarity,
-                listOf("All", "Rare", "Legendary", "Mythic", "Exotic"), onRarity
+                listOf("All", "Rare", "Legendary", "Mythic", "Exotic"), onRarity,
+                binder = binder
             )
         }
     }
@@ -516,13 +535,13 @@ private fun DeckScreen(
                 .any { it.contains(addSearch.trim(), ignoreCase = true) })
     }
 
-    // The original minigame deck builder has two equally important panes:
-    // a browseable card gallery at left, and the selected 15-card deck at right.
-    Column(Modifier.fillMaxSize().background(Color(0xFF141415))) {
+    // Three-column PORTRAIT binder: full-size gallery, with current deck
+    // on a separate tab (never add the reference game's right-side panel).
+    Column(Modifier.fillMaxSize().background(BinderPalette.edge)) {
         Row(
             Modifier.fillMaxWidth().height(43.dp)
-                .background(Color(0xFF211C1A))
-                .border(1.dp, Color(0xFF5C4838))
+                .background(BinderPalette.leatherDark)
+                .border(1.dp, BinderPalette.brass)
                 .padding(horizontal = 5.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -550,41 +569,40 @@ private fun DeckScreen(
             Modifier.fillMaxWidth().height(44.dp).padding(horizontal = 7.dp),
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            OutlinedButton(
+            DuelBinderTab(
+                label = "CARD GALLERY",
+                active = !showDeckPane,
                 onClick = { showDeckPane = false },
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
-            ) {
-                Text("CARD GALLERY", color = if (!showDeckPane) Gold else Secondary,
-                    fontSize = 11.sp)
-            }
-            OutlinedButton(
+                modifier = Modifier.weight(1f)
+            )
+            DuelBinderTab(
+                label = "MY DECK  $count / 15",
+                active = showDeckPane,
                 onClick = { showDeckPane = true },
-                modifier = Modifier.weight(1f),
-                contentPadding = PaddingValues(horizontal = 5.dp, vertical = 2.dp)
-            ) {
-                Text("MY DECK  $count / 15", color = if (showDeckPane) Gold else Secondary,
-                    fontSize = 11.sp)
-            }
+                modifier = Modifier.weight(1f)
+            )
         }
-        Box(Modifier.weight(1f).fillMaxWidth().padding(5.dp)) {
+        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 5.dp, vertical = 4.dp)) {
             if (!showDeckPane) {
-            // Gallery uses the full phone width instead of a cramped left split.
-            Column(
-                Modifier.fillMaxSize()
-                    .background(Color(0xFF262322), RoundedCornerShape(3.dp))
-                    .border(1.dp, Color(0xFF786046), RoundedCornerShape(3.dp))
-            ) {
+                DuelBinderPage(Modifier.fillMaxSize()) {
+                    Column(
+                        Modifier.fillMaxSize()
+                            .padding(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 8.dp)
+                    ) {
                 LibrarySearchBar(
                     addSearch, { addSearch = it },
                     addFaction, { addFaction = it },
-                    addRarity, { addRarity = it }
+                    addRarity, { addRarity = it },
+                    binder = true
                 )
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
+                    Modifier.fillMaxWidth()
+                        .background(Color(0xE51A110D), CutCornerShape(3.dp))
+                        .border(.75.dp, BinderPalette.brass.copy(alpha = .78f))
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("CARD GALLERY", color = Gold, fontSize = 11.sp,
+                    Text("CARD GALLERY", color = BinderPalette.bronze, fontSize = 11.sp,
                         fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text("${suggestions.size} CARDS  •  TAP ART TO INSPECT",
                         color = Secondary, fontSize = 9.sp)
@@ -592,28 +610,31 @@ private fun DeckScreen(
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
                     modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(7.dp),
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    contentPadding = PaddingValues(
+                        start = 4.dp, end = 4.dp, top = 9.dp, bottom = 12.dp
+                    ),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     gridItems(suggestions, key = { it.name }) { card ->
-                        LibraryCardFace(
-                            card,
-                            state.cards[card.name] ?: 0,
+                        DuelBinderCardSleeve(
+                            card = card,
+                            copies = state.cards[card.name] ?: 0,
                             onInspect = { onCard(card) },
-                            onAdd = { vm.add(card) }
+                            onAdd = { vm.add(card) },
+                            artwork = { artModifier -> CardArtPreview(card, artModifier) }
                         )
                     }
                 }
-            }
+                    }
+                }
             } else {
-            // The current deck replaces the gallery in portrait.
-            Column(
-                Modifier.fillMaxSize()
-                    .background(Color(0xFF292423), RoundedCornerShape(3.dp))
-                    .border(1.dp, Color(0xFF846846), RoundedCornerShape(3.dp))
-                    .padding(horizontal = 7.dp, vertical = 5.dp)
-            ) {
+            // The deck list is a separate binder leaf; no side-by-side pane.
+            DuelBinderPage(Modifier.fillMaxSize()) {
+                Column(
+                    Modifier.fillMaxSize()
+                        .padding(horizontal = 12.dp, vertical = 9.dp)
+                ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { editName = ""; deckDialog = "New" },
                         contentPadding = PaddingValues(horizontal = 3.dp)) {
@@ -668,9 +689,11 @@ private fun DeckScreen(
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     gridItems(deckCards, key = { it.name }) { card ->
-                        LibraryCardFace(
-                            card, state.cards[card.name] ?: 0,
-                            onInspect = { onCard(card) }
+                        DuelBinderCardSleeve(
+                            card = card,
+                            copies = state.cards[card.name] ?: 0,
+                            onInspect = { onCard(card) },
+                            artwork = { artModifier -> CardArtPreview(card, artModifier) }
                         )
                     }
                 }
@@ -730,7 +753,7 @@ private fun DeckScreen(
                             fontSize = 10.sp, maxLines = 1)
                     }
                 }
-            }
+                }
             }
         }
     }
