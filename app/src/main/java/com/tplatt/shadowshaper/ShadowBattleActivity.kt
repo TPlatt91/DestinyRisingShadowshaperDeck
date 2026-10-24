@@ -1131,140 +1131,275 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     }
     }
 
-    if (resumeChoice && savedAtLaunch != null && coordinator == null) AlertDialog(
-        onDismissRequest = {},
-        title = { Text("CONTINUE LAST MATCH?") },
-        text = {
+    // All battle modals share the same original, Destiny-inspired popup
+    // frame. Only their presentation changes; save/gameplay callbacks stay
+    // exactly as before.
+    if (resumeChoice && savedAtLaunch != null && coordinator == null) {
+        DuelPopupDialog(
+            title = "CONTINUE LAST MATCH?",
+            subtitle = "ROUND ${savedAtLaunch.engine.round} / ${ShadowRules.ROUNDS}  •  " +
+                savedAtLaunch.deckName +
+                "\nContinue with your exact saved board, hand, deck order and turn?",
+            symbol = DuelPopupSymbol.ORBIT,
+            onDismissRequest = {},
+            allowDismiss = false
+        ) {
             Text(
-                "Round ${savedAtLaunch.engine.round} of ${ShadowRules.ROUNDS} • " +
-                    "${savedAtLaunch.deckName}. Continue with the exact saved board, " +
-                    "hands and turn, or begin a new match?"
+                "SELECT YOUR NEXT ACTION",
+                color = DuelPopupColors.goldSoft,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.2.sp
             )
-        },
-        confirmButton = {
-            TextButton(onClick = { resumeMatch(savedAtLaunch) }) { Text("CONTINUE") }
-        },
-        dismissButton = {
-            TextButton(onClick = {
-                matchRepository.clear()
-                resumeChoice = false
-                deckDialog = true
-            }) { Text("START NEW") }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "START NEW",
+                    style = DuelPopupActionStyle.SECONDARY,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        matchRepository.clear()
+                        resumeChoice = false
+                        deckDialog = true
+                    }
+                )
+                DuelPopupAction(
+                    label = "CONTINUE",
+                    style = DuelPopupActionStyle.PRIMARY,
+                    modifier = Modifier.weight(1f),
+                    onClick = { resumeMatch(savedAtLaunch) }
+                )
+            }
         }
-    )
-    if (restoringError != null) AlertDialog(
-        onDismissRequest = { restoringError = null },
-        title = { Text("SAVE RECOVERY") },
-        text = { Text(restoringError.orEmpty()) },
-        confirmButton = {
-            TextButton(onClick = { restoringError = null }) { Text("OK") }
+    }
+
+    if (restoringError != null) {
+        DuelPopupDialog(
+            title = "SAVE RECOVERY",
+            subtitle = restoringError.orEmpty(),
+            symbol = DuelPopupSymbol.WARNING,
+            onDismissRequest = { restoringError = null }
+        ) {
+            DuelPopupAction(
+                label = "ACKNOWLEDGE",
+                style = DuelPopupActionStyle.PRIMARY,
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { restoringError = null }
+            )
         }
-    )
-    if (deckDialog && !resumeChoice) AlertDialog(
-        onDismissRequest = { if (engine != null) deckDialog = false },
-        title = { Text("CHOOSE A DECK") },
-        text = {
-            Column {
-                if (validDecks.isEmpty()) Text("Build a legal 15-card deck in Deck Construction first.")
-                validDecks.forEach { (name, deck) ->
-                    TextButton(onClick = {
+    }
+
+    if (deckDialog && !resumeChoice) {
+        DuelPopupDialog(
+            title = "CHOOSE YOUR DECK",
+            subtitle = "SELECT A LEGAL 15-CARD LOADOUT",
+            symbol = DuelPopupSymbol.CARDS,
+            onDismissRequest = { if (engine != null) deckDialog = false },
+            allowDismiss = engine != null
+        ) {
+            if (validDecks.isEmpty()) {
+                Text(
+                    "Build a legal 15-card deck in Deck Construction first.",
+                    fontSize = 12.sp,
+                    color = DuelPopupColors.muted
+                )
+            }
+            validDecks.forEach { (name, deck) ->
+                DuelPopupMenuRow(
+                    label = name.uppercase(),
+                    description = "EQUIP AND CHOOSE OPPONENT",
+                    onClick = {
                         chosenDeck = deck
                         chosenDeckName = name
-                        chosenCover = if (name == "Starter Practice Deck") "default" else saves.cover(name)
+                        chosenCover =
+                            if (name == "Starter Practice Deck") "default"
+                            else saves.cover(name)
                         deckDialog = false
                         factionDialog = true
-                    }) { Text(name) }
-                }
+                    }
+                )
             }
-        },
-        confirmButton = { TextButton(onClick = onExit) { Text("HOME") } }
-    )
-    if (factionDialog) AlertDialog(
-        onDismissRequest = { factionDialog = false; deckDialog = true },
-        title = { Text("CPU FACTION") },
-        text = {
-            Column {
-                listOf("Mixed", "Fallen", "Hive", "Cabal", "Humans").forEach { faction ->
-                    TextButton(onClick = { startMatch(faction) }) { Text(faction) }
-                }
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { factionDialog = false; deckDialog = true }) { Text("BACK") }
+            DuelPopupRule()
+            DuelPopupAction(
+                label = "HOME",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = onExit
+            )
         }
-    )
-    if (openingDialog && engine != null) AlertDialog(
-        onDismissRequest = {},
-        title = { Text(if (engine.humanFirst) "OFFENSIVE • YOU GO FIRST" else "DEFENSIVE • CPU FIRST") },
-        text = { Text("Six rounds • 15 cards per deck\nBuild the greatest total surviving Power.\nOpening hand: " + engine.human.hand.size) },
-        confirmButton = { TextButton(onClick = { openingDialog = false }) { Text("START DUEL") } }
-    )
-    if (settingsDialog) AlertDialog(
-        onDismissRequest = { settingsDialog = false },
-        title = { Text("SHADOW SHAPER DUELS") },
-        text = {
-            Column {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text("SOUND EFFECTS", fontSize = 12.sp, color = BattleCream)
-                    Switch(
-                        checked = audioEnabled,
-                        onCheckedChange = { value ->
-                            audioEnabled = value
-                            sounds.enabled = value
-                            if (value) sounds.play(DuelSound.UI_TAP)
-                        }
-                    )
+    }
+
+    if (factionDialog) {
+        DuelPopupDialog(
+            title = "SELECT OPPONENT",
+            subtitle = "CHOOSE AN ENEMY FACTION FOR THIS SKIRMISH",
+            symbol = DuelPopupSymbol.OPPONENT,
+            onDismissRequest = { factionDialog = false; deckDialog = true }
+        ) {
+            listOf("Mixed", "Fallen", "Hive", "Cabal", "Humans").forEach { faction ->
+                DuelPopupMenuRow(
+                    label = faction.uppercase(),
+                    description = if (faction == "Mixed")
+                        "VARIED ENEMY DECK" else "FACTION-SPECIFIC ENEMY DECK",
+                    onClick = { startMatch(faction) }
+                )
+            }
+            DuelPopupRule()
+            DuelPopupAction(
+                label = "BACK TO DECKS",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { factionDialog = false; deckDialog = true }
+            )
+        }
+    }
+
+    if (openingDialog && engine != null) {
+        DuelPopupDialog(
+            title = if (engine.humanFirst) "YOU ATTACK FIRST" else "CPU ATTACKS FIRST",
+            subtitle = "SIX ROUNDS  •  15 CARDS PER DECK\n" +
+                "Build the greatest total surviving Power.",
+            symbol = DuelPopupSymbol.READY,
+            onDismissRequest = {},
+            allowDismiss = false
+        ) {
+            Text(
+                "OPENING HAND   ${engine.human.hand.size} CARDS",
+                color = DuelPopupColors.gold,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                fontSize = 12.sp
+            )
+            DuelPopupAction(
+                label = "START DUEL",
+                modifier = Modifier.fillMaxWidth(),
+                style = DuelPopupActionStyle.PRIMARY,
+                onClick = { openingDialog = false }
+            )
+        }
+    }
+
+    if (settingsDialog) {
+        DuelPopupDialog(
+            title = "SHADOW SHAPER DUELS",
+            subtitle = "SKIRMISH  /  SETTINGS",
+            symbol = DuelPopupSymbol.SETTINGS,
+            onDismissRequest = { settingsDialog = false }
+        ) {
+            DuelPopupSoundSettings(
+                enabled = audioEnabled,
+                volume = audioVolume,
+                onEnabledChange = { value ->
+                    audioEnabled = value
+                    sounds.enabled = value
+                    if (value) sounds.play(DuelSound.UI_TAP)
+                },
+                onVolumeChange = { value ->
+                    audioVolume = value
+                    sounds.volume = value
                 }
-                Text(
-                    "SFX VOLUME  ${(audioVolume * 100f).toInt()}%",
-                    color = BattleFaded, fontSize = 11.sp
-                )
-                Slider(
-                    value = audioVolume,
-                    onValueChange = { value ->
-                        audioVolume = value
-                        sounds.volume = value
-                    },
-                    valueRange = 0f..1f,
-                    enabled = audioEnabled
-                )
-                TextButton(
-                    onClick = { sounds.play(DuelSound.CARD_SELECT) },
-                    enabled = audioEnabled
-                ) { Text("TEST SOUND") }
-                TextButton(onClick = { settingsDialog = false }) { Text("RESUME") }
-                TextButton(onClick = {
+            )
+            DuelPopupRule()
+            DuelPopupMenuRow(
+                label = "TEST SOUND",
+                description = "PREVIEW BATTLE AUDIO",
+                highlighted = true,
+                enabled = audioEnabled,
+                onClick = { sounds.play(DuelSound.CARD_SELECT) }
+            )
+            DuelPopupMenuRow(
+                label = "RESUME",
+                description = "RETURN TO THE BATTLEFIELD",
+                onClick = { settingsDialog = false }
+            )
+            DuelPopupMenuRow(
+                label = "NEW MATCH",
+                description = "SELECT A NEW SKIRMISH",
+                onClick = {
                     settingsDialog = false
                     matchRepository.clear()
                     coordinator = null
                     deckDialog = true
                     factionDialog = false
-                }) { Text("NEW MATCH") }
-                TextButton(onClick = { settingsDialog = false; onRules() }) { Text("RULES") }
-                TextButton(onClick = { settingsDialog = false; exitConfirmation = true }) { Text("HOME") }
+                }
+            )
+            DuelPopupMenuRow(
+                label = "RULES",
+                description = "VIEW GAMEPLAY GUIDANCE",
+                onClick = { settingsDialog = false; onRules() }
+            )
+            DuelPopupMenuRow(
+                label = "HOME",
+                description = "LEAVE THE CURRENT SKIRMISH",
+                onClick = { settingsDialog = false; exitConfirmation = true }
+            )
+            DuelPopupRule()
+            DuelPopupAction(
+                label = "CLOSE",
+                modifier = Modifier.fillMaxWidth(),
+                onClick = { settingsDialog = false }
+            )
+        }
+    }
+
+    if (exitConfirmation) {
+        DuelPopupDialog(
+            title = "LEAVE SKIRMISH?",
+            subtitle = "Your current match is automatically saved. " +
+                "You can continue from the same turn later.",
+            symbol = DuelPopupSymbol.WARNING,
+            onDismissRequest = { exitConfirmation = false }
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "STAY",
+                    modifier = Modifier.weight(1f),
+                    onClick = { exitConfirmation = false }
+                )
+                DuelPopupAction(
+                    label = "SAVE & HOME",
+                    modifier = Modifier.weight(1f),
+                    style = DuelPopupActionStyle.PRIMARY,
+                    onClick = onExit
+                )
             }
-        },
-        confirmButton = { TextButton(onClick = { settingsDialog = false }) { Text("CLOSE") } }
-    )
-    if (exitConfirmation) AlertDialog(
-        onDismissRequest = { exitConfirmation = false },
-        title = { Text("Leave battle?") },
-        text = { Text("Your current match is saved automatically. You can continue it later.") },
-        confirmButton = { TextButton(onClick = onExit) { Text("SAVE & HOME") } },
-        dismissButton = { TextButton(onClick = { exitConfirmation = false }) { Text("STAY") } }
-    )
-    if (endConfirmation) AlertDialog(
-        onDismissRequest = { endConfirmation = false },
-        title = { Text("End turn with Light remaining?") },
-        text = { Text("Unspent Light does not carry over.") },
-        confirmButton = {
-            TextButton(onClick = { endConfirmation = false; sounds.play(DuelSound.UI_TAP); current?.endTurn() }) { Text("END TURN") }
-        },
-        dismissButton = { TextButton(onClick = { endConfirmation = false }) { Text("KEEP PLAYING") } }
-    )
+        }
+    }
+
+    if (endConfirmation) {
+        DuelPopupDialog(
+            title = "END THIS TURN?",
+            subtitle = "You still have unspent Light. " +
+                "Unused Light does not carry over.",
+            symbol = DuelPopupSymbol.WARNING,
+            onDismissRequest = { endConfirmation = false }
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "KEEP PLAYING",
+                    modifier = Modifier.weight(1f),
+                    onClick = { endConfirmation = false }
+                )
+                DuelPopupAction(
+                    label = "END TURN",
+                    modifier = Modifier.weight(1f),
+                    style = DuelPopupActionStyle.PRIMARY,
+                    onClick = {
+                        endConfirmation = false
+                        sounds.play(DuelSound.UI_TAP)
+                        current?.endTurn()
+                    }
+                )
+            }
+        }
+    }
+
     if (snapshot?.finished == true && !inspectingFinalBoard &&
         !showLog && inspectedUnit == null && inspectedCard == null) {
         DuelMatchResult(
@@ -1291,24 +1426,60 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             onHome = onExit
         )
     }
-    if (showLog && engine != null) AlertDialog(
-        onDismissRequest = { showLog = false },
-        title = { Text("BATTLE LOG") },
-        text = {
-            Column(Modifier.height(250.dp).verticalScroll(rememberScrollState())) {
-                engine.fullJournal.forEach { Text(it, fontSize = 11.sp, color = BattleCream) }
+    if (showLog && engine != null) {
+        DuelPopupDialog(
+            title = "BATTLE LOG",
+            subtitle = "COMPLETE SKIRMISH EVENT HISTORY",
+            symbol = DuelPopupSymbol.LOG,
+            onDismissRequest = { showLog = false }
+        ) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .height(240.dp)
+                    .background(Color(0xFF09121A))
+                    .border(.7.dp, DuelPopupColors.border.copy(alpha = .68f))
+                    .verticalScroll(rememberScrollState())
+                    .padding(12.dp),
+                verticalArrangement = Arrangement.spacedBy(5.dp)
+            ) {
+                engine.fullJournal.forEachIndexed { index, event ->
+                    Text(
+                        "${index + 1}.  $event",
+                        fontSize = 11.sp,
+                        color = DuelPopupColors.muted,
+                        lineHeight = 15.sp
+                    )
+                }
             }
-        },
-        confirmButton = {
-            TextButton(onClick = {
-                val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                clipboard.setPrimaryClip(ClipData.newPlainText(
-                    "Shadowshaper match report", engine.diagnosticReport()))
-                showLog = false
-            }) { Text("COPY REPORT") }
-        },
-        dismissButton = { TextButton(onClick = { showLog = false }) { Text("CLOSE") } }
-    )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(9.dp)
+            ) {
+                DuelPopupAction(
+                    label = "CLOSE",
+                    modifier = Modifier.weight(1f),
+                    onClick = { showLog = false }
+                )
+                DuelPopupAction(
+                    label = "COPY REPORT",
+                    style = DuelPopupActionStyle.PRIMARY,
+                    modifier = Modifier.weight(1f),
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE)
+                            as ClipboardManager
+                        clipboard.setPrimaryClip(
+                            ClipData.newPlainText(
+                                "Shadowshaper match report",
+                                engine.diagnosticReport()
+                            )
+                        )
+                        showLog = false
+                    }
+                )
+            }
+        }
+    }
+
     if (inspectedUnit != null || inspectedCard != null) {
         val unit = inspectedUnit
         val card = inspectedCard ?: unit?.card
