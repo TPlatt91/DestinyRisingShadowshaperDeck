@@ -72,6 +72,9 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     @JvmField val human = Player(true)
     @JvmField val cpu = Player(false)
     @JvmField val journal = ArrayList<String>()
+    // Complete, nonrolling history for the post-match review screen. The
+    // existing 90-event journal still drives compact combat notifications.
+    @JvmField val fullJournal = ArrayList<String>()
     @JvmField var rng = Random(seed)
     @JvmField var lastActionError = ""
     @JvmField var humanFirst = false
@@ -110,6 +113,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
     internal fun actionTurnId(): Int = (round - 1) * 2 + completedTurns
 
     internal fun log(message: String) {
+        fullJournal.add(message)
         journal.add(message)
         if (journal.size > 90) journal.removeAt(0)
     }
@@ -143,6 +147,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         clear(human)
         clear(cpu)
         journal.clear()
+        fullJournal.clear()
         unresolvedEffects = 0
         unresolvedEffectDetails.clear()
         rejectedCpuMoves = 0
@@ -1067,7 +1072,7 @@ class ShadowEngine(@JvmField val catalog: Map<String, ShadowData.Card>, @JvmFiel
         appendSideReport(this, "PLAYER", human)
         appendSideReport(this, "CPU", cpu)
         append("\nEVENTS\n")
-        for (event in journal) append(event).append('\n')
+        for (event in fullJournal) append(event).append('\n')
     }
 
     private fun appendSideReport(report: StringBuilder, label: String, side: Player) {
