@@ -577,6 +577,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         )
     ) {
         DuelBattleTopBar(
+            round = snapshot?.round ?: 1,
             status = when {
                 snapshot?.finished == true -> "DUEL COMPLETE"
                 engine?.pendingMovedUnit != null &&
