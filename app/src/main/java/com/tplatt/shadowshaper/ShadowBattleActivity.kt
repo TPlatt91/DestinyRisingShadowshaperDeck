@@ -644,6 +644,16 @@ private fun ShadowBattleScreen(
                     else emptyList()
                     val moving = engine.pendingMovedUnit != null &&
                         engine.pendingMoveCaster === engine.human
+                    // Only indicate a row ability when the hand card is
+                    // genuinely available for placement, not while targeting,
+                    // relocating, during the CPU turn, or after the duel.
+                    val selectedAbilityGlow =
+                        if (!snapshot.finished && snapshot.playerTurn && !moving &&
+                            pendingPosition == null &&
+                            selectedIndex in engine.human.hand.indices
+                        ) DuelRowAbilityCue.forCard(
+                            engine, engine.human.hand[selectedIndex]
+                        ) else DuelRowGlow.STANDARD
                     listOf(
                         Triple("CPU BACK", engine.cpu, 0),
                         Triple("CPU FRONT", engine.cpu, 1),
@@ -664,7 +674,39 @@ private fun ShadowBattleScreen(
                                     )
                             )
                         }
-                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
+                        // The colored band is behind the entire relevant
+                        // player row; individual legal slots receive a brighter
+                        // matching outline. Other legal rows remain gold.
+                        val rowGlow = if (
+                            owner === engine.human &&
+                            DuelRowAbilityCue.abilityRow(selectedAbilityGlow) == row &&
+                            (0 until ShadowRules.COLUMNS).any { col ->
+                                engine.isPlayablePlacement(engine.human, selectedIndex, row, col)
+                            }
+                        ) selectedAbilityGlow else DuelRowGlow.STANDARD
+                        val rowAccent = duelRowGlowColor(rowGlow)
+                        Row(
+                            Modifier.weight(1f).then(
+                                if (rowGlow != DuelRowGlow.STANDARD)
+                                    Modifier
+                                        .background(
+                                            Brush.horizontalGradient(
+                                                listOf(
+                                                    rowAccent.copy(alpha = .10f),
+                                                    rowAccent.copy(alpha = .25f),
+                                                    rowAccent.copy(alpha = .10f)
+                                                )
+                                            ),
+                                            RoundedCornerShape(4.dp)
+                                        )
+                                        .border(
+                                            1.dp, rowAccent.copy(alpha = .75f),
+                                            RoundedCornerShape(4.dp)
+                                        )
+                                else Modifier
+                            ),
+                            horizontalArrangement = Arrangement.spacedBy(1.dp)
+                        ) {
                             for (col in 0 until ShadowRules.COLUMNS) {
                                 val unit = owner.board[row][col]
                                 val targeting = targets.any {
@@ -687,7 +729,13 @@ private fun ShadowBattleScreen(
                                                 else ", empty"
                                             if (targeting) stateDescription = "Select as ability target"
                                             else if (relocating) stateDescription = "Available relocation slot"
-                                            else if (legal) stateDescription = "Available card placement"
+                                            else if (legal) stateDescription = when (rowGlow) {
+                                                DuelRowGlow.FRONT_ABILITY ->
+                                                    "Available card placement; Front Row ability active"
+                                                DuelRowGlow.BACK_ABILITY ->
+                                                    "Available card placement; Back Row ability active"
+                                                DuelRowGlow.STANDARD -> "Available card placement"
+                                            }
                                         }
                                         .then(
                                             if (!snapshot.finished &&
@@ -707,7 +755,8 @@ private fun ShadowBattleScreen(
                                         friendly = owner === engine.human,
                                         occupied = unit != null,
                                         modifier = Modifier.fillMaxSize(),
-                                        label = if (legal || relocating || targeting) "+" else ""
+                                        label = if (legal || relocating || targeting) "+" else "",
+                                        glow = if (legal) rowGlow else DuelRowGlow.STANDARD
                                     )
                                     if (unit != null) {
                                         // Remember when each specific unit
