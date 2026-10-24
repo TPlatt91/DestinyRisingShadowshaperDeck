@@ -169,6 +169,9 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
     var lastAudioJournal by remember(current) { mutableStateOf<List<String>?>(null) }
     var lastAudioTurn by remember(current) { mutableStateOf<Pair<Int, Boolean>?>(null) }
     var matchOutcomePlayed by remember(current) { mutableStateOf(false) }
+    var lastAudioDraws by remember(current) {
+        mutableStateOf<DuelDrawAudioSnapshot?>(null)
+    }
 
     var deckDialog by remember { mutableStateOf(true) }
     var factionDialog by remember { mutableStateOf(false) }
@@ -298,6 +301,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
         val card = e.human.hand[index]
         if (e.isTargeted(card) && e.targetOptions(e.human, card, row, column).isNotEmpty()) {
+            sounds.play(DuelSound.TARGET_LOCK)
             pendingPosition = row to column
             message = if (card.name == "Rossi-11")
                 "Choose a highlighted ally or SHIELD SELF."
@@ -320,6 +324,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         if (co.play(e.human, selectedIndex, position.first, position.second,
                 ShadowEngine.Target(owner, row, column))) {
             recordSuccessfulLaunch(e, selectedIndex, position.first, position.second)
+            sounds.play(DuelSound.ABILITY_TRIGGER)
             selectedIndex = -1
             pendingPosition = null
             message = "Effect resolved."
@@ -334,6 +339,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         if (card.name != "Rossi-11") return
         if (co.play(e.human, selectedIndex, position.first, position.second, null)) {
             recordSuccessfulLaunch(e, selectedIndex, position.first, position.second)
+            sounds.play(DuelSound.ABILITY_TRIGGER)
             selectedIndex = -1
             pendingPosition = null
             message = "Overshield granted to Rossi-11."
@@ -381,6 +387,26 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         }
     }
 
+    // Engine.start() really shuffles both decks and deals an opening hand.
+    // Run only once for this match, after asynchronously loaded samples have
+    // become available. Do not invent a mulligan or discard gameplay event.
+    LaunchedEffect(current) {
+        if (current != null) {
+            var attempts = 0
+            while (!sounds.isReady(DuelSound.SHUFFLE) && attempts < 32) {
+                delay(45)
+                attempts++
+            }
+            sounds.play(DuelSound.SHUFFLE)
+            delay(230)
+            sounds.play(DuelSound.OPENING_DEAL)
+            repeat(current.engine.human.hand.size.coerceAtMost(5)) {
+                delay(110)
+                sounds.play(DuelSound.DRAW_SINGLE)
+            }
+        }
+    }
+
     // Listen only to actual state changes; never play unconfirmed clicks as
     // a card landing. Card arrival/impact SFX are synchronized separately in
     // DuelAnimatedUnit with its 170ms transmat + 760ms landing timeline.
@@ -396,9 +422,41 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                 DuelSoundEvents.newLines(prior, journalNow)
                     .mapNotNull(DuelSoundEvents::forJournalLine)
                     .takeLast(4)
-                    .forEach(sounds::play)
+                    .forEach { cue ->
+                        sounds.play(cue)
+                        if (cue == DuelSound.DESTROY) {
+                            sounds.play(DuelSound.CARD_BREAK)
+                        }
+                    }
             }
             lastAudioJournal = journalNow
+
+            val drawNow = DuelDrawAudioSnapshot(
+                playerDraws = current.engine.humanDrawTotal,
+                opponentDraws = current.engine.cpuDrawTotal,
+                playerEmptyAttempts = current.engine.humanEmptyDrawTotal,
+                opponentEmptyAttempts = current.engine.cpuEmptyDrawTotal
+            )
+            lastAudioDraws?.let { priorDraws ->
+                val change = drawNow.since(priorDraws)
+                // Opening hand is separately scored by the shuffle/deal
+                // sequence above. Real later draws are counted even when a
+                // simultaneous card play hides them from hand-size changes.
+                val drawCue = change.sound
+                if (drawCue != null) {
+                    sounds.play(drawCue)
+                    if (change.totalDrawn > 1) {
+                        repeat(change.totalDrawn.coerceAtMost(4)) {
+                            delay(105)
+                            sounds.play(DuelSound.DRAW_SINGLE)
+                        }
+                    }
+                }
+                if (change.emptyAttempts > 0 && drawCue != DuelSound.DECK_EMPTY) {
+                    sounds.play(DuelSound.DECK_EMPTY)
+                }
+            }
+            lastAudioDraws = drawNow
             val key = snapshot.round to snapshot.playerTurn
             if (lastAudioTurn != null && key != lastAudioTurn && !snapshot.finished) {
                 sounds.play(DuelSound.TURN)
@@ -820,6 +878,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                                     }
                                                 }
                                             if (canPlace) {
+                                                sounds.play(DuelSound.CARD_LIFT)
                                                 draggedIndex = index
                                                 selectedIndex = index
                                                 dragPosition =
