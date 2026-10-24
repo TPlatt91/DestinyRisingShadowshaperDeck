@@ -97,12 +97,12 @@ import kotlinx.coroutines.launch
 
 /** Compose portrait battle UI. Rules and AI are resolved by the shared engine. */
 class ShadowBattleActivity : ComponentActivity() {
-    private var backgroundMusic: DuelBackgroundMusic? = null
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-        backgroundMusic = DuelBackgroundMusic(applicationContext)
+        // The same soundtrack instance also plays on the launcher, deck
+        // editor, collection, and rules. Activity switches never reset it.
+        val music = DuelMusicSession.get(applicationContext)
         // The original Destiny: Rising duel occupies the whole display,
         // without an Android status/navigation band consuming arena space.
         // Immersive-STICKY still allows a swipe to reveal system bars.
@@ -127,7 +127,7 @@ class ShadowBattleActivity : ComponentActivity() {
             )) {
                 ShadowBattleScreen(
                     requestedDeck = intent.getStringExtra("selected_deck"),
-                    music = requireNotNull(backgroundMusic),
+                    music = music,
                     onExit = { finish() },
                     onRules = { startActivity(Intent(this, ShadowComposeActivity::class.java)
                         .putExtra("start_page", "rules")) }
@@ -136,21 +136,6 @@ class ShadowBattleActivity : ComponentActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        backgroundMusic?.onForeground()
-    }
-
-    override fun onPause() {
-        backgroundMusic?.onBackground()
-        super.onPause()
-    }
-
-    override fun onDestroy() {
-        backgroundMusic?.close()
-        backgroundMusic = null
-        super.onDestroy()
-    }
 }
 
 private val BattleInk = Color(0xFF17110F)
