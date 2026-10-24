@@ -52,6 +52,7 @@ internal fun DuelAnimatedUnit(
     currentPower: Int,
     placementRevision: Int,
     isNewestPlacement: Boolean,
+    effectEvents: List<DuelEffectEvent> = emptyList(),
     modifier: Modifier = Modifier,
     entryFromHand: Offset? = null,
     sounds: DuelSoundPlayer? = null
@@ -219,6 +220,13 @@ internal fun DuelAnimatedUnit(
                 inspired = unit.inspired,
                 suppressed = unit.suppressed,
                 scorched = unit.scorchTurns > 0
+            )
+            // Real status events trigger peripheral VFX, and active statuses
+            // retain a quiet aura until the engine actually clears them.
+            DuelCardStatusFx(
+                unit = unit,
+                events = effectEvents,
+                modifier = Modifier.fillMaxSize()
             )
 
             // Resolved damage/buff effect; never fire on a mere card summon.
