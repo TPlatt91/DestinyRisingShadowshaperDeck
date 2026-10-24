@@ -83,4 +83,17 @@ class DuelVisualParityGuardTest {
         assertTrue(battle.contains("showLog = true"))
         assertTrue(battle.contains("current.endTurn()"))
     }
+    @Test fun everyEnginePlayableCardCanDragWithoutStaleTurnState() {
+        val battle = source("ShadowBattleActivity.kt")
+        val hitTesting = source("DuelHitTesting.kt")
+        assertTrue(battle.contains("pointerInput(current, index, card.name)"))
+        assertTrue(battle.contains("val canPlace = engine.humanTurn"))
+        assertTrue(battle.contains("engine.isPlayablePlacement("))
+        assertTrue(battle.contains("DuelHitTesting.playerSlotForDrop("))
+        assertTrue(battle.contains("userScrollEnabled = false"))
+        assertTrue(battle.contains("handListState.animateScrollToItem("))
+        assertTrue(hitTesting.contains("val cardCenter = Offset("))
+        assertFalse(battle.contains("if (snapshot.playerTurn && !snapshot.finished &&"))
+    }
+
 }
