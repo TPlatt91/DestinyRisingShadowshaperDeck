@@ -443,7 +443,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
             verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "☰  MENU", color = BattleGold, fontSize = 10.sp,
-                modifier = Modifier.clickable { settingsDialog = true }
+                modifier = Modifier.clickable { sounds.play(DuelSound.UI_TAP); settingsDialog = true }
                     .padding(horizontal = 10.dp, vertical = 5.dp)
             )
             Text("SHADOWSHAPER DUELS", color = DuelPalette.cream,
@@ -691,7 +691,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                     ) {
                         if (pendingPosition != null &&
                             engine.human.hand.getOrNull(selectedIndex)?.name == "Rossi-11") {
-                            TextButton(onClick = { shieldRossiSelf() }) {
+                            TextButton(onClick = { sounds.play(DuelSound.UI_TAP); shieldRossiSelf() }) {
                                 Text("SHIELD", color = DuelPalette.gold, fontSize = 9.sp)
                             }
                         }
@@ -703,6 +703,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                 else -> "END\nTURN"
                             },
                             onClick = {
+                                sounds.play(DuelSound.UI_TAP)
                                 if (pendingPosition != null) pendingPosition = null
                                 else if (engine.pendingMovedUnit != null)
                                     message = "Choose a relocation slot first."
@@ -1083,7 +1084,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
         title = { Text("End turn with Light remaining?") },
         text = { Text("Unspent Light does not carry over.") },
         confirmButton = {
-            TextButton(onClick = { endConfirmation = false; current?.endTurn() }) { Text("END TURN") }
+            TextButton(onClick = { endConfirmation = false; sounds.play(DuelSound.UI_TAP); current?.endTurn() }) { Text("END TURN") }
         },
         dismissButton = { TextButton(onClick = { endConfirmation = false }) { Text("KEEP PLAYING") } }
     )
