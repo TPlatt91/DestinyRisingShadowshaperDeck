@@ -37,7 +37,10 @@ internal data class ShadowMatchState(
     val pendingUnit: Int?,
     val pendingCaster: Int?
 ) : Serializable {
-    companion object { const val VERSION = 1 }
+    companion object {
+        const val VERSION = 1
+        private const val serialVersionUID: Long = 1L
+    }
 }
 
 internal data class SideState(
@@ -45,7 +48,9 @@ internal data class SideState(
     val deck: List<String>,
     val hand: List<String>,
     val board: List<Int?>
-) : Serializable
+) : Serializable {
+    companion object { private const val serialVersionUID: Long = 1L }
+}
 
 internal data class UnitState(
     val id: Int,
@@ -71,13 +76,21 @@ internal data class UnitState(
     val sniperLastHits: List<HitState>,
     val fuseOrigin: Int?,
     val fuseRound: Int
-) : Serializable
+) : Serializable {
+    companion object { private const val serialVersionUID: Long = 1L }
+}
 
-internal data class BonusState(val value: Int, val turns: Int) : Serializable
+internal data class BonusState(val value: Int, val turns: Int) : Serializable {
+    companion object { private const val serialVersionUID: Long = 1L }
+}
 internal data class ScorchState(
     val source: Int?, val damage: Int, val turns: Int
-) : Serializable
-internal data class HitState(val target: Int, val turn: Int) : Serializable
+) : Serializable {
+    companion object { private const val serialVersionUID: Long = 1L }
+}
+internal data class HitState(val target: Int, val turn: Int) : Serializable {
+    companion object { private const val serialVersionUID: Long = 1L }
+}
 
 /** The saved-match wrapper carries the deck choices needed for a fresh replay. */
 internal data class ShadowSavedMatch(
@@ -87,7 +100,9 @@ internal data class ShadowSavedMatch(
     val playerDeck: Map<String, Int>,
     val cpuFaction: String,
     val engine: ShadowMatchState
-) : Serializable
+) : Serializable {
+    companion object { private const val serialVersionUID: Long = 1L }
+}
 
 /**
  * Capture and restore COMPLETE game logic without replaying effect triggers.
