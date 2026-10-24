@@ -437,7 +437,7 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                     )
                             )
                         }
-                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(1.dp)) {
                             for (col in 0 until ShadowRules.COLUMNS) {
                                 val unit = owner.board[row][col]
                                 val targeting = targets.any {
@@ -496,6 +496,12 @@ private fun ShadowBattleScreen(requestedDeck: String?, onExit: () -> Unit, onRul
                                                 column = col
                                             ),
                                             modifier = Modifier.width(fit.width.dp).height(fit.height.dp)
+                                                .graphicsLayer {
+                                                    // Visual art gains presence inside the
+                                                    // same legal slot hitbox; no new zones.
+                                                    scaleX = 1.035f
+                                                    scaleY = 1.035f
+                                                }
                                         )
                                     }
                                 }
