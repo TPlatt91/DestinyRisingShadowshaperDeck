@@ -130,6 +130,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             "Rossi-11" -> {
                 val protectedUnit = picked ?: actor
                 protectedUnit.overshield = true
+                emitVisual(DuelEffectKind.OVERSHIELD_APPLIED, protectedUnit, actor)
                 log("OVERSHIELD granted ▶ " + protectedUnit.card.name)
             }
             "Harrow" -> if (rng.nextBoolean()) {
@@ -143,23 +144,22 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     log("Umbliks Prime: heads, +6 Power to " + recipient.card.name)
                 } else log("Umbliks Prime: tails, no Power bonus.")
             }
-            "Hexguard" -> {
-                actor.inspired = true
-                log("Inspired: " + name)
-            }
+            "Hexguard" -> inspire(actor)
             "Tenacious Shielded Knight", "Tenacious Hexguard" ->
                 all(me).filter {
                     adjacent(actor, it) && it.card.faction.equals("Hive", true)
                 }.forEach(::inspire)
             "Wizard", "Guarding Servitor" -> inspire(picked)
             "Tenacious Wizard" -> inspireRandom(me, "Hive", 2)
-            "Knight" -> buff(picked, 3)
+            "Knight" -> buff(picked, 3, actor)
             "Tenacious Knight" -> if (actor.row == 1) buffRandom(inspired(me, "Hive"), 2, 3)
-            "Morgran" -> buff(picked, 1)
-            "Hyssop" -> buff(picked, 3)
-            "Mishra" -> all(me).filter { adjacent(actor, it) }.forEach { buff(it, 3) }
+            "Morgran" -> buff(picked, 1, actor)
+            "Hyssop" -> buff(picked, 3, actor)
+            "Mishra" -> all(me).filter { adjacent(actor, it) }.forEach {
+                buff(it, 3, actor)
+            }
             "Zhong Wenbin" ->
-                if (actor.row == 1) buff(at(me, actor.row, actor.column + 1), 2)
+                if (actor.row == 1) buff(at(me, actor.row, actor.column + 1), 2, actor)
             "Finnala" -> {
                 if (actor.row == 1 && picked != null) {
                     buff(picked, 8)
@@ -169,7 +169,7 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
             }
             "Attal" -> if (picked != null) buff(picked, power(picked))
             "Maru" -> for (unit in all(me)) {
-                if (unit !== actor && unit.row == actor.row) buff(unit, 2)
+                if (unit !== actor && unit.row == actor.row) buff(unit, 2, actor)
             }
             "Vanok" -> faction(me, "Fallen").forEach { buff(it, 2) }
             "Kabr" -> all(me).filter { it.card.name == "Guerrilla" }.forEach { buff(it, 3) }
@@ -392,14 +392,14 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                 }
                 if (recipients.isNotEmpty() && claimDisfavoredTrigger(target)) {
                     val recipient = recipients[rng.nextInt(recipients.size)]
-                    buff(recipient, 2)
+                    buff(recipient, 2, target)
                     log("The Disfavored ▶ +2 Power to " + recipient.card.name)
                 } else if (recipients.isEmpty()) {
                     log("The Disfavored: no other surviving Hive ally to buff.")
                 }
             }
             "The Speaker" -> if (target.row == ShadowRules.BACK_ROW)
-                buff(at(own, target.row, target.column + 1), 2)
+                buff(at(own, target.row, target.column + 1), 2, target)
             "Guerrilla Captain" ->
                 randomUnit(foe)?.let { damage(target, it, 2) }
             "Denzin" ->
@@ -527,7 +527,14 @@ internal class ShadowCardEffects(private val e: ShadowEngine) {
                     effect.turns--
                     // Individual enemy sources get attribution on each tick.
                     // A first lethal Scorched hit must stop further ticks.
+                    val powerBeforeTick = unit.power
                     dealDirect(effect.source ?: unit, unit, effect.damage)
+                    if (unit.power < powerBeforeTick) {
+                        emitVisual(
+                            DuelEffectKind.SCORCH_TICK, unit, effect.source,
+                            powerBeforeTick - unit.power
+                        )
+                    }
                     sweep()
                     if (effect.turns <= 0) unit.scorchEffects.remove(effect)
                 }
