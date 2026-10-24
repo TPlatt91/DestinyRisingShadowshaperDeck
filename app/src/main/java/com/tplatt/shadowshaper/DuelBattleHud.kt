@@ -8,6 +8,9 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -35,6 +38,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -194,87 +204,175 @@ internal fun DuelUtilityPill(hand: Int, deck: Int) {
     }
 }
 
-/** Working onClick is supplied by the battle coordinator's existing guarded End Turn action. */
+/**
+ * Faceted command medallion, a game control rather than a default material
+ * button. It exposes the SAME enabled/label/onClick contract as before.
+ * In particular: CANCEL still exits target selection; MOVE still prompts
+ * the real movement choice; END TURN still goes through the coordinator.
+ */
 @Composable
 internal fun DuelGoldTurnDial(
     enabled: Boolean,
     label: String,
     onClick: () -> Unit
 ) {
+    val cancelling = label.contains("CANCEL", ignoreCase = true)
+    val moving = label.contains("MOVE", ignoreCase = true)
+    val accent = when {
+        cancelling -> Color(0xFF94D5F5)
+        moving -> Color(0xFFCAD7E5)
+        else -> Color(0xFFF3CF83)
+    }
+    val muted = Color(0xFF817F76)
+    val metal = if (enabled) accent else muted
+    val interactivity = remember { MutableInteractionSource() }
+    val pressed by interactivity.collectIsPressedAsState()
     val glint = rememberInfiniteTransition(label = "turn dial")
     val dialLight by glint.animateFloat(
-        initialValue = .45f, targetValue = 1f,
+        initialValue = .48f,
+        targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            tween(durationMillis = 1650), repeatMode = RepeatMode.Reverse
+            tween(durationMillis = 1850), repeatMode = RepeatMode.Reverse
         ),
         label = "gold bezel glow"
     )
     Box(
-        Modifier.size(62.dp),
+        Modifier
+            .size(78.dp)
+            .graphicsLayer {
+                val pressScale = if (pressed && enabled) .955f else 1f
+                scaleX = pressScale
+                scaleY = pressScale
+            }
+            .shadow(8.dp, CircleShape)
+            .clickable(
+                enabled = enabled,
+                interactionSource = interactivity,
+                indication = null,
+                role = Role.Button,
+                onClick = onClick
+            )
+            .semantics {
+                contentDescription = when {
+                    cancelling -> "Cancel card targeting"
+                    moving -> "Choose a unit relocation slot"
+                    else -> "End turn"
+                }
+                stateDescription = if (enabled) "Available" else "Not your turn"
+            },
         contentAlignment = Alignment.Center
     ) {
-        // Etched rotating-mechanism style bezel: gold teeth, inner black
-        // recess, a polished top highlight and an amber outer circumference.
-        Canvas(Modifier.size(62.dp)) {
+        Canvas(Modifier.size(76.dp)) {
             val center = Offset(size.width / 2f, size.height / 2f)
-            val outer = size.minDimension * .475f
-            drawCircle(Color(0xA5101115), outer)
+            val radius = size.minDimension * .472f
+            val glow = if (enabled) dialLight else .18f
+
+            // Diffuse edge, brushed-metal bezel, faceted inner core.
+            drawCircle(Color(0xB5080E15), radius * 1.06f, center)
+            drawCircle(
+                brush = Brush.sweepGradient(
+                    listOf(
+                        Color(0xFF443C2E), metal.copy(alpha = .90f),
+                        Color(0xFF554536), Color(0xFFB29A70),
+                        Color(0xFF272D31), metal.copy(alpha = .94f),
+                        Color(0xFF443C2E)
+                    ),
+                    center = center
+                ),
+                radius = radius,
+                center = center
+            )
+            drawCircle(
+                color = Color(0xFF0A1118),
+                radius = radius * .886f,
+                center = center
+            )
             drawCircle(
                 brush = Brush.radialGradient(
-                    listOf(
-                        Color(0x005B3B1B), Color(0xB844311D),
-                        Color(0xFFB88B42), Color(0xFF32281E)
-                    )
+                    colors = listOf(
+                        if (cancelling) Color(0xFF2C5870) else Color(0xFF684C2B),
+                        if (cancelling) Color(0xFF173747) else Color(0xFF3D3025),
+                        Color(0xFF101921)
+                    ),
+                    center = Offset(center.x - radius * .25f, center.y - radius * .37f),
+                    radius = radius * 1.39f
                 ),
-                radius = outer
+                radius = radius * .78f,
+                center = center
+            )
+
+            drawCircle(
+                color = metal.copy(alpha = .66f + .30f * glow),
+                radius = radius * .88f,
+                center = center,
+                style = Stroke(width = (1f + glow * .55f).dp.toPx())
             )
             drawCircle(
-                Color(0xFFDEB66B).copy(alpha = if (enabled) dialLight else .45f), radius = outer * .91f,
-                style = Stroke(1.2.dp.toPx())
+                color = metal.copy(alpha = .31f),
+                radius = radius * .735f,
+                center = center,
+                style = Stroke(.8.dp.toPx())
             )
-            for (index in 0 until 16) {
-                val a = 2.0 * PI * index / 16.0 - PI / 2.0
-                val direction = Offset(
-                    cos(a).toFloat(), sin(a).toFloat()
-                )
-                val from = center + direction * (outer * .88f)
-                val to = center + direction * (outer * if (index % 4 == 0) 1.02f else .97f)
+            // Six radial accents and precision-machined ordinal teeth.
+            for (index in 0 until 24) {
+                val a = 2.0 * PI * index / 24.0 - PI / 2.0
+                val dx = cos(a).toFloat()
+                val dy = sin(a).toFloat()
+                val major = index % 4 == 0
+                val inner = radius * (if (major) .87f else .924f)
+                val outer = radius * (if (major) 1.025f else .973f)
                 drawLine(
-                    if (index % 4 == 0) Color(0xFFF4D48E)
-                    else Color(0xFF8B6938),
-                    from, to,
-                    if (index % 4 == 0) 1.3.dp.toPx() else .8.dp.toPx()
+                    color = metal.copy(alpha = if (major) .90f else .54f),
+                    start = center + Offset(dx * inner, dy * inner),
+                    end = center + Offset(dx * outer, dy * outer),
+                    strokeWidth = (if (major) 1.45f else .73f).dp.toPx()
                 )
             }
-            drawCircle(
-                Color(0xFF261D1A), radius = outer * .70f,
+            // Short arcs imply a precision-engineered mechanism; they do not
+            // falsely indicate a time limit or change real game turns.
+            drawArc(
+                color = metal.copy(alpha = .37f + .36f * glow),
+                startAngle = 209f,
+                sweepAngle = 73f,
+                useCenter = false,
+                topLeft = Offset(center.x - radius * .96f, center.y - radius * .96f),
+                size = androidx.compose.ui.geometry.Size(radius * 1.92f, radius * 1.92f),
                 style = Stroke(1.7.dp.toPx())
             )
+            drawArc(
+                color = metal.copy(alpha = .40f),
+                startAngle = 24f,
+                sweepAngle = 85f,
+                useCenter = false,
+                topLeft = Offset(center.x - radius * .96f, center.y - radius * .96f),
+                size = androidx.compose.ui.geometry.Size(radius * 1.92f, radius * 1.92f),
+                style = Stroke(1.15.dp.toPx())
+            )
+            val topY = center.y - radius * .59f
+            val mark = Path().apply {
+                moveTo(center.x, topY - 2.dp.toPx())
+                lineTo(center.x + 3.dp.toPx(), topY)
+                lineTo(center.x, topY + 2.dp.toPx())
+                lineTo(center.x - 3.dp.toPx(), topY)
+                close()
+            }
+            drawPath(mark, metal.copy(alpha = if (enabled) .90f else .38f))
             drawLine(
-                Color(0xAFFFDE9D),
-                Offset(center.x - outer * .26f, center.y - outer * .69f),
-                Offset(center.x + outer * .15f, center.y - outer * .69f),
-                1.1.dp.toPx()
+                color = metal.copy(alpha = .64f),
+                start = Offset(center.x - radius * .34f, center.y + radius * .54f),
+                end = Offset(center.x + radius * .34f, center.y + radius * .54f),
+                strokeWidth = .9.dp.toPx()
             )
         }
-        Button(
-            onClick = onClick, enabled = enabled,
-            shape = CircleShape,
-            modifier = Modifier.size(47.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFF765022),
-                contentColor = Color.White,
-                disabledContainerColor = Color(0xFF555046)
-            ),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(2.dp)
-        ) {
-            Text(
-                label, fontSize = 9.sp,
-                fontWeight = FontWeight.Black,
-                textAlign = TextAlign.Center,
-                lineHeight = 10.sp,
-                maxLines = 2
-            )
-        }
+        Text(
+            label,
+            color = if (enabled) Color(0xFFFFF2D9) else Color(0xFFC6C4BE),
+            fontSize = if (label.length > 7) 10.sp else 11.sp,
+            lineHeight = 12.sp,
+            letterSpacing = .85.sp,
+            fontWeight = FontWeight.Black,
+            textAlign = TextAlign.Center,
+            maxLines = 2
+        )
     }
 }
