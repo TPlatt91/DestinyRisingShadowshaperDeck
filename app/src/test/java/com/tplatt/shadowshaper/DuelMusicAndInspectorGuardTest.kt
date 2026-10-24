@@ -52,7 +52,7 @@ class DuelMusicAndInspectorGuardTest {
     @Test fun musicHasSeparatePreferencesAndRespectsAndroidActivityLifecycle() {
         val player = source("DuelBackgroundMusic.kt")
         val battle = source("ShadowBattleActivity.kt")
-        val gradle = listOf(File("build.gradle.kts"), File("app/build.gradle.kts"))
+        val gradle = listOf(File("app/build.gradle.kts"), File("build.gradle.kts"))
             .firstOrNull(File::isFile)?.readText() ?: error("Gradle script missing")
         assertTrue(gradle.contains("noCompress += \"opus\""))
         assertTrue(player.contains("MediaPlayer()"))
